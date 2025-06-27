@@ -1,7 +1,7 @@
 package models
 
 type Section struct {
-	ID                 int     `json:"id"`
+	Id                 int     `json:"id"`
 	SectionNumber      string  `json:"section_number"`
 	CurrentCapacity    int     `json:"current_capacity"`
 	CurrentTemperature float64 `json:"current_temperature"`
