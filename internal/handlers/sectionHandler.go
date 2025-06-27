@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/responses"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/mappers"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
-	"github.com/sajimenezher_meli/meli-frescos-8/internal/responses"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/services"
 )
 
@@ -16,7 +16,9 @@ func GetSectionHandler() SectionHandlerI {
 	}
 }
 
-type SectionHandlerI interface{}
+type SectionHandlerI interface {
+	GetAll() http.HandlerFunc
+}
 
 type SectionHandler struct {
 	service services.SectionServiceI
