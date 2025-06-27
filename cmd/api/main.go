@@ -13,8 +13,13 @@ type test struct {
 }
 
 func main() {
-	app := application.Application{FolderDatabase: "docs/database"}
+	app := application.Application{
+		PortServer:     ":8080",
+		FolderDatabase: "docs/database",
+	}
+
 	app.SetEnvironment()
+	app.InitApplication()
 
 	buyerStruct1 := test{Id: 1, Name: "123451"}
 	buyerStruct2 := test{Id: 7, Name: "124451"}
