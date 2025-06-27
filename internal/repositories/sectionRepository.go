@@ -4,12 +4,12 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 )
 
-func GetServiceRepository() ServiceRepositoryI {
-	return &ServiceRepository{}
+func GetSectionRepository() SectionRepositoryI {
+	return &sectionRepository{}
 }
 
-type ServiceRepositoryI interface{}
+type SectionRepositoryI interface{}
 
-type ServiceRepository struct {
+type sectionRepository struct {
 	Storage *models.Section
 }
