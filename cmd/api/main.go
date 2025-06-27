@@ -1,9 +1,7 @@
 package main
 
 import (
-	"fmt"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/application"
-	"github.com/sajimenezher_meli/meli-frescos-8/pkg/loader"
 )
 
 type test struct {
@@ -15,19 +13,34 @@ func main() {
 	app := application.Application{FolderDatabase: "docs/database"}
 	app.SetEnvironment()
 
+	//prueba con Test Struct
 	/*
-		testStruct := test{Id: 1, Name: "Test"}
+		testStruct1 := test{Id: 1, Name: "Test"}
+		testStruct2 := test{Id: 2, Name: "Test"}
+		testsStructsSlice := []test{testStruct1, testStruct2}
+
 		fileName := "text.json"
-		err := loader.WriterFile(fileName, testStruct)
+		storage := loader.NewJSONStorage[test](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), fileName))
+
+		err := storage.WriteAll(testsStructsSlice)
 		if err != nil {
 			panic(err.Error())
 		}
+
+
+
+		fileName := "text.json"
+		storage := loader.NewJSONStorage[test](
+			fmt.Sprintf("%s/%s", os.Getenv("folder_database"), fileName),
+		)
+
+		data, err := storage.ReadAll()
+		if err != nil {
+			fmt.Println(err)
+			return
+
+		}
+		fmt.Println(data)
 	*/
-
-	fileName := "text.json"
-
-	data := loader.ReadFile[test](fileName)
-
-	fmt.Println(data)
 
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"reflect"
 )
 
 // Storage define la interfaz genérica para persistencia de datos
@@ -28,18 +29,37 @@ func NewJSONStorage[T any](filePath string) *StorageJSON[T] {
 }
 
 // ReadAll implementa Storage[T].ReadAll
-func (s *StorageJSON[T]) ReadAll() ([]T, error) {
-	// 1. Leer el archivo
-	data, err := os.ReadFile(s.filepath)
+func (s *StorageJSON[T]) ReadAll() (map[int]T, error) {
+	file, err := os.Open(s.filepath)
 	if err != nil {
-		return nil, fmt.Errorf("Error al leer el archivo %s , %w", s.filepath, err)
+		return nil, fmt.Errorf("error abriendo el archivo: %w", err)
 	}
-	//2. Deserializar el archivo
-	var items []T
-	if err := json.Unmarshal(data, &items); err != nil {
-		return nil, fmt.Errorf("Error al deserializar el archivo %s : %w", s.filepath, err)
+	defer file.Close()
+
+	var list []T
+	decoder := json.NewDecoder(file)
+	if err := decoder.Decode(&list); err != nil {
+		return nil, fmt.Errorf("error decodificando JSON: %w", err)
 	}
-	return items, nil
+
+	result := make(map[int]T)
+	for _, item := range list {
+		// Usamos reflection para acceder al campo `Id`
+		val := reflect.ValueOf(item)
+		if val.Kind() == reflect.Struct {
+			idField := val.FieldByName("Id")
+			if idField.IsValid() && idField.Kind() == reflect.Int {
+				id := int(idField.Int())
+				result[id] = item
+			} else {
+				return nil, fmt.Errorf("el campo 'id' no es válido o no es de tipo int en %v", item)
+			}
+		} else {
+			return nil, fmt.Errorf("el tipo no es un struct válido")
+		}
+	}
+
+	return result, nil
 }
 
 // WriteAll implementa Storage[T].WriteAll
@@ -51,11 +71,11 @@ func (s *StorageJSON[T]) WriteAll(items []T) error {
 	// En este caso vamos a serializar los elementos a un formato json legible
 	data, err := json.MarshalIndent(items, "", "  ")
 	if err != nil {
-		return fmt.Errorf("Error al serializar elementos :%w", err)
+		return fmt.Errorf("error al serializar elementos :%w", err)
 	}
 	// Escribimos el archivo para aplicar los cambios
 	if err := os.WriteFile(s.filepath, data, 0644); err != nil {
-		return fmt.Errorf("Error escribiendo el archivo :%w ", err)
+		return fmt.Errorf("error escribiendo el archivo :%w ", err)
 	}
 	return nil
 }
