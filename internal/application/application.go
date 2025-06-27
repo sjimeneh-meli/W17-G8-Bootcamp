@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/routes"
 )
 
@@ -27,10 +28,16 @@ func (app *Application) SetEnvironment() {
 }
 
 func (app *Application) InitApplication() {
+	sectionHandler := handlers.GetSectionHandler()
 	router := chi.NewRouter()
 
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
+
+	router.Route("/sections", func(rt chi.Router) {
+
+		rt.Get("/", sectionHandler.GetAll())
+	})
 
 	routes.SetupRoutes(router)
 
