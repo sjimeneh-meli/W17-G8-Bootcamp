@@ -83,13 +83,13 @@ func (s *StorageJSON[T]) WriteAll(items []T) error {
 // MapToSlice converts a generic map[int]T to a generic slice []T.
 // It iterates through the values of the input map and appends them
 // to a new slice, which is then returned.
-func (s *StorageJSON[T]) MapToSlice(items map[int]T) []T {
+func (s *StorageJSON[T]) MapToSlice(items map[int]T) []*T {
 
-	var itemsSlice = make([]T, 0)
+	var itemsSlice = make([]*T, 0)
 
 	for _, value := range items {
 		// Append each value from the map to the itemsSlice.
-		itemsSlice = append(itemsSlice, value)
+		itemsSlice = append(itemsSlice, &value)
 	}
 
 	// Return the newly created slice containing all the values from the map.
