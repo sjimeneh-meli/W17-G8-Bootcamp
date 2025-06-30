@@ -22,6 +22,7 @@ func GetSectionHandler() SectionHandlerI {
 type SectionHandlerI interface {
 	GetAll() http.HandlerFunc
 	GetByID() http.HandlerFunc
+	DeleteByID() http.HandlerFunc
 }
 
 type SectionHandler struct {
@@ -89,5 +90,33 @@ func (h *SectionHandler) GetByID() http.HandlerFunc {
 			json.NewEncoder(w).Encode(response)
 			return
 		}
+	}
+}
+
+func (h *SectionHandler) DeleteByID() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var (
+			response *responses.DataResponse = &responses.DataResponse{}
+		)
+
+		w.Header().Set("Content-Type", "application/json")
+
+		idParam, convErr := strconv.Atoi(chi.URLParam(r, "id"))
+		if convErr != nil {
+			response.SetError(error_message.ErrInvalidInput.Error())
+			w.WriteHeader(http.StatusExpectationFailed)
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+
+		srvErr := h.service.DeleteByID(idParam)
+		if srvErr != nil {
+			response.SetError(srvErr.Error())
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+
+		w.WriteHeader(http.StatusNoContent)
 	}
 }
