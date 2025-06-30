@@ -22,6 +22,7 @@ func GetSectionRepository() SectionRepositoryI {
 
 type SectionRepositoryI interface {
 	GetAll() []*models.Section
+	GetByID(id int) *models.Section
 }
 
 type sectionRepository struct {
@@ -30,4 +31,13 @@ type sectionRepository struct {
 
 func (r sectionRepository) GetAll() []*models.Section {
 	return r.storage
+}
+
+func (r sectionRepository) GetByID(id int) *models.Section {
+	for _, m := range r.storage {
+		if m.Id == id {
+			return m
+		}
+	}
+	return nil
 }
