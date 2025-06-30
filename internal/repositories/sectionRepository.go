@@ -23,6 +23,7 @@ func GetSectionRepository() SectionRepositoryI {
 type SectionRepositoryI interface {
 	GetAll() []*models.Section
 	GetByID(id int) *models.Section
+	DeleteByID(id int) bool
 }
 
 type sectionRepository struct {
@@ -40,4 +41,14 @@ func (r sectionRepository) GetByID(id int) *models.Section {
 		}
 	}
 	return nil
+}
+
+func (r sectionRepository) DeleteByID(id int) bool {
+	for i, m := range r.storage {
+		if m.Id == id {
+			r.storage = append(r.storage[:i], r.storage[i+1:]...)
+			return true
+		}
+	}
+	return false
 }

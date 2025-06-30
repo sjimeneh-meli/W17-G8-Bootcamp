@@ -15,6 +15,7 @@ func GetSectionService() SectionServiceI {
 type SectionServiceI interface {
 	GetAll() []*models.Section
 	GetByID(id int) (*models.Section, error)
+	DeleteByID(id int) error
 }
 
 type sectionService struct {
@@ -30,4 +31,11 @@ func (s *sectionService) GetByID(id int) (*models.Section, error) {
 		return model, nil
 	}
 	return nil, error_message.ErrNotFound
+}
+
+func (s *sectionService) DeleteByID(id int) error {
+	if s.repository.DeleteByID(id) {
+		return nil
+	}
+	return error_message.ErrNotFound
 }
