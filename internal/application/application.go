@@ -35,8 +35,8 @@ func (app *Application) InitApplication() {
 	router.Use(middleware.Recoverer)
 
 	router.Route("/sections", func(rt chi.Router) {
-
 		rt.Get("/", sectionHandler.GetAll())
+		rt.Get("/{id}", sectionHandler.GetByID())
 	})
 
 	routes.SetupRoutes(router)
