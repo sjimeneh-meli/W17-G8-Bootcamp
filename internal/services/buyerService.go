@@ -12,13 +12,18 @@ func GetBuyerService(repo repositories.BuyerRepositoryI) BuyerServiceI {
 }
 
 type BuyerServiceI interface {
-	GetAll() []*models.Buyer
+	GetAll() (map[int]models.Buyer, error)
+	GetById(id int) (models.Buyer, error)
 }
 
 type BuyerService struct {
 	repository repositories.BuyerRepositoryI
 }
 
-func (s *BuyerService) GetAll() []*models.Buyer {
+func (s *BuyerService) GetAll() (map[int]models.Buyer, error) {
 	return s.repository.GetAll()
+}
+
+func (s *BuyerService) GetById(id int) (models.Buyer, error) {
+	return s.repository.GetById(id)
 }

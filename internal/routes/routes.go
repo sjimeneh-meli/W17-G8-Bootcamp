@@ -10,7 +10,10 @@ import (
 )
 
 func SetupRoutes(router *chi.Mux) {
-	buyerRepository := repositories.GetJsonBuyerRepository()
+	buyerRepository, err := repositories.GetJsonBuyerRepository()
+	if err != nil {
+		panic(err.Error())
+	}
 	buyerService := services.GetBuyerService(buyerRepository)
 	buyerHandler := handlers.GetBuyerHandler(buyerService)
 
@@ -29,6 +32,7 @@ func SetupRoutes(router *chi.Mux) {
 
 		r.Route("/buyers", func(r chi.Router) {
 			r.Get("/", buyerHandler.GetAll())
+			r.Get("/{id}", buyerHandler.GetById())
 		})
 	})
 }
