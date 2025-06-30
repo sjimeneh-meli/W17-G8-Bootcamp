@@ -37,6 +37,7 @@ func (app *Application) InitApplication() {
 	router.Route("/sections", func(rt chi.Router) {
 		rt.Get("/", sectionHandler.GetAll())
 		rt.Get("/{id}", sectionHandler.GetByID())
+		rt.Delete("/{id}", sectionHandler.DeleteByID())
 	})
 
 	routes.SetupRoutes(router)
