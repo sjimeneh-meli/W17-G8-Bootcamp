@@ -13,9 +13,14 @@ func GetEmployeeService() EmployeeServiceI {
 
 type EmployeeServiceI interface {
 	GetAll() []*models.Employee
+	Add(e *models.Employee) (*models.Employee, error)
 }
 type employeeService struct {
 	repository repositories.EmployeeRepositoryI
+}
+
+func (s *employeeService) Add(e *models.Employee) (*models.Employee, error) {
+	return s.repository.Add(e)
 }
 
 func (s *employeeService) GetAll() []*models.Employee {

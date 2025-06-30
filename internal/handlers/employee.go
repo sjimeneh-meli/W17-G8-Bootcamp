@@ -17,6 +17,7 @@ func GetEmployeeHandler() EmployeeHandlerI {
 
 type EmployeeHandlerI interface {
 	GetAll() http.HandlerFunc
+	AddEmployee() http.HandlerFunc
 }
 
 type EmployeeHandler struct {
@@ -45,5 +46,55 @@ func (h *EmployeeHandler) GetAll() http.HandlerFunc {
 			json.NewEncoder(w).Encode(response)
 			return
 		}
+	}
+}
+func (h *EmployeeHandler) AddEmployee() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var (
+			// Variables auxiliares para manejar la solicitud entrante, el modelo interno,
+			//la conversión a respuesta y la estructura final que se envia
+
+			response   *responses.DataResponse          = &responses.DataResponse{}
+			requestDTO *responses.EmployeeCreateRequest = &responses.EmployeeCreateRequest{}
+			newEmp     *models.Employee
+			result     *responses.EmployeeResponse
+		)
+
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewDecoder(r.Body).Decode(&requestDTO); err != nil {
+			response.SetError("invalid JSON format")
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+
+		//Validate basic
+		if requestDTO.CardNumberID == "" || requestDTO.FirstName == "" || requestDTO.LastName == "" {
+			response.SetError("missing required fields")
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+
+		//Map
+		newEmp = &models.Employee{
+			CardNumberID: requestDTO.CardNumberID,
+			FirstName:    requestDTO.FirstName,
+			LastName:     requestDTO.LastName,
+			WarehouseID:  requestDTO.WarehouseID,
+		}
+
+		newEmp, err := h.service.Add(newEmp)
+		if err != nil {
+			response.SetError(err.Error())
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+		result = mappers.GetEmployeeResponseFromModel(newEmp)
+		response.Data = result
+
+		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(response)
 	}
 }
