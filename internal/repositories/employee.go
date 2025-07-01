@@ -20,7 +20,9 @@ func GetEmployeeRepository() EmployeeRepositoryI {
 
 type EmployeeRepositoryI interface {
 	GetAll() []*models.Employee
-	Add(e *models.Employee) (*models.Employee, error)
+	Create(e *models.Employee) (*models.Employee, error)
+	GetById(id int) *models.Employee
+	DeleteById(id int) bool
 }
 
 type employeeRepository struct {
@@ -30,17 +32,36 @@ type employeeRepository struct {
 func (r *employeeRepository) GetAll() []*models.Employee {
 	return r.storage
 }
-func (r *employeeRepository) Add(e *models.Employee) (*models.Employee, error) {
-	// Asignar nuevo ID
-	maxID := 0
-	for _, emp := range r.storage {
-		if emp.ID > maxID {
-			maxID = emp.ID
+func (r *employeeRepository) GetById(id int) *models.Employee {
+	for _, e := range r.storage {
+		if e.Id == id {
+			return e
 		}
 	}
-	e.ID = maxID + 1
+	return nil
+}
 
-	// Agregar al slice
+func (r *employeeRepository) Create(e *models.Employee) (*models.Employee, error) {
+	maxID := 0
+	for _, emp := range r.storage {
+		if emp.Id > maxID {
+			maxID = emp.Id
+		}
+	}
+	e.Id = maxID + 1
+
 	r.storage = append(r.storage, e)
 	return e, nil
+}
+
+// patch
+
+func (r *employeeRepository) DeleteById(id int) bool {
+	for i, e := range r.storage {
+		if e.Id == id {
+			r.storage = append(r.storage[:i], r.storage[i+1:]...)
+			return true
+		}
+	}
+	return false
 }

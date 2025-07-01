@@ -48,6 +48,7 @@ func (h *EmployeeHandler) GetAll() http.HandlerFunc {
 		}
 	}
 }
+
 func (h *EmployeeHandler) AddEmployee() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var (
@@ -84,7 +85,7 @@ func (h *EmployeeHandler) AddEmployee() http.HandlerFunc {
 			WarehouseID:  requestDTO.WarehouseID,
 		}
 
-		newEmp, err := h.service.Add(newEmp)
+		newEmp, err := h.service.Create(newEmp)
 		if err != nil {
 			response.SetError(err.Error())
 			w.WriteHeader(http.StatusInternalServerError)

@@ -7,7 +7,7 @@ import (
 
 func GetEmployeeResponseFromModel(model *models.Employee) *responses.EmployeeResponse {
 	return &responses.EmployeeResponse{
-		ID:           model.ID,
+		ID:           model.Id,
 		CardNumberID: model.CardNumberID,
 		FirstName:    model.FirstName,
 		LastName:     model.LastName,

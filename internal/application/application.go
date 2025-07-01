@@ -2,6 +2,7 @@ package application
 
 import (
 	"fmt"
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers"
 	"log"
 	"net/http"
 	"os"
@@ -33,10 +34,17 @@ func (app *Application) InitApplication() {
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
 
+	employeeHandler := handlers.GetEmployeeHandler()
+
+	router.Route("/api/v1/employees", func(r chi.Router) {
+		r.Get("/", employeeHandler.GetAll())
+		r.Post("/", employeeHandler.AddEmployee())
+	})
+
 	routes.SetupRoutes(router)
 
 	log.Println(fmt.Sprintf("Server starting on port http://%s/api/v1", app.PortServer))
-	
+
 	if err := http.ListenAndServe(app.PortServer, router); err != nil {
 		panic(fmt.Sprintf("Error starting server: %v", err))
 	}

@@ -13,16 +13,26 @@ func GetEmployeeService() EmployeeServiceI {
 
 type EmployeeServiceI interface {
 	GetAll() []*models.Employee
-	Add(e *models.Employee) (*models.Employee, error)
+	Create(e *models.Employee) (*models.Employee, error)
+	GetById(id int) *models.Employee
+	DeleteById(id int) bool
 }
 type employeeService struct {
 	repository repositories.EmployeeRepositoryI
 }
 
-func (s *employeeService) Add(e *models.Employee) (*models.Employee, error) {
-	return s.repository.Add(e)
-}
-
 func (s *employeeService) GetAll() []*models.Employee {
 	return s.repository.GetAll()
+}
+
+func (s *employeeService) GetById(id int) *models.Employee {
+	return s.repository.GetById(id)
+}
+
+func (s *employeeService) Create(e *models.Employee) (*models.Employee, error) {
+	return s.repository.Create(e)
+}
+
+func (s *employeeService) DeleteById(id int) bool {
+	return s.repository.DeleteById(id)
 }
