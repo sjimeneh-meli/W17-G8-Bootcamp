@@ -20,9 +20,10 @@ func GetEmployeeRepository() EmployeeRepositoryI {
 
 type EmployeeRepositoryI interface {
 	GetAll() []*models.Employee
-	Create(e *models.Employee) (*models.Employee, error)
+	Create(e *models.Employee)
 	GetById(id int) *models.Employee
 	DeleteById(id int) bool
+	ExistsWhCardNumber(id int, cardNumber string) bool
 }
 
 type employeeRepository struct {
@@ -41,20 +42,19 @@ func (r *employeeRepository) GetById(id int) *models.Employee {
 	return nil
 }
 
-func (r *employeeRepository) Create(e *models.Employee) (*models.Employee, error) {
-	maxID := 0
-	for _, emp := range r.storage {
-		if emp.Id > maxID {
-			maxID = emp.Id
-		}
-	}
-	e.Id = maxID + 1
-
+func (r *employeeRepository) Create(e *models.Employee) {
+	e.Id = len(r.storage) + 1
 	r.storage = append(r.storage, e)
-	return e, nil
 }
 
-// patch
+func (r *employeeRepository) ExistsWhCardNumber(id int, cardNumber string) bool {
+	for _, e := range r.storage {
+		if e.CardNumberID == cardNumber && e.Id != id {
+			return true
+		}
+	}
+	return false
+}
 
 func (r *employeeRepository) DeleteById(id int) bool {
 	for i, e := range r.storage {

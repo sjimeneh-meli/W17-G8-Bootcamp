@@ -23,3 +23,11 @@ func GetListEmployeeResponseFromListModel(models []*models.Employee) []*response
 	}
 	return listEmployeeResponse
 }
+func GetEmployeeModelFromRequest(model *models.Employee) *responses.EmployeeResponse {
+	return &responses.EmployeeResponse{
+		CardNumberID: model.CardNumberID,
+		FirstName:    model.FirstName,
+		LastName:     model.LastName,
+		WarehouseID:  model.WarehouseID,
+	}
+}

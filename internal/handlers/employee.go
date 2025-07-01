@@ -2,10 +2,13 @@ package handlers
 
 import (
 	"encoding/json"
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/error_message"
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/requests"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/responses"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/mappers"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/services"
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/validations"
 	"net/http"
 )
 
@@ -18,10 +21,13 @@ func GetEmployeeHandler() EmployeeHandlerI {
 type EmployeeHandlerI interface {
 	GetAll() http.HandlerFunc
 	AddEmployee() http.HandlerFunc
+	GetById() http.HandlerFunc
+	DeleteById() http.HandlerFunc
 }
 
 type EmployeeHandler struct {
 	service services.EmployeeServiceI
+	validation *validations.EmployeeValidation
 }
 
 func (h *EmployeeHandler) GetAll() http.HandlerFunc {
@@ -49,53 +55,56 @@ func (h *EmployeeHandler) GetAll() http.HandlerFunc {
 	}
 }
 
-func (h *EmployeeHandler) AddEmployee() http.HandlerFunc {
+func (h *EmployeeHandler) Create() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var (
-			// Variables auxiliares para manejar la solicitud entrante, el modelo interno,
-			//la conversión a respuesta y la estructura final que se envia
-
-			response   *responses.DataResponse          = &responses.DataResponse{}
-			requestDTO *responses.EmployeeCreateRequest = &responses.EmployeeCreateRequest{}
-			newEmp     *models.Employee
-			result     *responses.EmployeeResponse
+			request  *requests.EmployeeRequest = &requests.EmployeeRequest{}
+			response *responses.DataResponse  = &responses.DataResponse{}
+			section  *models.Employee
 		)
 
 		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewDecoder(r.Body).Decode(&requestDTO); err != nil {
-			response.SetError("invalid JSON format")
-			w.WriteHeader(http.StatusBadRequest)
+
+		if reqErr := json.NewDecoder(r.Body).Decode(request); reqErr != nil {
+			response.SetError(error_message.ErrInvalidInput.Error())
+			w.WriteHeader(http.StatusExpectationFailed)
 			json.NewEncoder(w).Encode(response)
 			return
 		}
 
-		//Validate basic
-		if requestDTO.CardNumberID == "" || requestDTO.FirstName == "" || requestDTO.LastName == "" {
-			response.SetError("missing required fields")
-			w.WriteHeader(http.StatusBadRequest)
+		if valErr := h.validation.ValidateEmployeeRequestStruct(*request); valErr != nil {
+			response.SetError(valErr.Error())
+			w.WriteHeader(http.StatusUnprocessableEntity)
 			json.NewEncoder(w).Encode(response)
 			return
 		}
 
-		//Map
-		newEmp = &models.Employee{
-			CardNumberID: requestDTO.CardNumberID,
-			FirstName:    requestDTO.FirstName,
-			LastName:     requestDTO.LastName,
-			WarehouseID:  requestDTO.WarehouseID,
-		}
+		employee = mappers.GetEmployeeModelFromRequest(request)
 
-		newEmp, err := h.service.Create(newEmp)
-		if err != nil {
-			response.SetError(err.Error())
-			w.WriteHeader(http.StatusInternalServerError)
+		if h.service.ExistsWithSectionNumber(section.Id, section.SectionNumber) {
+			response.SetError("already exist a section with the same number")
+			w.WriteHeader(http.StatusConflict)
 			json.NewEncoder(w).Encode(response)
 			return
 		}
-		result = mappers.GetEmployeeResponseFromModel(newEmp)
-		response.Data = result
 
+		if srvErr := h.service.Create(section); srvErr != nil {
+			response.SetError(error_message.ErrInvalidInput.Error())
+			w.WriteHeader(http.StatusExpectationFailed)
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+
+		response.Data = mappers.GetSectionResponseFromModel(section)
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(response)
+		encodeErr := json.NewEncoder(w).Encode(response)
+		if encodeErr != nil {
+			w.WriteHeader(http.StatusExpectationFailed)
+			response.SetError(encodeErr.Error())
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+
 	}
+}
 }
