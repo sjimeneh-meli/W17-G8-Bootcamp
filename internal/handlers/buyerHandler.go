@@ -5,13 +5,16 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/bootcamp-go/web/request"
 	"github.com/bootcamp-go/web/response"
 	"github.com/go-chi/chi/v5"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/error_message"
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/requests"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/responses"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/mappers"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/services"
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/validations"
 )
 
 func GetBuyerHandler(service services.BuyerServiceI) BuyerHandlerI {
@@ -24,6 +27,7 @@ type BuyerHandlerI interface {
 	GetAll() http.HandlerFunc
 	GetById() http.HandlerFunc
 	DeleteById() http.HandlerFunc
+	PostBuyer() http.HandlerFunc
 }
 
 type BuyerHandler struct {
@@ -115,6 +119,41 @@ func (h *BuyerHandler) DeleteById() http.HandlerFunc {
 
 		requestResponse.Message = "buyer deleted successfully"
 		response.JSON(w, http.StatusNoContent, requestResponse)
+	}
+}
+
+func (h *BuyerHandler) PostBuyer() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var requestResponse *responses.DataResponse = &responses.DataResponse{}
+
+		requestBuyer := requests.BuyerRequest{}
+		request.JSON(r, &requestBuyer)
+
+		err := validations.ValidateBuyerRequestStruct(requestBuyer)
+		if err != nil {
+			requestResponse.SetError(err.Error())
+			response.JSON(w, http.StatusUnprocessableEntity, requestResponse)
+			return
+		}
+
+		modelBuyer := mappers.GetModelBuyerFromRequest(requestBuyer)
+		buyerDb, err := h.service.Create(*modelBuyer)
+		if err != nil {
+			requestResponse.SetError(err.Error())
+
+			if errors.Is(err, error_message.ErrAlreadyExists) {
+				response.JSON(w, http.StatusConflict, requestResponse)
+				return
+			}
+
+			response.JSON(w, http.StatusInternalServerError, requestResponse)
+			return
+		}
+
+		buyerResponse := mappers.GetResponseBuyerFromModel(&buyerDb)
+		requestResponse.Data = buyerResponse
+		requestResponse.Message = "success"
+		response.JSON(w, http.StatusCreated, requestResponse)
 	}
 }
 

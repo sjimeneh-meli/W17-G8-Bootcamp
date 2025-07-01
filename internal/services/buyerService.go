@@ -1,6 +1,10 @@
 package services
 
 import (
+	"fmt"
+	"slices"
+
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/error_message"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/repositories"
 )
@@ -15,6 +19,7 @@ type BuyerServiceI interface {
 	GetAll() (map[int]models.Buyer, error)
 	GetById(id int) (models.Buyer, error)
 	DeleteById(id int) error
+	Create(buyer models.Buyer) (models.Buyer, error)
 }
 
 type BuyerService struct {
@@ -31,4 +36,16 @@ func (s *BuyerService) GetById(id int) (models.Buyer, error) {
 
 func (s *BuyerService) DeleteById(id int) error {
 	return s.repository.DeleteById(id)
+}
+
+func (s *BuyerService) Create(buyer models.Buyer) (models.Buyer, error) {
+	newId := s.repository.GetNewId()
+	buyer.Id = newId
+
+	existingCardNumbers := s.repository.GetCardNumberIds()
+	if slices.Contains(existingCardNumbers, buyer.CardNumberId) {
+		return models.Buyer{}, fmt.Errorf("%w - %s %s", error_message.ErrAlreadyExists, "card number with id:", buyer.CardNumberId)
+	}
+
+	return s.repository.Create(buyer)
 }

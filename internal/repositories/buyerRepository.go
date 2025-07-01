@@ -13,7 +13,10 @@ type BuyerRepositoryI interface {
 	GetAll() (map[int]models.Buyer, error)
 	GetById(id int) (models.Buyer, error)
 	DeleteById(id int) error
+	Create(buyer models.Buyer) (models.Buyer, error)
+	GetNewId() int
 	Save() error
+	GetCardNumberIds() []string
 }
 
 type BuyerRepository struct {
@@ -47,6 +50,32 @@ func (r *BuyerRepository) DeleteById(id int) error {
 	return nil
 }
 
+func (r *BuyerRepository) Create(buyer models.Buyer) (models.Buyer, error) {
+	_, exists := r.storage[buyer.Id]
+	if exists {
+		return models.Buyer{}, fmt.Errorf("%w. %s %d", error_message.ErrAlreadyExists, "Buyer with Id", buyer.Id)
+	}
+
+	r.storage[buyer.Id] = buyer
+
+	err := r.Save()
+	if err != nil {
+		return models.Buyer{}, fmt.Errorf("%w. %s", error_message.ErrInternalServerError, err.Error())
+	}
+
+	return buyer, nil
+}
+
+func (r *BuyerRepository) GetNewId() int {
+	lastId := 0
+	for _, buyer := range r.storage {
+		if buyer.Id > lastId {
+			lastId = buyer.Id
+		}
+	}
+	return (lastId + 1)
+}
+
 func (r *BuyerRepository) Save() error {
 	jsonLoader := loader.NewJSONStorage[models.Buyer](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "buyers.json"))
 	buyerArray := []models.Buyer{}
@@ -72,4 +101,12 @@ func GetJsonBuyerRepository() (BuyerRepositoryI, error) {
 	return &BuyerRepository{
 		storage: storage,
 	}, nil
+}
+
+func (r *BuyerRepository) GetCardNumberIds() []string {
+	cardNumbers := []string{}
+	for _, buyer := range r.storage {
+		cardNumbers = append(cardNumbers, buyer.CardNumberId)
+	}
+	return cardNumbers
 }

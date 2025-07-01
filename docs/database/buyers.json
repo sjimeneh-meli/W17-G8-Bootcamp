@@ -1,8 +1,20 @@
 [
   {
     "id": 2,
+    "card_number_id": "1234123",
+    "first_name": "testNombre2",
+    "last_name": "testApellido3"
+  },
+  {
+    "id": 3,
     "card_number_id": "2124123",
     "first_name": "Nacho",
     "last_name": "Garcia"
+  },
+  {
+    "id": 4,
+    "card_number_id": "1231231231231321312",
+    "first_name": "testPostFirstName1",
+    "last_name": "testPostLastName1"
   }
 ]

@@ -1,20 +1,20 @@
 package mappers
 
 import (
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/requests"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/responses"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 )
 
-/*
-	func RequestBuyerToBuyer(br BuyerRequest) *Buyer{
-		return &Buyer{
-			Id: 0,
-			CardNumberId: br.CardNumberId,
-			FirstName: br.FirstName,
-			LastName: br.LastName,
-		}
-	} // En el service checkear que CardNumberId no esté en la base de datos
-*/
+func GetModelBuyerFromRequest(br requests.BuyerRequest) *models.Buyer {
+	return &models.Buyer{
+		Id:           0,
+		CardNumberId: br.CardNumberId,
+		FirstName:    br.FirstName,
+		LastName:     br.LastName,
+	}
+}
+
 func GetResponseBuyerFromModel(b *models.Buyer) *responses.BuyerResponse {
 	return &responses.BuyerResponse{
 		Id:           b.Id,

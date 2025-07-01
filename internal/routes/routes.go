@@ -34,6 +34,7 @@ func SetupRoutes(router *chi.Mux) {
 			r.Get("/", buyerHandler.GetAll())
 			r.Get("/{id}", buyerHandler.GetById())
 			r.Delete("/{id}", buyerHandler.DeleteById())
+			r.Post("/", buyerHandler.PostBuyer())
 		})
 	})
 }
