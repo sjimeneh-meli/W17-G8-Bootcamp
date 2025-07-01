@@ -38,6 +38,7 @@ func (app *Application) InitApplication() {
 		rt.Get("/", sectionHandler.GetAll())
 		rt.Get("/{id}", sectionHandler.GetByID())
 		rt.Post("/", sectionHandler.Create())
+		rt.Patch("/{id}", sectionHandler.Update())
 		rt.Delete("/{id}", sectionHandler.DeleteByID())
 	})
 
