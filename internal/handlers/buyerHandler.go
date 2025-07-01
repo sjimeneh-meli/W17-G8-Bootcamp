@@ -45,15 +45,13 @@ func (h *BuyerHandler) GetAll() http.HandlerFunc {
 
 		buyersMap, err := h.service.GetAll()
 		if err != nil {
-			requestResponse.SetError(err.Error())
-			response.JSON(w, http.StatusInternalServerError, requestResponse)
+			response.Error(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		buyers = buyerMapToBuyerList(buyersMap)
 		buyerResponse = mappers.GetListBuyerResponseFromListModel(buyers)
 		requestResponse.Data = buyerResponse
-		requestResponse.Message = "success"
 
 		response.JSON(w, http.StatusOK, requestResponse)
 	}
@@ -69,57 +67,48 @@ func (h *BuyerHandler) GetById() http.HandlerFunc {
 
 		id, err := strconv.Atoi(chi.URLParam(r, "id"))
 		if err != nil {
-			requestResponse.SetError(err.Error())
-			response.JSON(w, http.StatusInternalServerError, requestResponse)
+			response.Error(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		buyer, err = h.service.GetById(id)
 		if err != nil {
-			requestResponse.SetError(err.Error())
 
 			if errors.Is(err, error_message.ErrNotFound) {
-				response.JSON(w, http.StatusNotFound, requestResponse)
+				response.Error(w, http.StatusNotFound, err.Error())
 				return
 			}
 
-			response.JSON(w, http.StatusInternalServerError, requestResponse)
+			response.Error(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		buyerResponse = mappers.GetResponseBuyerFromModel(&buyer)
 		requestResponse.Data = buyerResponse
-		requestResponse.Message = "success"
 		response.JSON(w, http.StatusOK, requestResponse)
 	}
 }
 
 func (h *BuyerHandler) DeleteById() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var requestResponse *responses.DataResponse = &responses.DataResponse{}
-
 		id, err := strconv.Atoi(chi.URLParam(r, "id"))
 		if err != nil {
-			requestResponse.SetError(err.Error())
-			response.JSON(w, http.StatusInternalServerError, requestResponse)
+			response.Error(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		err = h.service.DeleteById(id)
 		if err != nil {
-			requestResponse.SetError(err.Error())
 
 			if errors.Is(err, error_message.ErrNotFound) {
-				response.JSON(w, http.StatusNotFound, requestResponse)
+				response.Error(w, http.StatusNotFound, err.Error())
 				return
 			}
 
-			response.JSON(w, http.StatusInternalServerError, requestResponse)
+			response.Error(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-
-		requestResponse.Message = "buyer deleted successfully"
-		response.JSON(w, http.StatusNoContent, requestResponse)
+		w.WriteHeader(http.StatusNoContent)
 	}
 }
 
@@ -132,28 +121,25 @@ func (h *BuyerHandler) PostBuyer() http.HandlerFunc {
 
 		err := validations.ValidateBuyerRequestStruct(requestBuyer)
 		if err != nil {
-			requestResponse.SetError(err.Error())
-			response.JSON(w, http.StatusUnprocessableEntity, requestResponse)
+			response.Error(w, http.StatusUnprocessableEntity, err.Error())
 			return
 		}
 
 		modelBuyer := mappers.GetModelBuyerFromRequest(requestBuyer)
 		buyerDb, err := h.service.Create(*modelBuyer)
 		if err != nil {
-			requestResponse.SetError(err.Error())
 
 			if errors.Is(err, error_message.ErrAlreadyExists) {
-				response.JSON(w, http.StatusConflict, requestResponse)
+				response.Error(w, http.StatusConflict, err.Error())
 				return
 			}
 
-			response.JSON(w, http.StatusInternalServerError, requestResponse)
+			response.Error(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		buyerResponse := mappers.GetResponseBuyerFromModel(&buyerDb)
 		requestResponse.Data = buyerResponse
-		requestResponse.Message = "buyer created successfully"
 
 		response.JSON(w, http.StatusCreated, requestResponse)
 	}
@@ -165,35 +151,33 @@ func (h *BuyerHandler) PatchBuyer() http.HandlerFunc {
 
 		id, err := strconv.Atoi(chi.URLParam(r, "id"))
 		if err != nil {
-			requestResponse.SetError(err.Error())
-			response.JSON(w, http.StatusInternalServerError, requestResponse)
+			response.Error(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		requestBuyer := requests.BuyerRequest{}
 		request.JSON(r, &requestBuyer)
+
 		err = validations.IsNotAnEmptyBuyer(requestBuyer)
 		if err != nil {
-			requestResponse.SetError(err.Error())
-			response.JSON(w, http.StatusBadRequest, requestResponse)
+			response.Error(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		modelBuyer := mappers.GetModelBuyerFromRequest(requestBuyer)
 		buyerDb, err := h.service.Update(id, *modelBuyer)
 		if err != nil {
-			requestResponse.SetError(err.Error())
+
 			if errors.Is(err, error_message.ErrNotFound) {
-				response.JSON(w, http.StatusNotFound, requestResponse)
+				response.Error(w, http.StatusNotFound, err.Error())
 				return
 			}
-			response.JSON(w, http.StatusInternalServerError, requestResponse)
+			response.Error(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		buyerResponse := mappers.GetResponseBuyerFromModel(&buyerDb)
 		requestResponse.Data = buyerResponse
-		requestResponse.Message = "buyer updated successfully"
 
 		response.JSON(w, http.StatusOK, requestResponse)
 

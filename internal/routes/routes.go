@@ -1,16 +1,21 @@
 package routes
 
 import (
+	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers"
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/repositories"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/services"
+	"github.com/sajimenezher_meli/meli-frescos-8/pkg/loader"
 )
 
 func SetupRoutes(router *chi.Mux) {
-	buyerRepository, err := repositories.GetJsonBuyerRepository()
+	BuyerLoader := loader.NewJSONStorage[models.Buyer](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "buyers.json"))
+	buyerRepository, err := repositories.GetJsonBuyerRepository(BuyerLoader)
 	if err != nil {
 		panic(err.Error())
 	}

@@ -119,9 +119,9 @@ func (r *BuyerRepository) Save() error {
 	return nil
 }
 
-func GetJsonBuyerRepository() (BuyerRepositoryI, error) {
-	jsonLoader := loader.NewJSONStorage[models.Buyer](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "buyers.json"))
-	storage, err := jsonLoader.ReadAll()
+func GetJsonBuyerRepository(loader loader.Storage[models.Buyer]) (BuyerRepositoryI, error) {
+	//jsonLoader := loader.NewJSONStorage[models.Buyer](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "buyers.json"))
+	storage, err := loader.ReadAll()
 	if err != nil {
 		return nil, fmt.Errorf("%w:%v", error_message.ErrInternalServerError, err)
 	}
