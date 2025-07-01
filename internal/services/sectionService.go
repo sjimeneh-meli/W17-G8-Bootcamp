@@ -1,6 +1,8 @@
 package services
 
 import (
+	"errors"
+
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/error_message"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/repositories"
@@ -15,6 +17,7 @@ func GetSectionService() SectionServiceI {
 type SectionServiceI interface {
 	GetAll() []*models.Section
 	GetByID(id int) (*models.Section, error)
+	Create(model *models.Section) error
 	DeleteByID(id int) error
 }
 
@@ -31,6 +34,15 @@ func (s *sectionService) GetByID(id int) (*models.Section, error) {
 		return model, nil
 	}
 	return nil, error_message.ErrNotFound
+}
+
+func (s *sectionService) Create(model *models.Section) error {
+	if s.repository.ExistsWithSectionNumber(model.SectionNumber) {
+		return errors.New("already exist a section with the same number")
+	}
+
+	s.repository.Create(model)
+	return nil
 }
 
 func (s *sectionService) DeleteByID(id int) error {
