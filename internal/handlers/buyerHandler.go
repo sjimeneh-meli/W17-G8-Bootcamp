@@ -23,6 +23,7 @@ func GetBuyerHandler(service services.BuyerServiceI) BuyerHandlerI {
 type BuyerHandlerI interface {
 	GetAll() http.HandlerFunc
 	GetById() http.HandlerFunc
+	DeleteById() http.HandlerFunc
 }
 
 type BuyerHandler struct {
@@ -60,7 +61,6 @@ func (h *BuyerHandler) GetById() http.HandlerFunc {
 			buyerResponse   *responses.BuyerResponse
 			buyer           models.Buyer
 		)
-		w.Header().Set("Content-Type", "application/json")
 
 		id, err := strconv.Atoi(chi.URLParam(r, "id"))
 		if err != nil {
@@ -86,6 +86,35 @@ func (h *BuyerHandler) GetById() http.HandlerFunc {
 		requestResponse.Data = buyerResponse
 		requestResponse.Message = "success"
 		response.JSON(w, http.StatusOK, requestResponse)
+	}
+}
+
+func (h *BuyerHandler) DeleteById() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var requestResponse *responses.DataResponse = &responses.DataResponse{}
+
+		id, err := strconv.Atoi(chi.URLParam(r, "id"))
+		if err != nil {
+			requestResponse.SetError(err.Error())
+			response.JSON(w, http.StatusInternalServerError, requestResponse)
+			return
+		}
+
+		err = h.service.DeleteById(id)
+		if err != nil {
+			requestResponse.SetError(err.Error())
+
+			if errors.Is(err, error_message.ErrNotFound) {
+				response.JSON(w, http.StatusNotFound, requestResponse)
+				return
+			}
+
+			response.JSON(w, http.StatusInternalServerError, requestResponse)
+			return
+		}
+
+		requestResponse.Message = "buyer deleted successfully"
+		response.JSON(w, http.StatusNoContent, requestResponse)
 	}
 }
 

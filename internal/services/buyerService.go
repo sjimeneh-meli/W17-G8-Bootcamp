@@ -14,6 +14,7 @@ func GetBuyerService(repo repositories.BuyerRepositoryI) BuyerServiceI {
 type BuyerServiceI interface {
 	GetAll() (map[int]models.Buyer, error)
 	GetById(id int) (models.Buyer, error)
+	DeleteById(id int) error
 }
 
 type BuyerService struct {
@@ -26,4 +27,8 @@ func (s *BuyerService) GetAll() (map[int]models.Buyer, error) {
 
 func (s *BuyerService) GetById(id int) (models.Buyer, error) {
 	return s.repository.GetById(id)
+}
+
+func (s *BuyerService) DeleteById(id int) error {
+	return s.repository.DeleteById(id)
 }

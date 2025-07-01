@@ -12,6 +12,8 @@ import (
 type BuyerRepositoryI interface {
 	GetAll() (map[int]models.Buyer, error)
 	GetById(id int) (models.Buyer, error)
+	DeleteById(id int) error
+	Save() error
 }
 
 type BuyerRepository struct {
@@ -29,6 +31,35 @@ func (r *BuyerRepository) GetById(id int) (models.Buyer, error) {
 	}
 
 	return r.storage[id], nil
+}
+
+func (r *BuyerRepository) DeleteById(id int) error {
+	_, exists := r.storage[id]
+	if !exists {
+		return fmt.Errorf("%w. %s %d", error_message.ErrNotFound, "Buyer with Id", id)
+	}
+	delete(r.storage, id)
+
+	err := r.Save()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *BuyerRepository) Save() error {
+	jsonLoader := loader.NewJSONStorage[models.Buyer](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "buyers.json"))
+	buyerArray := []models.Buyer{}
+
+	for _, buyer := range r.storage {
+		buyerArray = append(buyerArray, buyer)
+	}
+
+	err := jsonLoader.WriteAll(buyerArray)
+	if err != nil {
+		return fmt.Errorf("%w. %s", error_message.ErrInternalServerError, err.Error())
+	}
+	return nil
 }
 
 func GetJsonBuyerRepository() (BuyerRepositoryI, error) {
