@@ -24,7 +24,7 @@ type SectionRepositoryI interface {
 	GetAll() []*models.Section
 	GetByID(id int) *models.Section
 	Create(model *models.Section)
-	ExistsWithSectionNumber(sectionNumber string) bool
+	ExistsWithSectionNumber(id int, sectionNumber string) bool
 	DeleteByID(id int) bool
 }
 
@@ -50,9 +50,9 @@ func (r *sectionRepository) Create(model *models.Section) {
 	r.storage = append(r.storage, model)
 }
 
-func (r *sectionRepository) ExistsWithSectionNumber(sectionNumber string) bool {
+func (r *sectionRepository) ExistsWithSectionNumber(id int, sectionNumber string) bool {
 	for _, m := range r.storage {
-		if m.SectionNumber == sectionNumber {
+		if m.SectionNumber == sectionNumber && m.Id != id {
 			return true
 		}
 	}

@@ -18,7 +18,7 @@ type SectionServiceI interface {
 	Create(model *models.Section) error
 	DeleteByID(id int) error
 
-	ExistsWithSectionNumber(sectionNumber string) bool
+	ExistsWithSectionNumber(id int, sectionNumber string) bool
 }
 
 type sectionService struct {
@@ -48,6 +48,6 @@ func (s *sectionService) DeleteByID(id int) error {
 	return error_message.ErrNotFound
 }
 
-func (s *sectionService) ExistsWithSectionNumber(sectionNumber string) bool {
-	return s.repository.ExistsWithSectionNumber(sectionNumber)
+func (s *sectionService) ExistsWithSectionNumber(id int, sectionNumber string) bool {
+	return s.repository.ExistsWithSectionNumber(id, sectionNumber)
 }
