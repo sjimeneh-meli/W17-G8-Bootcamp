@@ -1,9 +1,14 @@
 package routes
 
 import (
-	"net/http"
-
+	"fmt"
 	"github.com/go-chi/chi/v5"
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers"
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/repositories"
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/services"
+	"github.com/sajimenezher_meli/meli-frescos-8/pkg/loader"
+	"net/http"
 )
 
 func SetupRoutes(router *chi.Mux) {
@@ -19,5 +24,16 @@ func SetupRoutes(router *chi.Mux) {
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte(`{"message": "API v1 is running", "status": "active"}`))
 		})
+	})
+
+	router.Route("/sellers", func(r chi.Router) {
+
+		// sellers
+		sellerStorage := loader.NewJSONStorage[models.Seller](fmt.Sprintf("%s/%s", "docs/database", "sellers.json"))
+		sellerRepo := repositories.NewJSONSellerRepository(sellerStorage)
+		sellerService := services.NewJSONSellerService(sellerRepo)
+		sellerHandler := handlers.NewSellerHandler(sellerService)
+
+		r.Get("/", sellerHandler.GetAll)
 	})
 }
