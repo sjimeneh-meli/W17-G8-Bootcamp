@@ -202,7 +202,7 @@ func (h *SectionHandler) Update() http.HandlerFunc {
 		mappers.UpdateSectionModelFromRequest(section, request)
 
 		response.Data = mappers.GetSectionResponseFromModel(section)
-		w.WriteHeader(http.StatusCreated)
+		w.WriteHeader(http.StatusOK)
 		encodeErr := json.NewEncoder(w).Encode(response)
 		if encodeErr != nil {
 			w.WriteHeader(http.StatusExpectationFailed)
