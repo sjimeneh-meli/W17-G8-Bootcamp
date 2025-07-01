@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"github.com/go-chi/chi/v5"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/error_message"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/requests"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/responses"
@@ -10,6 +11,7 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/services"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/validations"
 	"net/http"
+	"strconv"
 )
 
 func GetEmployeeHandler() EmployeeHandlerI {
@@ -20,13 +22,13 @@ func GetEmployeeHandler() EmployeeHandlerI {
 
 type EmployeeHandlerI interface {
 	GetAll() http.HandlerFunc
-	AddEmployee() http.HandlerFunc
+	Create() http.HandlerFunc
 	GetById() http.HandlerFunc
 	DeleteById() http.HandlerFunc
 }
 
 type EmployeeHandler struct {
-	service services.EmployeeServiceI
+	service    services.EmployeeServiceI
 	validation *validations.EmployeeValidation
 }
 
@@ -59,8 +61,8 @@ func (h *EmployeeHandler) Create() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var (
 			request  *requests.EmployeeRequest = &requests.EmployeeRequest{}
-			response *responses.DataResponse  = &responses.DataResponse{}
-			section  *models.Employee
+			response *responses.DataResponse   = &responses.DataResponse{}
+			employee *models.Employee
 		)
 
 		w.Header().Set("Content-Type", "application/json")
@@ -81,21 +83,21 @@ func (h *EmployeeHandler) Create() http.HandlerFunc {
 
 		employee = mappers.GetEmployeeModelFromRequest(request)
 
-		if h.service.ExistsWithSectionNumber(section.Id, section.SectionNumber) {
+		if h.service.ExistsWhCardNumber(employee.Id, employee.CardNumberID) {
 			response.SetError("already exist a section with the same number")
 			w.WriteHeader(http.StatusConflict)
 			json.NewEncoder(w).Encode(response)
 			return
 		}
 
-		if srvErr := h.service.Create(section); srvErr != nil {
+		if srvErr := h.service.Create(employee); srvErr != nil {
 			response.SetError(error_message.ErrInvalidInput.Error())
 			w.WriteHeader(http.StatusExpectationFailed)
 			json.NewEncoder(w).Encode(response)
 			return
 		}
 
-		response.Data = mappers.GetSectionResponseFromModel(section)
+		response.Data = mappers.GetEmployeeResponseFromModel(employee)
 		w.WriteHeader(http.StatusCreated)
 		encodeErr := json.NewEncoder(w).Encode(response)
 		if encodeErr != nil {
@@ -107,4 +109,70 @@ func (h *EmployeeHandler) Create() http.HandlerFunc {
 
 	}
 }
+
+func (h *EmployeeHandler) GetById() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var (
+			response         *responses.DataResponse = &responses.DataResponse{}
+			employeeResponse *responses.EmployeeResponse
+		)
+
+		w.Header().Set("Content-Type", "application/json")
+
+		idParam, convErr := strconv.Atoi(chi.URLParam(r, "id"))
+		if convErr != nil {
+			response.SetError(error_message.ErrInvalidInput.Error())
+			w.WriteHeader(http.StatusExpectationFailed)
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+
+		employee, srvErr := h.service.GetById(idParam)
+		if srvErr != nil {
+			response.SetError(srvErr.Error())
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+
+		employeeResponse = mappers.GetEmployeeResponseFromModel(employee)
+		response.Data = employeeResponse
+
+		w.WriteHeader(http.StatusOK)
+		encodeErr := json.NewEncoder(w).Encode(response)
+		if encodeErr != nil {
+			response.SetError(encodeErr.Error())
+			w.WriteHeader(http.StatusExpectationFailed)
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+	}
+}
+
+func (h *EmployeeHandler) DeleteById() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var (
+			response *responses.DataResponse = &responses.DataResponse{}
+		)
+
+		w.Header().Set("Content-Type", "application/json")
+
+		idParam, convErr := strconv.Atoi(chi.URLParam(r, "id"))
+		if convErr != nil {
+			response.SetError(error_message.ErrInvalidInput.Error())
+			w.WriteHeader(http.StatusExpectationFailed)
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+
+		srvErr := h.service.DeleteById(idParam)
+		if srvErr != nil {
+			response.SetError(srvErr.Error())
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+
+		w.WriteHeader(http.StatusNoContent)
+	}
 }

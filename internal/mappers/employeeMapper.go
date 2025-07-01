@@ -1,6 +1,7 @@
 package mappers
 
 import (
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/requests"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/responses"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 )
@@ -23,11 +24,11 @@ func GetListEmployeeResponseFromListModel(models []*models.Employee) []*response
 	}
 	return listEmployeeResponse
 }
-func GetEmployeeModelFromRequest(model *models.Employee) *responses.EmployeeResponse {
-	return &responses.EmployeeResponse{
-		CardNumberID: model.CardNumberID,
-		FirstName:    model.FirstName,
-		LastName:     model.LastName,
-		WarehouseID:  model.WarehouseID,
+func GetEmployeeModelFromRequest(request *requests.EmployeeRequest) *models.Employee {
+	return &models.Employee{
+		CardNumberID: request.CardNumberID,
+		FirstName:    request.FirstName,
+		LastName:     request.LastName,
+		WarehouseID:  request.WarehouseID,
 	}
 }
