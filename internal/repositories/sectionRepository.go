@@ -23,6 +23,8 @@ func GetSectionRepository() SectionRepositoryI {
 type SectionRepositoryI interface {
 	GetAll() []*models.Section
 	GetByID(id int) *models.Section
+	Create(model *models.Section)
+	ExistsWithSectionNumber(sectionNumber string) bool
 	DeleteByID(id int) bool
 }
 
@@ -30,11 +32,11 @@ type sectionRepository struct {
 	storage []*models.Section
 }
 
-func (r sectionRepository) GetAll() []*models.Section {
+func (r *sectionRepository) GetAll() []*models.Section {
 	return r.storage
 }
 
-func (r sectionRepository) GetByID(id int) *models.Section {
+func (r *sectionRepository) GetByID(id int) *models.Section {
 	for _, m := range r.storage {
 		if m.Id == id {
 			return m
@@ -43,7 +45,21 @@ func (r sectionRepository) GetByID(id int) *models.Section {
 	return nil
 }
 
-func (r sectionRepository) DeleteByID(id int) bool {
+func (r *sectionRepository) Create(model *models.Section) {
+	model.Id = len(r.storage) + 1
+	r.storage = append(r.storage, model)
+}
+
+func (r *sectionRepository) ExistsWithSectionNumber(sectionNumber string) bool {
+	for _, m := range r.storage {
+		if m.SectionNumber == sectionNumber {
+			return true
+		}
+	}
+	return false
+}
+
+func (r *sectionRepository) DeleteByID(id int) bool {
 	for i, m := range r.storage {
 		if m.Id == id {
 			r.storage = append(r.storage[:i], r.storage[i+1:]...)
