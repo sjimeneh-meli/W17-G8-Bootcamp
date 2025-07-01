@@ -1,6 +1,6 @@
 package responses
 
-type Product struct {
+type ProductResponse struct {
 	Id                             string  `json:"id"`
 	ProductCode                    string  `json:"product_code"`
 	Description                    string  `json:"description"`
