@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/error_message"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
@@ -23,6 +22,7 @@ type BuyerRepositoryI interface {
 
 type BuyerRepository struct {
 	storage map[int]models.Buyer
+	loader  loader.Storage[models.Buyer]
 }
 
 func (r *BuyerRepository) Update(buyerId int, buyer models.Buyer) (models.Buyer, error) {
@@ -105,14 +105,13 @@ func (r *BuyerRepository) GetNewId() int {
 }
 
 func (r *BuyerRepository) Save() error {
-	jsonLoader := loader.NewJSONStorage[models.Buyer](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "buyers.json"))
 	buyerArray := []models.Buyer{}
 
 	for _, buyer := range r.storage {
 		buyerArray = append(buyerArray, buyer)
 	}
 
-	err := jsonLoader.WriteAll(buyerArray)
+	err := r.loader.WriteAll(buyerArray)
 	if err != nil {
 		return fmt.Errorf("%w. %s", error_message.ErrInternalServerError, err.Error())
 	}
@@ -120,7 +119,6 @@ func (r *BuyerRepository) Save() error {
 }
 
 func GetJsonBuyerRepository(loader loader.Storage[models.Buyer]) (BuyerRepositoryI, error) {
-	//jsonLoader := loader.NewJSONStorage[models.Buyer](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "buyers.json"))
 	storage, err := loader.ReadAll()
 	if err != nil {
 		return nil, fmt.Errorf("%w:%v", error_message.ErrInternalServerError, err)
@@ -128,6 +126,7 @@ func GetJsonBuyerRepository(loader loader.Storage[models.Buyer]) (BuyerRepositor
 
 	return &BuyerRepository{
 		storage: storage,
+		loader:  loader,
 	}, nil
 }
 
