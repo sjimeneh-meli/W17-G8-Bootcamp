@@ -118,12 +118,19 @@ func (h *SectionHandler) Create() http.HandlerFunc {
 
 		if valErr := h.validation.ValidateSectionRequestStruct(*request); valErr != nil {
 			response.SetError(valErr.Error())
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusUnprocessableEntity)
 			json.NewEncoder(w).Encode(response)
 			return
 		}
 
 		section = mappers.GetSectionModelFromRequest(request)
+
+		if h.service.ExistsWithSectionNumber(section.SectionNumber) {
+			response.SetError("already exist a section with the same number")
+			w.WriteHeader(http.StatusConflict)
+			json.NewEncoder(w).Encode(response)
+			return
+		}
 
 		if srvErr := h.service.Create(section); srvErr != nil {
 			response.SetError(error_message.ErrInvalidInput.Error())
