@@ -20,6 +20,7 @@ type BuyerServiceI interface {
 	GetById(id int) (models.Buyer, error)
 	DeleteById(id int) error
 	Create(buyer models.Buyer) (models.Buyer, error)
+	Update(buyerId int, buyer models.Buyer) (models.Buyer, error)
 }
 
 type BuyerService struct {
@@ -48,4 +49,8 @@ func (s *BuyerService) Create(buyer models.Buyer) (models.Buyer, error) {
 	}
 
 	return s.repository.Create(buyer)
+}
+
+func (s *BuyerService) Update(buyerId int, buyer models.Buyer) (models.Buyer, error) {
+	return s.repository.Update(buyerId, buyer)
 }

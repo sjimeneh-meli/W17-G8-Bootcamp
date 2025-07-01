@@ -28,6 +28,7 @@ type BuyerHandlerI interface {
 	GetById() http.HandlerFunc
 	DeleteById() http.HandlerFunc
 	PostBuyer() http.HandlerFunc
+	PatchBuyer() http.HandlerFunc
 }
 
 type BuyerHandler struct {
@@ -153,7 +154,49 @@ func (h *BuyerHandler) PostBuyer() http.HandlerFunc {
 		buyerResponse := mappers.GetResponseBuyerFromModel(&buyerDb)
 		requestResponse.Data = buyerResponse
 		requestResponse.Message = "success"
+
 		response.JSON(w, http.StatusCreated, requestResponse)
+	}
+}
+
+func (h *BuyerHandler) PatchBuyer() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var requestResponse *responses.DataResponse = &responses.DataResponse{}
+
+		id, err := strconv.Atoi(chi.URLParam(r, "id"))
+		if err != nil {
+			requestResponse.SetError(err.Error())
+			response.JSON(w, http.StatusInternalServerError, requestResponse)
+			return
+		}
+
+		requestBuyer := requests.BuyerRequest{}
+		request.JSON(r, &requestBuyer)
+		err = validations.IsNotAnEmptyBuyer(requestBuyer)
+		if err != nil {
+			requestResponse.SetError(err.Error())
+			response.JSON(w, http.StatusBadRequest, requestResponse)
+			return
+		}
+
+		modelBuyer := mappers.GetModelBuyerFromRequest(requestBuyer)
+		buyerDb, err := h.service.Update(id, *modelBuyer)
+		if err != nil {
+			requestResponse.SetError(err.Error())
+			if errors.Is(err, error_message.ErrNotFound) {
+				response.JSON(w, http.StatusNotFound, requestResponse)
+				return
+			}
+			response.JSON(w, http.StatusInternalServerError, requestResponse)
+			return
+		}
+
+		buyerResponse := mappers.GetResponseBuyerFromModel(&buyerDb)
+		requestResponse.Data = buyerResponse
+		requestResponse.Message = "success"
+
+		response.JSON(w, http.StatusOK, requestResponse)
+
 	}
 }
 

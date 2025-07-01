@@ -14,13 +14,41 @@ type BuyerRepositoryI interface {
 	GetById(id int) (models.Buyer, error)
 	DeleteById(id int) error
 	Create(buyer models.Buyer) (models.Buyer, error)
-	GetNewId() int
+	Update(buyerId int, buyer models.Buyer) (models.Buyer, error)
+
 	Save() error
+	GetNewId() int
 	GetCardNumberIds() []string
 }
 
 type BuyerRepository struct {
 	storage map[int]models.Buyer
+}
+
+func (r *BuyerRepository) Update(buyerId int, buyer models.Buyer) (models.Buyer, error) {
+	_, exists := r.storage[buyerId]
+	if !exists {
+		return models.Buyer{}, fmt.Errorf("%w. %s %d", error_message.ErrNotFound, "Buyer with Id", buyerId)
+	}
+
+	updatedBuyer := r.storage[buyerId]
+	if buyer.CardNumberId != "" {
+		updatedBuyer.CardNumberId = buyer.CardNumberId
+	}
+	if buyer.FirstName != "" {
+		updatedBuyer.FirstName = buyer.FirstName
+	}
+	if buyer.LastName != "" {
+		updatedBuyer.LastName = buyer.LastName
+	}
+
+	r.storage[buyerId] = updatedBuyer
+	err := r.Save()
+	if err != nil {
+		return models.Buyer{}, err
+	}
+
+	return updatedBuyer, nil
 }
 
 func (r *BuyerRepository) GetAll() (map[int]models.Buyer, error) {
