@@ -33,6 +33,17 @@ func GetSectionResponseFromModel(model *models.Section) *responses.SectionRespon
 	}
 }
 
+func UpdateSectionModelFromRequest(model *models.Section, request *requests.SectionRequest) {
+	model.SectionNumber = request.SectionNumber
+	model.CurrentCapacity = request.CurrentCapacity
+	model.CurrentTemperature = request.CurrentTemperature
+	model.MaximumCapacity = request.MaximumCapacity
+	model.MinimumCapacity = request.MinimumCapacity
+	model.MinimumTemperature = request.MinimumTemperature
+	model.ProductTypeID = request.ProductTypeID
+	model.WarehouseID = request.WarehouseID
+}
+
 func GetListSectionResponseFromListModel(models []*models.Section) []*responses.SectionResponse {
 	var listSectionResponse []*responses.SectionResponse
 	if len(models) > 0 {
