@@ -7,26 +7,31 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/error_message"
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/requests"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/responses"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/mappers"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/services"
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/validations"
 )
 
 func GetSectionHandler() SectionHandlerI {
 	return &SectionHandler{
-		service: services.GetSectionService(),
+		service:    services.GetSectionService(),
+		validation: validations.GetSectionValidation(),
 	}
 }
 
 type SectionHandlerI interface {
 	GetAll() http.HandlerFunc
 	GetByID() http.HandlerFunc
+	Create() http.HandlerFunc
 	DeleteByID() http.HandlerFunc
 }
 
 type SectionHandler struct {
-	service services.SectionServiceI
+	service    services.SectionServiceI
+	validation *validations.SectionValidation
 }
 
 func (h *SectionHandler) GetAll() http.HandlerFunc {
@@ -90,6 +95,53 @@ func (h *SectionHandler) GetByID() http.HandlerFunc {
 			json.NewEncoder(w).Encode(response)
 			return
 		}
+	}
+}
+
+func (h *SectionHandler) Create() http.HandlerFunc {
+	//VALIDATE IF PRODUCT AND WAREHOUSE EXIST
+	return func(w http.ResponseWriter, r *http.Request) {
+		var (
+			request  *requests.SectionRequest = &requests.SectionRequest{}
+			response *responses.DataResponse  = &responses.DataResponse{}
+			section  *models.Section
+		)
+
+		w.Header().Set("Content-Type", "application/json")
+
+		if reqErr := json.NewDecoder(r.Body).Decode(request); reqErr != nil {
+			response.SetError(error_message.ErrInvalidInput.Error())
+			w.WriteHeader(http.StatusExpectationFailed)
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+
+		if valErr := h.validation.ValidateSectionRequestStruct(*request); valErr != nil {
+			response.SetError(valErr.Error())
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+
+		section = mappers.GetSectionModelFromRequest(request)
+
+		if srvErr := h.service.Create(section); srvErr != nil {
+			response.SetError(error_message.ErrInvalidInput.Error())
+			w.WriteHeader(http.StatusExpectationFailed)
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+
+		response.Data = mappers.GetSectionResponseFromModel(section)
+		w.WriteHeader(http.StatusCreated)
+		encodeErr := json.NewEncoder(w).Encode(response)
+		if encodeErr != nil {
+			w.WriteHeader(http.StatusExpectationFailed)
+			response.SetError(encodeErr.Error())
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+
 	}
 }
 
