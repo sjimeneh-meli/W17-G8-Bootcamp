@@ -153,7 +153,7 @@ func (h *BuyerHandler) PostBuyer() http.HandlerFunc {
 
 		buyerResponse := mappers.GetResponseBuyerFromModel(&buyerDb)
 		requestResponse.Data = buyerResponse
-		requestResponse.Message = "success"
+		requestResponse.Message = "buyer created successfully"
 
 		response.JSON(w, http.StatusCreated, requestResponse)
 	}
@@ -193,7 +193,7 @@ func (h *BuyerHandler) PatchBuyer() http.HandlerFunc {
 
 		buyerResponse := mappers.GetResponseBuyerFromModel(&buyerDb)
 		requestResponse.Data = buyerResponse
-		requestResponse.Message = "success"
+		requestResponse.Message = "buyer updated successfully"
 
 		response.JSON(w, http.StatusOK, requestResponse)
 
