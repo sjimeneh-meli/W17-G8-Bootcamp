@@ -10,6 +10,7 @@ type ProductRepositoryI interface {
 	GetAll() ([]models.Product, error)
 	GetByID(id int) (*models.Product, error)
 	Create(product models.Product) (models.Product, error)
+	CreateByBatch(products []models.Product) ([]models.Product, error)
 	UpdateById(id int, product models.Product) (models.Product, error)
 	DeleteById(id int) error
 	ExistById(id int) bool
@@ -88,7 +89,18 @@ func (pr *productRepository) Create(newProduct models.Product) (models.Product, 
 
 }
 
-func (pr *productRepository) UpdateById(id int, updateProduct models.Product) (models.Product, error) {
+func (pr *productRepository) CreateByBatch(products []models.Product) ([]models.Product, error) {
+	for _, currentProduct := range products {
+		_, err := pr.Create(currentProduct)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return products, nil
+}
+
+func (pr *productRepository) UpdateById(id int, productToUpdate models.Product) (models.Product, error) {
 	if !pr.ExistById(id) {
 		return models.Product{}, error_message.ErrNotFound
 	}
@@ -99,7 +111,9 @@ func (pr *productRepository) UpdateById(id int, updateProduct models.Product) (m
 		return models.Product{}, err
 	}
 
-	productsMap[id] = updateProduct
+	productToUpdate.Id = id
+
+	productsMap[id] = productToUpdate
 	productsSlice := pr.Storage.MapToSlice(productsMap)
 
 	err = pr.Storage.WriteAll(productsSlice)
@@ -108,7 +122,7 @@ func (pr *productRepository) UpdateById(id int, updateProduct models.Product) (m
 		return models.Product{}, err
 	}
 
-	return updateProduct, nil
+	return productToUpdate, nil
 
 }
 
@@ -117,11 +131,15 @@ func (pr *productRepository) DeleteById(id int) error {
 		return error_message.ErrNotFound
 	}
 
-	products, _ := pr.Storage.ReadAll()
+	productsMap, _ := pr.Storage.ReadAll()
 
-	delete(products, id)
+	delete(productsMap, id)
 
-	return nil
+	productsSlice := pr.Storage.MapToSlice(productsMap)
+
+	err := pr.Storage.WriteAll(productsSlice)
+
+	return err
 }
 
 func (pr *productRepository) ExistById(id int) bool {
