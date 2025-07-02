@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/sajimenezher_meli/meli-frescos-8/internal/error_message"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/requests"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/responses"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/mappers"
@@ -52,7 +51,6 @@ func (h *SectionHandler) GetAll() http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 		encodeErr := json.NewEncoder(w).Encode(response)
 		if encodeErr != nil {
-			response.SetError(encodeErr.Error())
 			w.WriteHeader(http.StatusExpectationFailed)
 			json.NewEncoder(w).Encode(response)
 			return
@@ -71,7 +69,6 @@ func (h *SectionHandler) GetByID() http.HandlerFunc {
 
 		idParam, convErr := strconv.Atoi(chi.URLParam(r, "id"))
 		if convErr != nil {
-			response.SetError(error_message.ErrInvalidInput.Error())
 			w.WriteHeader(http.StatusExpectationFailed)
 			json.NewEncoder(w).Encode(response)
 			return
@@ -79,7 +76,6 @@ func (h *SectionHandler) GetByID() http.HandlerFunc {
 
 		section, srvErr := h.service.GetByID(idParam)
 		if srvErr != nil {
-			response.SetError(srvErr.Error())
 			w.WriteHeader(http.StatusNotFound)
 			json.NewEncoder(w).Encode(response)
 			return
@@ -91,7 +87,6 @@ func (h *SectionHandler) GetByID() http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 		encodeErr := json.NewEncoder(w).Encode(response)
 		if encodeErr != nil {
-			response.SetError(encodeErr.Error())
 			w.WriteHeader(http.StatusExpectationFailed)
 			json.NewEncoder(w).Encode(response)
 			return
@@ -111,14 +106,12 @@ func (h *SectionHandler) Create() http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 
 		if reqErr := json.NewDecoder(r.Body).Decode(request); reqErr != nil {
-			response.SetError(error_message.ErrInvalidInput.Error())
 			w.WriteHeader(http.StatusExpectationFailed)
 			json.NewEncoder(w).Encode(response)
 			return
 		}
 
 		if valErr := h.validation.ValidateSectionRequestStruct(*request); valErr != nil {
-			response.SetError(valErr.Error())
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			json.NewEncoder(w).Encode(response)
 			return
@@ -127,14 +120,12 @@ func (h *SectionHandler) Create() http.HandlerFunc {
 		section = mappers.GetSectionModelFromRequest(request)
 
 		if h.service.ExistsWithSectionNumber(section.Id, section.SectionNumber) {
-			response.SetError("already exist a section with the same number")
 			w.WriteHeader(http.StatusConflict)
 			json.NewEncoder(w).Encode(response)
 			return
 		}
 
 		if srvErr := h.service.Create(section); srvErr != nil {
-			response.SetError(error_message.ErrInvalidInput.Error())
 			w.WriteHeader(http.StatusExpectationFailed)
 			json.NewEncoder(w).Encode(response)
 			return
@@ -145,7 +136,6 @@ func (h *SectionHandler) Create() http.HandlerFunc {
 		encodeErr := json.NewEncoder(w).Encode(response)
 		if encodeErr != nil {
 			w.WriteHeader(http.StatusExpectationFailed)
-			response.SetError(encodeErr.Error())
 			json.NewEncoder(w).Encode(response)
 			return
 		}
@@ -164,7 +154,6 @@ func (h *SectionHandler) Update() http.HandlerFunc {
 
 		idParam, convErr := strconv.Atoi(chi.URLParam(r, "id"))
 		if convErr != nil {
-			response.SetError(error_message.ErrInvalidInput.Error())
 			w.WriteHeader(http.StatusExpectationFailed)
 			json.NewEncoder(w).Encode(response)
 			return
@@ -172,28 +161,24 @@ func (h *SectionHandler) Update() http.HandlerFunc {
 
 		section, srvErr := h.service.GetByID(idParam)
 		if srvErr != nil {
-			response.SetError(srvErr.Error())
 			w.WriteHeader(http.StatusNotFound)
 			json.NewEncoder(w).Encode(response)
 			return
 		}
 
 		if reqErr := json.NewDecoder(r.Body).Decode(request); reqErr != nil {
-			response.SetError(error_message.ErrInvalidInput.Error())
 			w.WriteHeader(http.StatusExpectationFailed)
 			json.NewEncoder(w).Encode(response)
 			return
 		}
 
 		if valErr := h.validation.ValidateSectionRequestStruct(*request); valErr != nil {
-			response.SetError(valErr.Error())
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			json.NewEncoder(w).Encode(response)
 			return
 		}
 
 		if h.service.ExistsWithSectionNumber(section.Id, request.SectionNumber) {
-			response.SetError("already exist a section with the same number")
 			w.WriteHeader(http.StatusConflict)
 			json.NewEncoder(w).Encode(response)
 			return
@@ -206,7 +191,6 @@ func (h *SectionHandler) Update() http.HandlerFunc {
 		encodeErr := json.NewEncoder(w).Encode(response)
 		if encodeErr != nil {
 			w.WriteHeader(http.StatusExpectationFailed)
-			response.SetError(encodeErr.Error())
 			json.NewEncoder(w).Encode(response)
 			return
 		}
@@ -223,7 +207,6 @@ func (h *SectionHandler) DeleteByID() http.HandlerFunc {
 
 		idParam, convErr := strconv.Atoi(chi.URLParam(r, "id"))
 		if convErr != nil {
-			response.SetError(error_message.ErrInvalidInput.Error())
 			w.WriteHeader(http.StatusExpectationFailed)
 			json.NewEncoder(w).Encode(response)
 			return
@@ -231,7 +214,6 @@ func (h *SectionHandler) DeleteByID() http.HandlerFunc {
 
 		srvErr := h.service.DeleteByID(idParam)
 		if srvErr != nil {
-			response.SetError(srvErr.Error())
 			w.WriteHeader(http.StatusNotFound)
 			json.NewEncoder(w).Encode(response)
 			return
