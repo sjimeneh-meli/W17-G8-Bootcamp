@@ -160,7 +160,7 @@ func (h *EmployeeHandler) Create() http.HandlerFunc {
 		}
 
 		response.Data = mappers.GetEmployeeResponseFromModel(employee)
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(http.StatusCreated)
 		encodeErr := json.NewEncoder(w).Encode(response)
 		if encodeErr != nil {
 			w.WriteHeader(http.StatusExpectationFailed)
