@@ -154,13 +154,13 @@ func (h *EmployeeHandler) Create() http.HandlerFunc {
 
 		if srvErr := h.service.Create(employee); srvErr != nil {
 			response.SetError(error_message.ErrInvalidInput.Error())
-			w.WriteHeader(http.StatusExpectationFailed)
+			w.WriteHeader(http.StatusUnprocessableEntity)
 			json.NewEncoder(w).Encode(response)
 			return
 		}
 
 		response.Data = mappers.GetEmployeeResponseFromModel(employee)
-		w.WriteHeader(http.StatusCreated)
+		w.WriteHeader(http.StatusOK)
 		encodeErr := json.NewEncoder(w).Encode(response)
 		if encodeErr != nil {
 			w.WriteHeader(http.StatusExpectationFailed)
