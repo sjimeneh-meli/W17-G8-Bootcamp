@@ -1,21 +1,20 @@
 package repositories
 
 import (
-	"fmt"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 	"github.com/sajimenezher_meli/meli-frescos-8/pkg/loader"
-	"os"
 )
 
-func GetEmployeeRepository() EmployeeRepositoryI {
-	jsonLoader := loader.NewJSONStorage[models.Employee](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "employees.json"))
-	storage, err := jsonLoader.ReadAll()
+func GetEmployeeRepository(loader *loader.StorageJSON[models.Employee]) (EmployeeRepositoryI, error) {
+	storage, err := loader.ReadAll()
 	if err != nil {
-		fmt.Println("error loading employees:", err)
+		return nil, err
 	}
+
 	return &employeeRepository{
-		storage: jsonLoader.MapToSlice(storage),
-	}
+		storage: storage,
+		loader:  loader,
+	}, nil
 }
 
 type EmployeeRepositoryI interface {
@@ -27,16 +26,17 @@ type EmployeeRepositoryI interface {
 }
 
 type employeeRepository struct {
-	storage []*models.Employee
+	storage map[int]models.Employee
+	loader  *loader.StorageJSON[models.Employee]
 }
 
 func (r *employeeRepository) GetAll() []*models.Employee {
-	return r.storage
+	return r.loader.MapToSlice(r.storage)
 }
 func (r *employeeRepository) GetById(id int) *models.Employee {
 	for _, e := range r.storage {
 		if e.Id == id {
-			return e
+			return &e
 		}
 	}
 	return nil
@@ -44,7 +44,7 @@ func (r *employeeRepository) GetById(id int) *models.Employee {
 
 func (r *employeeRepository) Create(e *models.Employee) {
 	e.Id = len(r.storage) + 1
-	r.storage = append(r.storage, e)
+	r.storage[e.Id] = *e
 }
 
 func (r *employeeRepository) ExistsWhCardNumber(id int, cardNumber string) bool {
@@ -57,9 +57,9 @@ func (r *employeeRepository) ExistsWhCardNumber(id int, cardNumber string) bool 
 }
 
 func (r *employeeRepository) DeleteById(id int) bool {
-	for i, e := range r.storage {
-		if e.Id == id {
-			r.storage = append(r.storage[:i], r.storage[i+1:]...)
+	for i, m := range r.storage {
+		if m.Id == id {
+			delete(r.storage, i)
 			return true
 		}
 	}

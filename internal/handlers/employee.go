@@ -14,9 +14,10 @@ import (
 	"strconv"
 )
 
-func GetEmployeeHandler() EmployeeHandlerI {
+func GetEmployeeHandler(service services.EmployeeServiceI, validation *validations.EmployeeValidation) EmployeeHandlerI {
 	return &EmployeeHandler{
-		service: services.GetEmployeeService(),
+		service:    service,
+		validation: validation,
 	}
 }
 

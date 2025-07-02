@@ -6,9 +6,9 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/repositories"
 )
 
-func GetEmployeeService() EmployeeServiceI {
+func GetEmployeeService(repository repositories.EmployeeRepositoryI) EmployeeServiceI {
 	return &employeeService{
-		repository: repositories.GetEmployeeRepository(),
+		repository: repository,
 	}
 }
 
