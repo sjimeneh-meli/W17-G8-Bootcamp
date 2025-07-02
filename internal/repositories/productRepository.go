@@ -1,9 +1,11 @@
 package repositories
 
 import (
+	"errors"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/error_message"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 	"github.com/sajimenezher_meli/meli-frescos-8/pkg/loader"
+	"strings"
 )
 
 type ProductRepositoryI interface {
@@ -14,6 +16,7 @@ type ProductRepositoryI interface {
 	UpdateById(id int, product models.Product) (models.Product, error)
 	DeleteById(id int) error
 	ExistById(id int) bool
+	ExistByProductCode(id string) bool
 }
 
 type productRepository struct {
@@ -67,6 +70,10 @@ func (pr *productRepository) Create(newProduct models.Product) (models.Product, 
 
 	if pr.ExistById(newProduct.Id) {
 		return models.Product{}, error_message.ErrAlreadyExists
+	}
+
+	if pr.ExistByProductCode(newProduct.ProductCode) {
+		return models.Product{}, errors.New("error: product with the same product_code exists")
 	}
 
 	productsMap, err := pr.Storage.ReadAll()
@@ -157,4 +164,24 @@ func (pr *productRepository) ExistById(id int) bool {
 
 	return exist
 
+}
+
+func (pr *productRepository) ExistByProductCode(productCode string) bool {
+	products, err := pr.Storage.ReadAll()
+
+	if err != nil {
+		return false
+	}
+
+	if len(products) == 0 {
+		return false
+	}
+
+	for _, currentProduct := range products {
+		if strings.ToLower(currentProduct.ProductCode) == strings.ToLower(productCode) {
+			return true
+		}
+	}
+
+	return false
 }
