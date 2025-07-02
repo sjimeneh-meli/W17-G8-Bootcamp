@@ -14,8 +14,8 @@ import (
 )
 
 func SetupRoutes(router *chi.Mux) {
-	BuyerLoader := loader.NewJSONStorage[models.Buyer](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "buyers.json"))
-	buyerRepository, err := repositories.GetJsonBuyerRepository(BuyerLoader)
+	buyerLoader := loader.NewJSONStorage[models.Buyer](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "buyers.json"))
+	buyerRepository, err := repositories.GetNewBuyerRepository(buyerLoader)
 	if err != nil {
 		panic(err.Error())
 	}

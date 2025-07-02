@@ -51,6 +51,6 @@ func (s *BuyerService) Create(buyer models.Buyer) (models.Buyer, error) {
 	return s.repository.Create(buyer)
 }
 
-func (s *BuyerService) Update(buyerId int, buyer models.Buyer) (models.Buyer, error) {
-	return s.repository.Update(buyerId, buyer)
+func (s *BuyerService) Update(id int, buyer models.Buyer) (models.Buyer, error) {
+	return s.repository.Update(id, buyer)
 }

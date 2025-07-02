@@ -25,13 +25,13 @@ type BuyerRepository struct {
 	loader  loader.Storage[models.Buyer]
 }
 
-func (r *BuyerRepository) Update(buyerId int, buyer models.Buyer) (models.Buyer, error) {
-	_, exists := r.storage[buyerId]
+func (r *BuyerRepository) Update(id int, buyer models.Buyer) (models.Buyer, error) {
+	_, exists := r.storage[id]
 	if !exists {
-		return models.Buyer{}, fmt.Errorf("%w. %s %d", error_message.ErrNotFound, "Buyer with Id", buyerId)
+		return models.Buyer{}, fmt.Errorf("%w. %s %d", error_message.ErrNotFound, "Buyer with Id", id)
 	}
 
-	updatedBuyer := r.storage[buyerId]
+	updatedBuyer := r.storage[id]
 	if buyer.CardNumberId != "" {
 		updatedBuyer.CardNumberId = buyer.CardNumberId
 	}
@@ -42,7 +42,7 @@ func (r *BuyerRepository) Update(buyerId int, buyer models.Buyer) (models.Buyer,
 		updatedBuyer.LastName = buyer.LastName
 	}
 
-	r.storage[buyerId] = updatedBuyer
+	r.storage[id] = updatedBuyer
 	err := r.Save()
 	if err != nil {
 		return models.Buyer{}, err
@@ -118,7 +118,7 @@ func (r *BuyerRepository) Save() error {
 	return nil
 }
 
-func GetJsonBuyerRepository(loader loader.Storage[models.Buyer]) (BuyerRepositoryI, error) {
+func GetNewBuyerRepository(loader loader.Storage[models.Buyer]) (BuyerRepositoryI, error) {
 	storage, err := loader.ReadAll()
 	if err != nil {
 		return nil, fmt.Errorf("%w:%v", error_message.ErrInternalServerError, err)
