@@ -16,7 +16,8 @@ func GetSectionRepository() SectionRepositoryI {
 	}
 
 	return &sectionRepository{
-		storage: jsonLoader.MapToSlice(storage),
+		storage: storage,
+		loader:  jsonLoader,
 	}
 }
 
@@ -29,17 +30,18 @@ type SectionRepositoryI interface {
 }
 
 type sectionRepository struct {
-	storage []*models.Section
+	storage map[int]models.Section
+	loader  *loader.StorageJSON[models.Section]
 }
 
 func (r *sectionRepository) GetAll() []*models.Section {
-	return r.storage
+	return r.loader.MapToSlice(r.storage)
 }
 
 func (r *sectionRepository) GetByID(id int) *models.Section {
 	for _, m := range r.storage {
 		if m.Id == id {
-			return m
+			return &m
 		}
 	}
 	return nil
@@ -47,7 +49,8 @@ func (r *sectionRepository) GetByID(id int) *models.Section {
 
 func (r *sectionRepository) Create(model *models.Section) {
 	model.Id = len(r.storage) + 1
-	r.storage = append(r.storage, model)
+	r.storage[model.Id] = *model
+	//r.storage = append(r.storage, model)
 }
 
 func (r *sectionRepository) ExistsWithSectionNumber(id int, sectionNumber string) bool {
@@ -62,7 +65,7 @@ func (r *sectionRepository) ExistsWithSectionNumber(id int, sectionNumber string
 func (r *sectionRepository) DeleteByID(id int) bool {
 	for i, m := range r.storage {
 		if m.Id == id {
-			r.storage = append(r.storage[:i], r.storage[i+1:]...)
+			delete(r.storage, i)
 			return true
 		}
 	}
