@@ -47,8 +47,7 @@ func (h *WarehouseHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.JSON(w, http.StatusOK, responses.DataResponse{
-		Message: "Almacenes obtenidos correctamente",
-		Data:    warehouseResponses,
+		Data: warehouseResponses,
 	})
 }
 
@@ -90,8 +89,7 @@ func (h *WarehouseHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 	warehouseResponse := mappers.ToResponse(createdWarehouse)
 	response.JSON(w, http.StatusCreated, responses.DataResponse{
-		Message: "Almacen creado correctamente",
-		Data:    warehouseResponse,
+		Data: warehouseResponse,
 	})
 }
 
@@ -125,8 +123,7 @@ func (h *WarehouseHandler) GetById(w http.ResponseWriter, r *http.Request) {
 
 	warehouseResponse := mappers.ToResponse(warehouse)
 	response.JSON(w, http.StatusOK, responses.DataResponse{
-		Message: "Almacen encontrado correctamente",
-		Data:    warehouseResponse,
+		Data: warehouseResponse,
 	})
 }
 
@@ -158,8 +155,7 @@ func (h *WarehouseHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.JSON(w, http.StatusNoContent, responses.DataResponse{
-		Message: "Almacen eliminado correctamente",
-		Data:    nil,
+		Data: nil,
 	})
 }
 
@@ -208,7 +204,6 @@ func (h *WarehouseHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 	warehouseResponse := mappers.ToResponse(updatedWarehouse)
 	response.JSON(w, http.StatusOK, responses.DataResponse{
-		Message: "Almacen actualizado correctamente",
-		Data:    warehouseResponse,
+		Data: warehouseResponse,
 	})
 }

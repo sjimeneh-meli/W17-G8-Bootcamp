@@ -22,12 +22,6 @@ func SetupRoutes(router *chi.Mux) {
 	buyerService := services.GetBuyerService(buyerRepository)
 	buyerHandler := handlers.GetBuyerHandler(buyerService)
 
-	// Setup Warehouse routes
-	warehouseStorage := loader.NewJSONStorage[models.Warehouse](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "warehouse.json"))
-	repository := repositories.NewWarehouseRepository(*warehouseStorage)
-	service := services.NewWarehouseService(repository)
-	handler := handlers.NewWarehouseHandler(service)
-
 	router.Get("/hello-world", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -49,12 +43,28 @@ func SetupRoutes(router *chi.Mux) {
 			r.Patch("/{id}", buyerHandler.PatchBuyer())
 		})
 
-		r.Route("/api/v1/warehouse", func(r chi.Router) {
+		r.Route("/warehouse", func(r chi.Router) {
+			warehouseStorage := loader.NewJSONStorage[models.Warehouse](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "warehouse.json"))
+			repository := repositories.NewWarehouseRepository(*warehouseStorage)
+			service := services.NewWarehouseService(repository)
+			handler := handlers.NewWarehouseHandler(service)
 			r.Get("/{id}", handler.GetById)
 			r.Get("/", handler.GetAll)
 			r.Post("/", handler.Create)
 			r.Put("/{id}", handler.Update)
 			r.Delete("/{id}", handler.Delete)
+		})
+		r.Route("/sellers", func(r chi.Router) {
+			sellerStorage := loader.NewJSONStorage[models.Seller](fmt.Sprintf("%s/%s", "docs/database", "sellers.json"))
+			sellerRepo := repositories.NewJSONSellerRepository(sellerStorage)
+			sellerService := services.NewJSONSellerService(sellerRepo)
+			sellerHandler := handlers.NewSellerHandler(sellerService)
+
+			r.Get("/", sellerHandler.GetAll)
+			r.Get("/{id}", sellerHandler.GetById)
+			r.Post("/", sellerHandler.Save)
+			r.Patch("/{id}", sellerHandler.Update)
+			r.Delete("/{id}", sellerHandler.Delete)
 		})
 	})
 }
