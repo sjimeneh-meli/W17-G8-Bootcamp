@@ -25,11 +25,72 @@ type EmployeeHandlerI interface {
 	Create() http.HandlerFunc
 	GetById() http.HandlerFunc
 	DeleteById() http.HandlerFunc
+	PatchEmployee() http.HandlerFunc
 }
 
 type EmployeeHandler struct {
 	service    services.EmployeeServiceI
 	validation *validations.EmployeeValidation
+}
+
+func (h *EmployeeHandler) PatchEmployee() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var (
+			request  *requests.EmployeeRequest = &requests.EmployeeRequest{}
+			response *responses.DataResponse   = &responses.DataResponse{}
+		)
+
+		w.Header().Set("Content-Type", "application/json")
+
+		idParam, convErr := strconv.Atoi(chi.URLParam(r, "id"))
+		if convErr != nil {
+			response.SetError(error_message.ErrInvalidInput.Error())
+			w.WriteHeader(http.StatusExpectationFailed)
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+
+		employee, srvErr := h.service.GetById(idParam)
+		if srvErr != nil {
+			response.SetError(error_message.ErrNotFound.Error())
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+
+		if reqErr := json.NewDecoder(r.Body).Decode(request); reqErr != nil {
+			response.SetError(error_message.ErrInvalidInput.Error())
+			w.WriteHeader(http.StatusExpectationFailed)
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+
+		if valErr := h.validation.ValidateEmployeeRequestStruct(*request); valErr != nil {
+			response.SetError(valErr.Error())
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+
+		if h.service.ExistsWhCardNumber(employee.Id, request.CardNumberID) {
+			response.SetError("already exist an employee with the same card_number_id")
+			w.WriteHeader(http.StatusConflict)
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+
+		mappers.UpdateEmployeeModelFromRequest(employee, request)
+
+		response.Data = mappers.GetEmployeeResponseFromModel(employee)
+		w.WriteHeader(http.StatusOK)
+
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			w.WriteHeader(http.StatusExpectationFailed)
+			response.SetError(err.Error())
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+	}
 }
 
 func (h *EmployeeHandler) GetAll() http.HandlerFunc {

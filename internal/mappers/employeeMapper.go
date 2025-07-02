@@ -32,3 +32,9 @@ func GetEmployeeModelFromRequest(request *requests.EmployeeRequest) *models.Empl
 		WarehouseID:  request.WarehouseID,
 	}
 }
+func UpdateEmployeeModelFromRequest(model *models.Employee, request *requests.EmployeeRequest) {
+	model.CardNumberID = request.CardNumberID
+	model.FirstName = request.FirstName
+	model.LastName = request.LastName
+	model.WarehouseID = request.WarehouseID
+}

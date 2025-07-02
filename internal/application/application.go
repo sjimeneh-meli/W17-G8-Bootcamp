@@ -35,10 +35,12 @@ func (app *Application) InitApplication() {
 	router.Use(middleware.Recoverer)
 
 	employeeHandler := handlers.GetEmployeeHandler()
-
-	router.Route("/api/v1/employees", func(r chi.Router) {
-		r.Get("/", employeeHandler.GetAll())
-		r.Post("/", employeeHandler.AddEmployee())
+	router.Route("/employee", func(rt chi.Router) {
+		rt.Get("/", employeeHandler.GetAll())
+		rt.Get("/{id}", employeeHandler.GetById())
+		rt.Post("/", employeeHandler.Create())
+		//	rt.Patch("/{id}", employeeHandler.Update())
+		rt.Delete("/{id}", employeeHandler.DeleteById())
 	})
 
 	routes.SetupRoutes(router)
