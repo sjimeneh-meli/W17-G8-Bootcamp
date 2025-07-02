@@ -42,5 +42,17 @@ func SetupRoutes(router *chi.Mux) {
 			r.Post("/", buyerHandler.PostBuyer())
 			r.Patch("/{id}", buyerHandler.PatchBuyer())
 		})
+		r.Route("/sellers", func(r chi.Router){
+			sellerStorage := loader.NewJSONStorage[models.Seller](fmt.Sprintf("%s/%s", "docs/database", "sellers.json"))
+			sellerRepo := repositories.NewJSONSellerRepository(sellerStorage)
+			sellerService := services.NewJSONSellerService(sellerRepo)
+			sellerHandler := handlers.NewSellerHandler(sellerService)
+
+			r.Get("/", sellerHandler.GetAll)
+			r.Get("/{id}", sellerHandler.GetById)
+			r.Post("/", sellerHandler.Save)
+			r.Patch("/{id}", sellerHandler.Update)
+			r.Delete("/{id}", sellerHandler.Delete)
+		})
 	})
 }
