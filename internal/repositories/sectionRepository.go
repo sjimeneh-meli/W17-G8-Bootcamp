@@ -1,24 +1,20 @@
 package repositories
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 	"github.com/sajimenezher_meli/meli-frescos-8/pkg/loader"
 )
 
-func GetSectionRepository() SectionRepositoryI {
-	jsonLoader := loader.NewJSONStorage[models.Section](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "sections.json"))
-	storage, err := jsonLoader.ReadAll()
+func GetSectionRepository(loader *loader.StorageJSON[models.Section]) (SectionRepositoryI, error) {
+	storage, err := loader.ReadAll()
 	if err != nil {
-		fmt.Println(err)
+		return nil, err
 	}
 
 	return &sectionRepository{
 		storage: storage,
-		loader:  jsonLoader,
-	}
+		loader:  loader,
+	}, nil
 }
 
 type SectionRepositoryI interface {

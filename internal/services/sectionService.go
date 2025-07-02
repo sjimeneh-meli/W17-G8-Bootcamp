@@ -6,9 +6,9 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/repositories"
 )
 
-func GetSectionService() SectionServiceI {
+func GetSectionService(repository repositories.SectionRepositoryI) SectionServiceI {
 	return &sectionService{
-		repository: repositories.GetSectionRepository(),
+		repository: repository,
 	}
 }
 

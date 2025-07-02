@@ -15,10 +15,10 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/validations"
 )
 
-func GetSectionHandler() SectionHandlerI {
+func GetSectionHandler(service services.SectionServiceI, validation *validations.SectionValidation) SectionHandlerI {
 	return &SectionHandler{
-		service:    services.GetSectionService(),
-		validation: validations.GetSectionValidation(),
+		service:    service,
+		validation: validation,
 	}
 }
 
