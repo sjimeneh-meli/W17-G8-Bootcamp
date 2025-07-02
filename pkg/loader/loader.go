@@ -10,7 +10,7 @@ import (
 // Storage define la interfaz genérica para persistencia de datos
 type Storage[T any] interface {
 	// ReadAll lee todos los elementos del almacenamiento
-	ReadAll() ([]T, error)
+	ReadAll() (map[int]T, error)
 
 	// WriteAll escribe todos los elementos al almacenamiento
 	WriteAll(items []T) error
@@ -31,6 +31,7 @@ func NewJSONStorage[T any](filePath string) *StorageJSON[T] {
 // ReadAll implementa Storage[T].ReadAll
 func (s *StorageJSON[T]) ReadAll() (map[int]T, error) {
 	file, err := os.Open(s.filepath)
+	fmt.Println(err)
 	if err != nil {
 		return nil, fmt.Errorf("error abriendo el archivo: %w", err)
 	}

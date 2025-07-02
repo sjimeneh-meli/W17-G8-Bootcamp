@@ -10,11 +10,18 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/repositories"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/services"
-	"github.com/sajimenezher_meli/meli-frescos-8/internal/validations"
 	"github.com/sajimenezher_meli/meli-frescos-8/pkg/loader"
 )
 
 func SetupRoutes(router *chi.Mux) {
+	buyerLoader := loader.NewJSONStorage[models.Buyer](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "buyers.json"))
+	buyerRepository, err := repositories.GetNewBuyerRepository(buyerLoader)
+	if err != nil {
+		panic(err.Error())
+	}
+	buyerService := services.GetBuyerService(buyerRepository)
+	buyerHandler := handlers.GetBuyerHandler(buyerService)
+
 	sectionLoader := loader.NewJSONStorage[models.Section](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "sections.json"))
 	sectionRepository, sectionLoaderErr := repositories.GetSectionRepository(sectionLoader)
 	if sectionLoaderErr != nil {
@@ -35,6 +42,26 @@ func SetupRoutes(router *chi.Mux) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte(`{"message": "API v1 is running", "status": "active"}`))
+		})
+
+		r.Route("/buyers", func(r chi.Router) {
+			r.Get("/", buyerHandler.GetAll())
+			r.Get("/{id}", buyerHandler.GetById())
+			r.Delete("/{id}", buyerHandler.DeleteById())
+			r.Post("/", buyerHandler.PostBuyer())
+			r.Patch("/{id}", buyerHandler.PatchBuyer())
+		})
+		r.Route("/sellers", func(r chi.Router) {
+			sellerStorage := loader.NewJSONStorage[models.Seller](fmt.Sprintf("%s/%s", "docs/database", "sellers.json"))
+			sellerRepo := repositories.NewJSONSellerRepository(sellerStorage)
+			sellerService := services.NewJSONSellerService(sellerRepo)
+			sellerHandler := handlers.NewSellerHandler(sellerService)
+
+			r.Get("/", sellerHandler.GetAll)
+			r.Get("/{id}", sellerHandler.GetById)
+			r.Post("/", sellerHandler.Save)
+			r.Patch("/{id}", sellerHandler.Update)
+			r.Delete("/{id}", sellerHandler.Delete)
 		})
 
 		r.Route("/sections", func(rt chi.Router) {

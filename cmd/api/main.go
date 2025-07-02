@@ -6,11 +6,10 @@ import (
 
 func main() {
 	app := application.Application{
-		PortServer:     ":8080",
+		PortServer:     "localhost:8080",
 		FolderDatabase: "docs/database",
 	}
 
 	app.SetEnvironment()
 	app.InitApplication()
-
 }

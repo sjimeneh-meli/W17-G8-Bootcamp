@@ -2,6 +2,7 @@ package application
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 
@@ -34,7 +35,8 @@ func (app *Application) InitApplication() {
 
 	routes.SetupRoutes(router)
 
-	fmt.Printf("Server starting on port %s\n", app.PortServer)
+	log.Println(fmt.Sprintf("Server starting on port http://%s/api/v1", app.PortServer))
+
 	if err := http.ListenAndServe(app.PortServer, router); err != nil {
 		panic(fmt.Sprintf("Error starting server: %v", err))
 	}
