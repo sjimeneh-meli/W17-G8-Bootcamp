@@ -10,6 +10,8 @@ import (
 type WarehouseRepository interface {
 	GetAll() (map[int]models.Warehouse, error)
 	Create(warehouse models.Warehouse) (models.Warehouse, error)
+	ExistsByCode(code string) (bool, error)
+	GetById(id int) (models.Warehouse, error)
 }
 
 type WarehouseRepositoryImpl struct {
@@ -46,4 +48,28 @@ func (r *WarehouseRepositoryImpl) Create(warehouse models.Warehouse) (models.War
 	}
 
 	return warehouse, nil
+}
+
+func (r *WarehouseRepositoryImpl) ExistsByCode(code string) (bool, error) {
+	warehouses, err := r.loader.ReadAll()
+	if err != nil {
+		return false, fmt.Errorf("error al leer warehouses: %w", err)
+	}
+
+	for _, warehouse := range warehouses {
+		if warehouse.WareHouseCode == code {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+func (r *WarehouseRepositoryImpl) GetById(id int) (models.Warehouse, error) {
+	warehouses, err := r.loader.ReadAll()
+	if err != nil {
+		return models.Warehouse{}, fmt.Errorf("error al leer warehouses: %w", err)
+	}
+
+	return warehouses[id], nil
 }

@@ -7,17 +7,21 @@ import (
 
 func ToResponse(warehouse models.Warehouse) dto.WarehouseResponse {
 	return dto.WarehouseResponse{
-		ID:            warehouse.Id,
-		Address:       warehouse.Address,
-		Telephone:     warehouse.Telephone,
-		WareHouseCode: warehouse.WareHouseCode,
+		ID:                 warehouse.Id,
+		Address:            warehouse.Address,
+		Telephone:          warehouse.Telephone,
+		WareHouseCode:      warehouse.WareHouseCode,
+		MinimumCapacity:    warehouse.MinimumCapacity,
+		MinimumTemperature: warehouse.MinimumTemperature,
 	}
 }
 
 func ToRequest(warehouseRequest dto.WarehouseRequest) models.Warehouse {
 	return models.Warehouse{
-		Address:       warehouseRequest.Address,
-		Telephone:     warehouseRequest.Telephone,
-		WareHouseCode: warehouseRequest.WareHouseCode,
+		Address:            warehouseRequest.Address,
+		Telephone:          warehouseRequest.Telephone,
+		WareHouseCode:      warehouseRequest.WareHouseCode,
+		MinimumCapacity:    warehouseRequest.MinimumCapacity,
+		MinimumTemperature: warehouseRequest.MinimumTemperature,
 	}
 }
