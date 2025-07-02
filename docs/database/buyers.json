@@ -1,0 +1,68 @@
+[
+  {
+    "id": 9,
+    "card_number_id": "9009009009",
+    "first_name": "Valentina",
+    "last_name": "Suarez"
+  },
+  {
+    "id": 10,
+    "card_number_id": "1010101010",
+    "first_name": "Federico",
+    "last_name": "Mendez"
+  },
+  {
+    "id": 11,
+    "card_number_id": "2020202020",
+    "first_name": "Manuel",
+    "last_name": "Gomez"
+  },
+  {
+    "id": 1,
+    "card_number_id": "1001001001",
+    "first_name": "Juan",
+    "last_name": "Martinez"
+  },
+  {
+    "id": 5,
+    "card_number_id": "5005005005",
+    "first_name": "Martina",
+    "last_name": "Fernandez"
+  },
+  {
+    "id": 6,
+    "card_number_id": "6006006006",
+    "first_name": "Carlos",
+    "last_name": "Lopez"
+  },
+  {
+    "id": 7,
+    "card_number_id": "7007007007",
+    "first_name": "Lucia",
+    "last_name": "Perez"
+  },
+  {
+    "id": 8,
+    "card_number_id": "8008008008",
+    "first_name": "Marcos",
+    "last_name": "Alvarez"
+  },
+  {
+    "id": 2,
+    "card_number_id": "2002002002",
+    "first_name": "Ana",
+    "last_name": "Gomez"
+  },
+  {
+    "id": 3,
+    "card_number_id": "3003003003",
+    "first_name": "Luis",
+    "last_name": "Rodriguez"
+  },
+  {
+    "id": 4,
+    "card_number_id": "4004004004",
+    "first_name": "Sofia",
+    "last_name": "Diaz"
+  }
+]
