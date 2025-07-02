@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/bootcamp-go/web/response"
 	"github.com/go-chi/chi/v5"
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/responses"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/mappers"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 	"net/http"
@@ -27,15 +28,7 @@ func (h *SellerHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//sellersMarshall, _ := json.Marshal(sellers)
-
-	response.JSON(w, http.StatusOK, map[string]any{
-		"message": "sellers founded",
-		"data":    sellers,
-	})
-	/*w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(sellersMarshall)*/
+	response.JSON(w, http.StatusOK, responses.DataResponse{Data: sellers})
 }
 
 func (h *SellerHandler) GetById(w http.ResponseWriter, r *http.Request) {
@@ -55,10 +48,7 @@ func (h *SellerHandler) GetById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusOK, map[string]any{
-		"message": "Seller founded",
-		"data":    seller,
-	})
+	response.JSON(w, http.StatusOK, responses.DataResponse{Data: seller})
 }
 
 func (h *SellerHandler) Save(w http.ResponseWriter, r *http.Request) {
@@ -78,10 +68,7 @@ func (h *SellerHandler) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusOK, map[string]any{
-		"message": "Seller created",
-		"data":    sellerCreated,
-	})
+	response.JSON(w, http.StatusOK, responses.DataResponse{Data: sellerCreated})
 
 }
 
@@ -115,10 +102,7 @@ func (h *SellerHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusOK, map[string]any{
-		"response": "Seller updated",
-		"data":     sellerUpdated,
-	})
+	response.JSON(w, http.StatusOK, responses.DataResponse{Data: sellerUpdated})
 }
 
 func (h *SellerHandler) Delete(w http.ResponseWriter, r *http.Request) {
@@ -143,7 +127,5 @@ func (h *SellerHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusOK, map[string]any{
-		"response": "Seller deleted",
-	})
+	response.JSON(w, http.StatusNoContent, nil)
 }
