@@ -28,8 +28,8 @@ func (s employeeService) GetAll() []*models.Employee {
 }
 
 func (s employeeService) Create(e *models.Employee) error {
-	//TODO implement me
-	panic("implement me")
+	s.repository.Create(e)
+	return nil
 }
 
 func (s employeeService) GetById(id int) (*models.Employee, error) {
