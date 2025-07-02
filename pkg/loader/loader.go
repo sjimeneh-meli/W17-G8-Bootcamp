@@ -31,6 +31,7 @@ func NewJSONStorage[T any](filePath string) *StorageJSON[T] {
 // ReadAll implementa Storage[T].ReadAll
 func (s *StorageJSON[T]) ReadAll() (map[int]T, error) {
 	file, err := os.Open(s.filepath)
+	fmt.Println(err)
 	if err != nil {
 		return nil, fmt.Errorf("error abriendo el archivo: %w", err)
 	}
