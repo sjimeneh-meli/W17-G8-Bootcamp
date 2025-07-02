@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/error_message"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
@@ -33,6 +34,10 @@ func (r *BuyerRepository) Update(id int, buyer models.Buyer) (models.Buyer, erro
 
 	updatedBuyer := r.storage[id]
 	if buyer.CardNumberId != "" {
+		existingCardNumberIds := r.GetCardNumberIds()
+		if slices.Contains(existingCardNumberIds, buyer.CardNumberId) {
+			return models.Buyer{}, fmt.Errorf("%w. %s %s", error_message.ErrAlreadyExists, "Card number with Id", buyer.CardNumberId)
+		}
 		updatedBuyer.CardNumberId = buyer.CardNumberId
 	}
 	if buyer.FirstName != "" {
