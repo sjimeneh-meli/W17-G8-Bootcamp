@@ -26,7 +26,7 @@ func SetupRoutes(router *chi.Mux) {
 		})
 	})
 
-	router.Route("/sellers", func(r chi.Router) {
+	router.Route("/api/v1/sellers", func(r chi.Router) {
 
 		// sellers
 		sellerStorage := loader.NewJSONStorage[models.Seller](fmt.Sprintf("%s/%s", "docs/database", "sellers.json"))
@@ -35,5 +35,9 @@ func SetupRoutes(router *chi.Mux) {
 		sellerHandler := handlers.NewSellerHandler(sellerService)
 
 		r.Get("/", sellerHandler.GetAll)
+		r.Get("/{id}", sellerHandler.GetById)
+		r.Post("/", sellerHandler.Save)
+		r.Patch("/{id}", sellerHandler.Update)
+		r.Delete("/{id}", sellerHandler.Delete)
 	})
 }
