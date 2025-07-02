@@ -5,14 +5,14 @@
     "telephone": "+1-555-0101",
     "warehouse_code": "WH001",
     "minimum_capacity": 1000,
-    "minimum_temperature": -5.0
+    "minimum_temperature": -5
   },
   {
     "id": 2,
     "address": "Calle Nueva 456, Ciudad Industrial",
     "telephone": "+1-555-0202",
     "warehouse_code": "WH002",
-    "minimum_capacity": 1500,
-    "minimum_temperature": -10.0
+    "minimum_capacity": 1000,
+    "minimum_temperature": -5
   }
 ]

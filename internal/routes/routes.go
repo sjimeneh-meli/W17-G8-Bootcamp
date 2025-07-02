@@ -24,5 +24,6 @@ func SetupRoutes(router *chi.Mux) {
 		r.Get("/{id}", handler.GetById)
 		r.Get("/", handler.GetAll)
 		r.Post("/", handler.Create)
+		r.Delete("/{id}", handler.Delete)
 	})
 }

@@ -3,6 +3,7 @@ package repositories
 import (
 	"fmt"
 
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/error_message"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 	"github.com/sajimenezher_meli/meli-frescos-8/pkg/loader"
 )
@@ -12,6 +13,7 @@ type WarehouseRepository interface {
 	Create(warehouse models.Warehouse) (models.Warehouse, error)
 	ExistsByCode(code string) (bool, error)
 	GetById(id int) (models.Warehouse, error)
+	Delete(id int) error
 }
 
 type WarehouseRepositoryImpl struct {
@@ -68,8 +70,35 @@ func (r *WarehouseRepositoryImpl) ExistsByCode(code string) (bool, error) {
 func (r *WarehouseRepositoryImpl) GetById(id int) (models.Warehouse, error) {
 	warehouses, err := r.loader.ReadAll()
 	if err != nil {
-		return models.Warehouse{}, fmt.Errorf("error al leer warehouses: %w", err)
+		return models.Warehouse{}, fmt.Errorf("%w: %v", error_message.ErrDatabaseError, err)
 	}
 
-	return warehouses[id], nil
+	warehouse, exists := warehouses[id]
+	if !exists {
+		return models.Warehouse{}, fmt.Errorf("%w: warehouse con id %d", error_message.ErrEntityNotFound, id)
+	}
+
+	return warehouse, nil
+}
+
+func (r *WarehouseRepositoryImpl) Delete(id int) error {
+	warehouses, err := r.loader.ReadAll()
+	if err != nil {
+		return fmt.Errorf("%w: %v", error_message.ErrDatabaseError, err)
+	}
+
+	// Verificar que el warehouse existe
+	if _, exists := warehouses[id]; !exists {
+		return fmt.Errorf("%w: warehouse con id %d", error_message.ErrEntityNotFound, id)
+	}
+
+	delete(warehouses, id)
+
+	warehousesSlice := r.loader.MapToSlice(warehouses)
+
+	if err := r.loader.WriteAll(warehousesSlice); err != nil {
+		return fmt.Errorf("%w: %v", error_message.ErrDatabaseError, err)
+	}
+
+	return nil
 }
