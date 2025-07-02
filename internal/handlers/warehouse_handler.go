@@ -27,7 +27,11 @@ func NewWarehouseHandler(warehouseService services.WarehouseService) *WarehouseH
 func (h *WarehouseHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	warehouses, err := h.warehouseService.GetAll()
 	if err != nil {
-		response.Error(w, http.StatusInternalServerError, err.Error())
+		if errors.Is(err, error_message.ErrDatabaseError) {
+			response.Error(w, http.StatusInternalServerError, "Error al leer la base de datos de warehouses")
+			return
+		}
+		response.Error(w, http.StatusInternalServerError, "Error al obtener los warehouses")
 		return
 	}
 
@@ -67,10 +71,10 @@ func (h *WarehouseHandler) Create(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if errors.Is(err, error_message.ErrDatabaseError) {
-			response.Error(w, http.StatusInternalServerError, "Error interno del servidor")
+			response.Error(w, http.StatusInternalServerError, "Error al validar la unicidad del código en la base de datos")
 			return
 		}
-		response.Error(w, http.StatusInternalServerError, err.Error())
+		response.Error(w, http.StatusInternalServerError, "Error al validar el código del warehouse")
 		return
 	}
 
@@ -78,10 +82,10 @@ func (h *WarehouseHandler) Create(w http.ResponseWriter, r *http.Request) {
 	createdWarehouse, err := h.warehouseService.Create(warehouse)
 	if err != nil {
 		if errors.Is(err, error_message.ErrDatabaseError) {
-			response.Error(w, http.StatusInternalServerError, "Error interno del servidor")
+			response.Error(w, http.StatusInternalServerError, "Error al guardar el warehouse en la base de datos")
 			return
 		}
-		response.Error(w, http.StatusInternalServerError, err.Error())
+		response.Error(w, http.StatusInternalServerError, "Error al crear el warehouse")
 		return
 	}
 	warehouseResponse := mappers.ToResponse(createdWarehouse)
@@ -112,7 +116,7 @@ func (h *WarehouseHandler) GetById(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if errors.Is(err, error_message.ErrDatabaseError) {
-			response.Error(w, http.StatusInternalServerError, "Error interno del servidor")
+			response.Error(w, http.StatusInternalServerError, "Error al buscar el warehouse en la base de datos")
 			return
 		}
 		response.Error(w, http.StatusInternalServerError, "Error al obtener el warehouse")
@@ -146,7 +150,7 @@ func (h *WarehouseHandler) Delete(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if errors.Is(err, error_message.ErrDatabaseError) {
-			response.Error(w, http.StatusInternalServerError, "Error interno del servidor")
+			response.Error(w, http.StatusInternalServerError, "Error al eliminar el warehouse de la base de datos")
 			return
 		}
 		response.Error(w, http.StatusInternalServerError, "Error al eliminar el warehouse")
@@ -195,7 +199,7 @@ func (h *WarehouseHandler) Update(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if errors.Is(err, error_message.ErrDatabaseError) {
-			response.Error(w, http.StatusInternalServerError, "Error interno del servidor")
+			response.Error(w, http.StatusInternalServerError, "Error al actualizar el warehouse en la base de datos")
 			return
 		}
 		response.Error(w, http.StatusInternalServerError, "Error al actualizar el warehouse")

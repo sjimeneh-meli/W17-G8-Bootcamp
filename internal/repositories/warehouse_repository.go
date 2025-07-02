@@ -28,7 +28,7 @@ func NewWarehouseRepository(loader loader.StorageJSON[models.Warehouse]) *Wareho
 func (r *WarehouseRepositoryImpl) GetAll() (map[int]models.Warehouse, error) {
 	warehouses, err := r.loader.ReadAll()
 	if err != nil {
-		return nil, fmt.Errorf("error al leer warehouses: %w", err)
+		return nil, fmt.Errorf("%w: %v", error_message.ErrDatabaseError, err)
 	}
 
 	return warehouses, nil
@@ -37,7 +37,7 @@ func (r *WarehouseRepositoryImpl) GetAll() (map[int]models.Warehouse, error) {
 func (r *WarehouseRepositoryImpl) Create(warehouse models.Warehouse) (models.Warehouse, error) {
 	warehouses, err := r.loader.ReadAll()
 	if err != nil {
-		return models.Warehouse{}, fmt.Errorf("Error al crear el Id : %w", err)
+		return models.Warehouse{}, fmt.Errorf("%w: %v", error_message.ErrDatabaseError, err)
 	}
 
 	warehouse.Id = len(warehouses) + 1
@@ -47,7 +47,7 @@ func (r *WarehouseRepositoryImpl) Create(warehouse models.Warehouse) (models.War
 	warehousesSlice := r.loader.MapToSlice(warehouses)
 
 	if err := r.loader.WriteAll(warehousesSlice); err != nil {
-		return models.Warehouse{}, fmt.Errorf("error al guardar el warehouse: %w", err)
+		return models.Warehouse{}, fmt.Errorf("%w: %v", error_message.ErrDatabaseError, err)
 	}
 
 	return warehouse, nil
@@ -56,7 +56,7 @@ func (r *WarehouseRepositoryImpl) Create(warehouse models.Warehouse) (models.War
 func (r *WarehouseRepositoryImpl) ExistsByCode(code string) (bool, error) {
 	warehouses, err := r.loader.ReadAll()
 	if err != nil {
-		return false, fmt.Errorf("error al leer warehouses: %w", err)
+		return false, fmt.Errorf("%w: %v", error_message.ErrDatabaseError, err)
 	}
 
 	for _, warehouse := range warehouses {
