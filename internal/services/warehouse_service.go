@@ -7,6 +7,7 @@ import (
 
 type WarehouseService interface {
 	GetAll() (map[int]models.Warehouse, error)
+	Create(warehouse models.Warehouse) (models.Warehouse, error)
 }
 
 type WarehouseServiceImpl struct {
@@ -19,4 +20,7 @@ func NewWarehouseService(warehouseRepository repositories.WarehouseRepository) *
 
 func (s *WarehouseServiceImpl) GetAll() (map[int]models.Warehouse, error) {
 	return s.warehouseRepository.GetAll()
+}
+func (s *WarehouseServiceImpl) Create(warehouse models.Warehouse) (models.Warehouse, error) {
+	return s.warehouseRepository.Create(warehouse)
 }

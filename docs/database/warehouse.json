@@ -1,8 +1,14 @@
 [
-    {
-        "id": 1,
-        "address": "Calle Principal 123, Ciudad Industrial",
-        "telephone": "+1-555-0101",
-        "warehouse_code": "WH001"
-    }
+  {
+    "id": 1,
+    "address": "Calle Principal 123, Ciudad Industrial",
+    "telephone": "+1-555-0101",
+    "warehouse_code": "WH001"
+  },
+  {
+    "id": 2,
+    "address": "Calle Nueva 456, Ciudad Industrial",
+    "telephone": "+1-555-0202",
+    "warehouse_code": "WH002"
+  }
 ]

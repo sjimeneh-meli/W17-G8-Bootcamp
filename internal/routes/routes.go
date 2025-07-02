@@ -22,5 +22,6 @@ func SetupRoutes(router *chi.Mux) {
 		handler := handlers.NewWarehouseHandler(service)
 
 		r.Get("/", handler.GetAll)
+		r.Post("/", handler.Create)
 	})
 }
