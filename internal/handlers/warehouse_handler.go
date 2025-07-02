@@ -8,8 +8,8 @@ import (
 
 	"github.com/bootcamp-go/web/response"
 	"github.com/go-chi/chi/v5"
-	"github.com/sajimenezher_meli/meli-frescos-8/internal/dto"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/error_message"
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/requests"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/responses"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/mappers"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/services"
@@ -27,7 +27,7 @@ func NewWarehouseHandler(warehouseService services.WarehouseService) *WarehouseH
 func (h *WarehouseHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	warehouses, err := h.warehouseService.GetAll()
 	if err != nil {
-		if errors.Is(err, error_message.ErrDatabaseError) {
+		if errors.Is(err, error_message.ErrInternalServerError) {
 			response.Error(w, http.StatusInternalServerError, "Error al leer la base de datos de warehouses")
 			return
 		}
@@ -41,7 +41,7 @@ func (h *WarehouseHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Mapear a DTOs para la respuesta
-	warehouseResponses := make(map[int]dto.WarehouseResponse)
+	warehouseResponses := make(map[int]responses.WarehouseResponse)
 	for id, warehouse := range warehouses {
 		warehouseResponses[id] = mappers.ToResponse(warehouse)
 	}
@@ -52,7 +52,7 @@ func (h *WarehouseHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *WarehouseHandler) Create(w http.ResponseWriter, r *http.Request) {
-	var warehouseRequest dto.WarehouseRequest
+	var warehouseRequest requests.WarehouseRequest
 	if err := json.NewDecoder(r.Body).Decode(&warehouseRequest); err != nil {
 		response.Error(w, http.StatusBadRequest, "Formato JSON inválido")
 		return
@@ -65,11 +65,11 @@ func (h *WarehouseHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	// Validar que el código de almacén sea único
 	if err := h.warehouseService.ValidateCodeUniqueness(warehouseRequest.WareHouseCode); err != nil {
-		if errors.Is(err, error_message.ErrEntityExists) {
+		if errors.Is(err, error_message.ErrAlreadyExists) {
 			response.Error(w, http.StatusConflict, err.Error())
 			return
 		}
-		if errors.Is(err, error_message.ErrDatabaseError) {
+		if errors.Is(err, error_message.ErrInternalServerError) {
 			response.Error(w, http.StatusInternalServerError, "Error al validar la unicidad del código en la base de datos")
 			return
 		}
@@ -80,7 +80,7 @@ func (h *WarehouseHandler) Create(w http.ResponseWriter, r *http.Request) {
 	warehouse := mappers.ToRequest(warehouseRequest)
 	createdWarehouse, err := h.warehouseService.Create(warehouse)
 	if err != nil {
-		if errors.Is(err, error_message.ErrDatabaseError) {
+		if errors.Is(err, error_message.ErrInternalServerError) {
 			response.Error(w, http.StatusInternalServerError, "Error al guardar el warehouse en la base de datos")
 			return
 		}
@@ -109,11 +109,11 @@ func (h *WarehouseHandler) GetById(w http.ResponseWriter, r *http.Request) {
 	warehouse, err := h.warehouseService.GetById(id)
 	if err != nil {
 		// Determinar el código HTTP basado en el tipo de error
-		if errors.Is(err, error_message.ErrEntityNotFound) {
+		if errors.Is(err, error_message.ErrNotFound) {
 			response.Error(w, http.StatusNotFound, err.Error())
 			return
 		}
-		if errors.Is(err, error_message.ErrDatabaseError) {
+		if errors.Is(err, error_message.ErrInternalServerError) {
 			response.Error(w, http.StatusInternalServerError, "Error al buscar el warehouse en la base de datos")
 			return
 		}
@@ -142,11 +142,11 @@ func (h *WarehouseHandler) Delete(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.warehouseService.Delete(id); err != nil {
 		// Determinar el código HTTP basado en el tipo de error
-		if errors.Is(err, error_message.ErrEntityNotFound) {
+		if errors.Is(err, error_message.ErrNotFound) {
 			response.Error(w, http.StatusNotFound, err.Error())
 			return
 		}
-		if errors.Is(err, error_message.ErrDatabaseError) {
+		if errors.Is(err, error_message.ErrInternalServerError) {
 			response.Error(w, http.StatusInternalServerError, "Error al eliminar el warehouse de la base de datos")
 			return
 		}
@@ -172,7 +172,7 @@ func (h *WarehouseHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var warehouseRequest dto.WarehouseRequest
+	var warehouseRequest requests.WarehouseRequest
 	if err := json.NewDecoder(r.Body).Decode(&warehouseRequest); err != nil {
 		response.Error(w, http.StatusBadRequest, "Formato JSON inválido")
 		return
@@ -186,15 +186,15 @@ func (h *WarehouseHandler) Update(w http.ResponseWriter, r *http.Request) {
 	warehouse := mappers.ToRequest(warehouseRequest)
 	updatedWarehouse, err := h.warehouseService.Update(id, warehouse)
 	if err != nil {
-		if errors.Is(err, error_message.ErrEntityNotFound) {
+		if errors.Is(err, error_message.ErrNotFound) {
 			response.Error(w, http.StatusNotFound, err.Error())
 			return
 		}
-		if errors.Is(err, error_message.ErrEntityExists) {
+		if errors.Is(err, error_message.ErrAlreadyExists) {
 			response.Error(w, http.StatusConflict, err.Error())
 			return
 		}
-		if errors.Is(err, error_message.ErrDatabaseError) {
+		if errors.Is(err, error_message.ErrInternalServerError) {
 			response.Error(w, http.StatusInternalServerError, "Error al actualizar el warehouse en la base de datos")
 			return
 		}

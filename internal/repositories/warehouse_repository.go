@@ -28,7 +28,7 @@ func NewWarehouseRepository(loader loader.StorageJSON[models.Warehouse]) *Wareho
 func (r *WarehouseRepositoryImpl) GetAll() (map[int]models.Warehouse, error) {
 	warehouses, err := r.loader.ReadAll()
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", error_message.ErrDatabaseError, err)
+		return nil, fmt.Errorf("%w: %v", error_message.ErrInternalServerError, err)
 	}
 
 	return warehouses, nil
@@ -37,7 +37,7 @@ func (r *WarehouseRepositoryImpl) GetAll() (map[int]models.Warehouse, error) {
 func (r *WarehouseRepositoryImpl) Create(warehouse models.Warehouse) (models.Warehouse, error) {
 	warehouses, err := r.loader.ReadAll()
 	if err != nil {
-		return models.Warehouse{}, fmt.Errorf("%w: %v", error_message.ErrDatabaseError, err)
+		return models.Warehouse{}, fmt.Errorf("%w: %v", error_message.ErrInternalServerError, err)
 	}
 
 	warehouse.Id = len(warehouses) + 1
@@ -47,7 +47,7 @@ func (r *WarehouseRepositoryImpl) Create(warehouse models.Warehouse) (models.War
 	warehousesSlice := r.loader.MapToSlice(warehouses)
 
 	if err := r.loader.WriteAll(warehousesSlice); err != nil {
-		return models.Warehouse{}, fmt.Errorf("%w: %v", error_message.ErrDatabaseError, err)
+		return models.Warehouse{}, fmt.Errorf("%w: %v", error_message.ErrInternalServerError, err)
 	}
 
 	return warehouse, nil
@@ -56,7 +56,7 @@ func (r *WarehouseRepositoryImpl) Create(warehouse models.Warehouse) (models.War
 func (r *WarehouseRepositoryImpl) ExistsByCode(code string) (bool, error) {
 	warehouses, err := r.loader.ReadAll()
 	if err != nil {
-		return false, fmt.Errorf("%w: %v", error_message.ErrDatabaseError, err)
+		return false, fmt.Errorf("%w: %v", error_message.ErrInternalServerError, err)
 	}
 
 	for _, warehouse := range warehouses {
@@ -71,12 +71,12 @@ func (r *WarehouseRepositoryImpl) ExistsByCode(code string) (bool, error) {
 func (r *WarehouseRepositoryImpl) GetById(id int) (models.Warehouse, error) {
 	warehouses, err := r.loader.ReadAll()
 	if err != nil {
-		return models.Warehouse{}, fmt.Errorf("%w: %v", error_message.ErrDatabaseError, err)
+		return models.Warehouse{}, fmt.Errorf("%w: %v", error_message.ErrInternalServerError, err)
 	}
 
 	warehouse, exists := warehouses[id]
 	if !exists {
-		return models.Warehouse{}, fmt.Errorf("%w: warehouse con id %d", error_message.ErrEntityNotFound, id)
+		return models.Warehouse{}, fmt.Errorf("%w: warehouse with id %d", error_message.ErrNotFound, id)
 	}
 
 	return warehouse, nil
@@ -85,12 +85,12 @@ func (r *WarehouseRepositoryImpl) GetById(id int) (models.Warehouse, error) {
 func (r *WarehouseRepositoryImpl) Delete(id int) error {
 	warehouses, err := r.loader.ReadAll()
 	if err != nil {
-		return fmt.Errorf("%w: %v", error_message.ErrDatabaseError, err)
+		return fmt.Errorf("%w: %v", error_message.ErrInternalServerError, err)
 	}
 
 	// Verificar que el warehouse existe
 	if _, exists := warehouses[id]; !exists {
-		return fmt.Errorf("%w: warehouse con id %d", error_message.ErrEntityNotFound, id)
+		return fmt.Errorf("%w: warehouse with id %d", error_message.ErrNotFound, id)
 	}
 
 	delete(warehouses, id)
@@ -98,7 +98,7 @@ func (r *WarehouseRepositoryImpl) Delete(id int) error {
 	warehousesSlice := r.loader.MapToSlice(warehouses)
 
 	if err := r.loader.WriteAll(warehousesSlice); err != nil {
-		return fmt.Errorf("%w: %v", error_message.ErrDatabaseError, err)
+		return fmt.Errorf("%w: %v", error_message.ErrInternalServerError, err)
 	}
 
 	return nil
@@ -107,12 +107,12 @@ func (r *WarehouseRepositoryImpl) Delete(id int) error {
 func (r *WarehouseRepositoryImpl) Update(id int, warehouse models.Warehouse) (models.Warehouse, error) {
 	warehouses, err := r.loader.ReadAll()
 	if err != nil {
-		return models.Warehouse{}, fmt.Errorf("%w: %v", error_message.ErrDatabaseError, err)
+		return models.Warehouse{}, fmt.Errorf("%w: %v", error_message.ErrInternalServerError, err)
 	}
 
 	// Verificar que el warehouse existe
 	if _, exists := warehouses[id]; !exists {
-		return models.Warehouse{}, fmt.Errorf("%w: warehouse con id %d", error_message.ErrEntityNotFound, id)
+		return models.Warehouse{}, fmt.Errorf("%w: warehouse with id %d", error_message.ErrNotFound, id)
 	}
 
 	// Asignar el ID al warehouse y actualizarlo
@@ -122,7 +122,7 @@ func (r *WarehouseRepositoryImpl) Update(id int, warehouse models.Warehouse) (mo
 	warehousesSlice := r.loader.MapToSlice(warehouses)
 
 	if err := r.loader.WriteAll(warehousesSlice); err != nil {
-		return models.Warehouse{}, fmt.Errorf("%w: %v", error_message.ErrDatabaseError, err)
+		return models.Warehouse{}, fmt.Errorf("%w: %v", error_message.ErrInternalServerError, err)
 	}
 
 	return warehouse, nil

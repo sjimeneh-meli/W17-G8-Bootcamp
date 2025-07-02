@@ -36,11 +36,11 @@ func (s *WarehouseServiceImpl) Create(warehouse models.Warehouse) (models.Wareho
 func (s *WarehouseServiceImpl) ValidateCodeUniqueness(code string) error {
 	exists, err := s.warehouseRepository.ExistsByCode(code)
 	if err != nil {
-		return fmt.Errorf("%w: %v", error_message.ErrDatabaseError, err)
+		return fmt.Errorf("%w: %v", error_message.ErrInternalServerError, err)
 	}
 
 	if exists {
-		return fmt.Errorf("%w: el código de almacén '%s' ya existe", error_message.ErrEntityExists, code)
+		return fmt.Errorf("%w: warehouse code '%s' already exists", error_message.ErrAlreadyExists, code)
 	}
 
 	return nil

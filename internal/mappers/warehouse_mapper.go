@@ -1,12 +1,13 @@
 package mappers
 
 import (
-	"github.com/sajimenezher_meli/meli-frescos-8/internal/dto"
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/requests"
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/responses"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 )
 
-func ToResponse(warehouse models.Warehouse) dto.WarehouseResponse {
-	return dto.WarehouseResponse{
+func ToResponse(warehouse models.Warehouse) responses.WarehouseResponse {
+	return responses.WarehouseResponse{
 		ID:                 warehouse.Id,
 		Address:            warehouse.Address,
 		Telephone:          warehouse.Telephone,
@@ -16,7 +17,7 @@ func ToResponse(warehouse models.Warehouse) dto.WarehouseResponse {
 	}
 }
 
-func ToRequest(warehouseRequest dto.WarehouseRequest) models.Warehouse {
+func ToRequest(warehouseRequest requests.WarehouseRequest) models.Warehouse {
 	return models.Warehouse{
 		Address:            warehouseRequest.Address,
 		Telephone:          warehouseRequest.Telephone,
