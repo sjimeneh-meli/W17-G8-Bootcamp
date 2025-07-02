@@ -14,6 +14,7 @@ type WarehouseService interface {
 	ValidateCodeUniqueness(code string) error
 	GetById(id int) (models.Warehouse, error)
 	Delete(id int) error
+	Update(id int, warehouse models.Warehouse) (models.Warehouse, error)
 }
 
 type WarehouseServiceImpl struct {
@@ -51,4 +52,22 @@ func (s *WarehouseServiceImpl) GetById(id int) (models.Warehouse, error) {
 
 func (s *WarehouseServiceImpl) Delete(id int) error {
 	return s.warehouseRepository.Delete(id)
+}
+
+func (s *WarehouseServiceImpl) Update(id int, warehouse models.Warehouse) (models.Warehouse, error) {
+	// Obtener el warehouse actual para validar que el código no esté duplicado (excepto para sí mismo)
+	currentWarehouse, err := s.warehouseRepository.GetById(id)
+	if err != nil {
+		// El error ya viene con el tipo específico del repositorio
+		return models.Warehouse{}, err
+	}
+
+	// Validar que el código sea único solo si ha cambiado
+	if currentWarehouse.WareHouseCode != warehouse.WareHouseCode {
+		if err := s.ValidateCodeUniqueness(warehouse.WareHouseCode); err != nil {
+			return models.Warehouse{}, err
+		}
+	}
+
+	return s.warehouseRepository.Update(id, warehouse)
 }

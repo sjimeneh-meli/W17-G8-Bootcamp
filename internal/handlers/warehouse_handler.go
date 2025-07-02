@@ -158,3 +158,53 @@ func (h *WarehouseHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		Data:    nil,
 	})
 }
+
+func (h *WarehouseHandler) Update(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	if idStr == "" {
+		response.Error(w, http.StatusBadRequest, "El ID del almacén es requerido")
+		return
+	}
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		response.Error(w, http.StatusBadRequest, "El ID del almacén debe ser un número")
+		return
+	}
+
+	var warehouseRequest dto.WarehouseRequest
+	if err := json.NewDecoder(r.Body).Decode(&warehouseRequest); err != nil {
+		response.Error(w, http.StatusBadRequest, "Formato JSON inválido")
+		return
+	}
+
+	if err := validations.ValidateWarehouseRequestStruct(warehouseRequest); err != nil {
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	warehouse := mappers.ToRequest(warehouseRequest)
+	updatedWarehouse, err := h.warehouseService.Update(id, warehouse)
+	if err != nil {
+		if errors.Is(err, error_message.ErrEntityNotFound) {
+			response.Error(w, http.StatusNotFound, err.Error())
+			return
+		}
+		if errors.Is(err, error_message.ErrEntityExists) {
+			response.Error(w, http.StatusConflict, err.Error())
+			return
+		}
+		if errors.Is(err, error_message.ErrDatabaseError) {
+			response.Error(w, http.StatusInternalServerError, "Error interno del servidor")
+			return
+		}
+		response.Error(w, http.StatusInternalServerError, "Error al actualizar el warehouse")
+		return
+	}
+
+	warehouseResponse := mappers.ToResponse(updatedWarehouse)
+	response.JSON(w, http.StatusOK, responses.DataResponse{
+		Message: "Almacen actualizado correctamente",
+		Data:    warehouseResponse,
+	})
+}

@@ -14,6 +14,7 @@ type WarehouseRepository interface {
 	ExistsByCode(code string) (bool, error)
 	GetById(id int) (models.Warehouse, error)
 	Delete(id int) error
+	Update(id int, warehouse models.Warehouse) (models.Warehouse, error)
 }
 
 type WarehouseRepositoryImpl struct {
@@ -101,4 +102,28 @@ func (r *WarehouseRepositoryImpl) Delete(id int) error {
 	}
 
 	return nil
+}
+
+func (r *WarehouseRepositoryImpl) Update(id int, warehouse models.Warehouse) (models.Warehouse, error) {
+	warehouses, err := r.loader.ReadAll()
+	if err != nil {
+		return models.Warehouse{}, fmt.Errorf("%w: %v", error_message.ErrDatabaseError, err)
+	}
+
+	// Verificar que el warehouse existe
+	if _, exists := warehouses[id]; !exists {
+		return models.Warehouse{}, fmt.Errorf("%w: warehouse con id %d", error_message.ErrEntityNotFound, id)
+	}
+
+	// Asignar el ID al warehouse y actualizarlo
+	warehouse.Id = id
+	warehouses[id] = warehouse
+
+	warehousesSlice := r.loader.MapToSlice(warehouses)
+
+	if err := r.loader.WriteAll(warehousesSlice); err != nil {
+		return models.Warehouse{}, fmt.Errorf("%w: %v", error_message.ErrDatabaseError, err)
+	}
+
+	return warehouse, nil
 }
