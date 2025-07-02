@@ -10,7 +10,7 @@ import (
 // Esta interfaz implementa el patrón Repository/Service, separando la lógica de negocio del acceso a datos
 // This interface implements the Repository/Service pattern, separating business logic from data access
 type ProductServiceI interface {
-	GetAll() ([]models.Product, error)                                 // Obtiene todos los productos / Gets all products
+	GetAll() ([]*models.Product, error)                                // Obtiene todos los productos / Gets all products
 	GetByID(id int) (*models.Product, error)                           // Obtiene un producto por ID / Gets a product by ID
 	Create(product models.Product) (models.Product, error)             // Crea un nuevo producto / Creates a new product
 	CreateByBatch(products []models.Product) ([]models.Product, error) // Crea múltiples productos en lote / Creates multiple products in batch
@@ -39,7 +39,7 @@ func NewProductService(repository repositories.ProductRepositoryI) ProductServic
 
 // GetAll obtiene todos los productos delegando la responsabilidad al repositorio
 // GetAll gets all products by delegating responsibility to the repository
-func (ps *productService) GetAll() ([]models.Product, error) {
+func (ps *productService) GetAll() ([]*models.Product, error) {
 	return ps.repository.GetAll()
 }
 
