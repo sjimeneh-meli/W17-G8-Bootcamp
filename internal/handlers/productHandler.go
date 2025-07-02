@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/error_message"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/requests"
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/responses"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/mappers"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/services"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/validations"
@@ -37,7 +38,7 @@ func (ph *productHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusOK, products)
+	response.JSON(w, http.StatusOK, responses.DataResponse{Data: products})
 }
 
 func (ph *productHandler) Save(w http.ResponseWriter, r *http.Request) {
@@ -109,7 +110,7 @@ func (ph *productHandler) GetById(w http.ResponseWriter, r *http.Request) {
 
 	productResponse := mappers.GetProductResponseFromModel(product)
 
-	response.JSON(w, http.StatusOK, productResponse)
+	response.JSON(w, http.StatusOK, responses.DataResponse{Data: productResponse})
 
 }
 
@@ -151,7 +152,7 @@ func (ph *productHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusOK, productUpdated)
+	response.JSON(w, http.StatusOK, responses.DataResponse{Data: productUpdated})
 
 }
 
