@@ -14,13 +14,6 @@ import (
 )
 
 func SetupRoutes(router *chi.Mux) {
-	buyerLoader := loader.NewJSONStorage[models.Buyer](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "buyers.json"))
-	buyerRepository, err := repositories.GetNewBuyerRepository(buyerLoader)
-	if err != nil {
-		panic(err.Error())
-	}
-	buyerService := services.GetBuyerService(buyerRepository)
-	buyerHandler := handlers.GetBuyerHandler(buyerService)
 
 	router.Get("/hello-world", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -36,6 +29,14 @@ func SetupRoutes(router *chi.Mux) {
 		})
 
 		r.Route("/buyers", func(r chi.Router) {
+			buyerLoader := loader.NewJSONStorage[models.Buyer](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "buyers.json"))
+			buyerRepository, err := repositories.GetNewBuyerRepository(buyerLoader)
+			if err != nil {
+				panic(err.Error())
+			}
+			buyerService := services.GetBuyerService(buyerRepository)
+			buyerHandler := handlers.GetBuyerHandler(buyerService)
+
 			r.Get("/", buyerHandler.GetAll())
 			r.Get("/{id}", buyerHandler.GetById())
 			r.Delete("/{id}", buyerHandler.DeleteById())

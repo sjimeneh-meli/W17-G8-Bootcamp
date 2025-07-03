@@ -172,6 +172,12 @@ func (h *BuyerHandler) PatchBuyer() http.HandlerFunc {
 				response.Error(w, http.StatusNotFound, err.Error())
 				return
 			}
+
+			if errors.Is(err, error_message.ErrAlreadyExists) {
+				response.Error(w, http.StatusConflict, err.Error())
+				return
+			}
+
 			response.Error(w, http.StatusInternalServerError, err.Error())
 			return
 		}
