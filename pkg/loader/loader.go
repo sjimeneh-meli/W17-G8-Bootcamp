@@ -39,6 +39,7 @@ func (s *StorageJSON[T]) ReadAll() (map[int]T, error) {
 
 	var list []T
 	decoder := json.NewDecoder(file)
+
 	if err := decoder.Decode(&list); err != nil {
 		return nil, fmt.Errorf("error decodificando JSON: %w", err)
 	}
