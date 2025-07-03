@@ -96,7 +96,7 @@ func (h *SectionHandler) Create(w http.ResponseWriter, r *http.Request) {
 	section = mappers.GetSectionModelFromRequest(request)
 
 	if h.service.ExistsWithSectionNumber(section.Id, section.SectionNumber) {
-		response.Error(w, http.StatusConflict, "")
+		response.Error(w, http.StatusConflict, "already exist a section with the same number")
 		return
 	}
 
@@ -140,7 +140,7 @@ func (h *SectionHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if h.service.ExistsWithSectionNumber(section.Id, request.SectionNumber) {
-		response.Error(w, http.StatusConflict, "")
+		response.Error(w, http.StatusConflict, "already exist a section with the same number")
 		return
 	}
 
