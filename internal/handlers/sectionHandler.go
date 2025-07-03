@@ -43,8 +43,6 @@ func (h *SectionHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 		sections         []*models.Section
 	)
 
-	w.Header().Set("Content-Type", "application/json")
-
 	sections = h.service.GetAll()
 	sectionsResponse = mappers.GetListSectionResponseFromListModel(sections)
 	responseJson.Data = sectionsResponse
@@ -60,20 +58,14 @@ func (h *SectionHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 		sectionResponse *responses.SectionResponse
 	)
 
-	w.Header().Set("Content-Type", "application/json")
-
 	idParam, convErr := strconv.Atoi(chi.URLParam(r, "id"))
 	if convErr != nil {
-		w.WriteHeader(http.StatusExpectationFailed)
-		json.NewEncoder(w).Encode(responseJson)
-		return
+		response.Error(w, http.StatusExpectationFailed, convErr.Error())
 	}
 
 	section, srvErr := h.service.GetByID(idParam)
 	if srvErr != nil {
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(responseJson)
-		return
+		response.Error(w, http.StatusNotFound, srvErr.Error())
 	}
 
 	sectionResponse = mappers.GetSectionResponseFromModel(section)
@@ -91,31 +83,25 @@ func (h *SectionHandler) Create(w http.ResponseWriter, r *http.Request) {
 		section      *models.Section
 	)
 
-	w.Header().Set("Content-Type", "application/json")
-
 	if reqErr := json.NewDecoder(r.Body).Decode(request); reqErr != nil {
-		w.WriteHeader(http.StatusExpectationFailed)
-		json.NewEncoder(w).Encode(responseJson)
+		response.Error(w, http.StatusExpectationFailed, reqErr.Error())
 		return
 	}
 
 	if valErr := h.validation.ValidateSectionRequestStruct(*request); valErr != nil {
-		w.WriteHeader(http.StatusUnprocessableEntity)
-		json.NewEncoder(w).Encode(responseJson)
+		response.Error(w, http.StatusUnprocessableEntity, valErr.Error())
 		return
 	}
 
 	section = mappers.GetSectionModelFromRequest(request)
 
 	if h.service.ExistsWithSectionNumber(section.Id, section.SectionNumber) {
-		w.WriteHeader(http.StatusConflict)
-		json.NewEncoder(w).Encode(responseJson)
+		response.Error(w, http.StatusConflict, "")
 		return
 	}
 
 	if srvErr := h.service.Create(section); srvErr != nil {
-		w.WriteHeader(http.StatusExpectationFailed)
-		json.NewEncoder(w).Encode(responseJson)
+		response.Error(w, http.StatusExpectationFailed, srvErr.Error())
 		return
 	}
 
@@ -131,37 +117,30 @@ func (h *SectionHandler) Update(w http.ResponseWriter, r *http.Request) {
 		responseJson *responses.DataResponse  = &responses.DataResponse{}
 	)
 
-	w.Header().Set("Content-Type", "application/json")
-
 	idParam, convErr := strconv.Atoi(chi.URLParam(r, "id"))
 	if convErr != nil {
-		w.WriteHeader(http.StatusExpectationFailed)
-		json.NewEncoder(w).Encode(responseJson)
+		response.Error(w, http.StatusExpectationFailed, convErr.Error())
 		return
 	}
 
 	section, srvErr := h.service.GetByID(idParam)
 	if srvErr != nil {
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(responseJson)
+		response.Error(w, http.StatusNotFound, srvErr.Error())
 		return
 	}
 
 	if reqErr := json.NewDecoder(r.Body).Decode(request); reqErr != nil {
-		w.WriteHeader(http.StatusExpectationFailed)
-		json.NewEncoder(w).Encode(responseJson)
+		response.Error(w, http.StatusExpectationFailed, reqErr.Error())
 		return
 	}
 
 	if valErr := h.validation.ValidateSectionRequestStruct(*request); valErr != nil {
-		w.WriteHeader(http.StatusUnprocessableEntity)
-		json.NewEncoder(w).Encode(responseJson)
+		response.Error(w, http.StatusUnprocessableEntity, valErr.Error())
 		return
 	}
 
 	if h.service.ExistsWithSectionNumber(section.Id, request.SectionNumber) {
-		w.WriteHeader(http.StatusConflict)
-		json.NewEncoder(w).Encode(responseJson)
+		response.Error(w, http.StatusConflict, "")
 		return
 	}
 
@@ -178,19 +157,15 @@ func (h *SectionHandler) DeleteByID(w http.ResponseWriter, r *http.Request) {
 		response *responses.DataResponse = &responses.DataResponse{}
 	)
 
-	w.Header().Set("Content-Type", "application/json")
-
 	idParam, convErr := strconv.Atoi(chi.URLParam(r, "id"))
 	if convErr != nil {
-		w.WriteHeader(http.StatusExpectationFailed)
-		json.NewEncoder(w).Encode(response)
+		response.Error(w, http.StatusExpectationFailed, convErr.Error())
 		return
 	}
 
 	srvErr := h.service.DeleteByID(idParam)
 	if srvErr != nil {
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(response)
+		response.Error(w, http.StatusNotFound, srvErr.Error())
 		return
 	}
 
