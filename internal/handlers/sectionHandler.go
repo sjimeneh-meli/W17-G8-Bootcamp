@@ -146,16 +146,12 @@ func (h *SectionHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 	mappers.UpdateSectionModelFromRequest(section, request)
 
-	response.Data = mappers.GetSectionResponseFromModel(section)
+	responseJson.Data = mappers.GetSectionResponseFromModel(section)
 	response.JSON(w, http.StatusOK, responseJson)
 
 }
 
 func (h *SectionHandler) DeleteByID(w http.ResponseWriter, r *http.Request) {
-
-	var (
-		response *responses.DataResponse = &responses.DataResponse{}
-	)
 
 	idParam, convErr := strconv.Atoi(chi.URLParam(r, "id"))
 	if convErr != nil {

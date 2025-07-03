@@ -10,6 +10,7 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/repositories"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/services"
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/validations"
 	"github.com/sajimenezher_meli/meli-frescos-8/pkg/loader"
 )
 
