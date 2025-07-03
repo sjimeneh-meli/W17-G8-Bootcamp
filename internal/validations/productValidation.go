@@ -14,7 +14,6 @@ func GetProductValidation() *ProductValidation {
 
 func (v ProductValidation) ValidateProductRequestStruct(r requests.ProductRequest) error {
 	return validation.ValidateStruct(&r,
-		validation.Field(&r.Id, validation.Required),
 		validation.Field(&r.ProductCode, validation.Required),
 		validation.Field(&r.Description, validation.Required),
 		validation.Field(&r.Width, validation.Required),
@@ -26,6 +25,6 @@ func (v ProductValidation) ValidateProductRequestStruct(r requests.ProductReques
 		validation.Field(&r.RecommendedFreezingTemperature, validation.Required),
 		validation.Field(&r.FreezingRate, validation.Required),
 		validation.Field(&r.ProductTypeID, validation.Required),
-		validation.Field(&r.SellerID, validation.Required),
+		//validation.Field(&r.SellerID, validation.Required), this is optional
 	)
 }

@@ -50,7 +50,7 @@ func (r *JsonSellerRepository) Save(seller models.Seller) (models.Seller, error)
 	seller.Id = id + 1
 	sellers[seller.Id] = seller
 
-	itemSlice := loader.NewJSONStorage[models.Seller]("").MapToSlice(sellers)
+	itemSlice := r.storage.MapToSlice(sellers)
 
 	err = r.storage.WriteAll(itemSlice)
 
@@ -89,7 +89,7 @@ func (r *JsonSellerRepository) Update(id int, seller models.Seller) (models.Sell
 
 	sellers[id] = existingSeller
 
-	itemSlice := loader.NewJSONStorage[models.Seller]("").MapToSlice(sellers)
+	itemSlice := r.storage.MapToSlice(sellers)
 
 	err = r.storage.WriteAll(itemSlice)
 
@@ -115,7 +115,7 @@ func (r *JsonSellerRepository) Delete(id int) error {
 
 	delete(sellers, id)
 
-	itemSlice := loader.NewJSONStorage[models.Seller]("").MapToSlice(sellers)
+	itemSlice := r.storage.MapToSlice(sellers)
 
 	errWrite := r.storage.WriteAll(itemSlice)
 

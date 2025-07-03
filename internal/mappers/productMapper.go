@@ -24,7 +24,6 @@ func GetProductResponseFromModel(model *models.Product) *responses.ProductRespon
 
 func GetProductFromRequest(request requests.ProductRequest) models.Product {
 	return models.Product{
-		Id:                             request.Id,
 		ProductCode:                    request.ProductCode,
 		Description:                    request.Description,
 		Width:                          request.Width,

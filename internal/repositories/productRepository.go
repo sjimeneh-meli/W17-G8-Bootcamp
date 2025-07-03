@@ -14,7 +14,7 @@ import (
 type ProductRepositoryI interface {
 	// GetAll retrieves all products from storage
 	// GetAll obtiene todos los productos del almacenamiento
-	GetAll() ([]*models.Product, error)
+	GetAll() ([]models.Product, error)
 
 	// GetByID retrieves a product by its ID
 	// GetByID obtiene un producto por su ID
@@ -61,7 +61,7 @@ func NewProductRepository(storage loader.StorageJSON[models.Product]) ProductRep
 
 // GetAll retrieves all products from storage and returns them as a slice
 // GetAll obtiene todos los productos del almacenamiento y los devuelve como un slice
-func (pr *productRepository) GetAll() ([]*models.Product, error) {
+func (pr *productRepository) GetAll() ([]models.Product, error) {
 	// Read all products from storage
 	// Leer todos los productos del almacenamiento
 	productsMap, err := pr.Storage.ReadAll()

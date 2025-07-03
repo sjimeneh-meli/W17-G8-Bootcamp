@@ -1,7 +1,6 @@
 package requests
 
 type ProductRequest struct {
-	Id                             int     `json:"id"`
 	ProductCode                    string  `json:"product_code"`
 	Description                    string  `json:"description"`
 	Width                          float64 `json:"width"`
