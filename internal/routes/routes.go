@@ -80,6 +80,14 @@ func SetupRoutes(router *chi.Mux) {
 			r.Delete("/{id}", sellerHandler.Delete)
 		})
 
+		r.Route("/sections", func(rt chi.Router) {
+			rt.Get("/", sectionHandler.GetAll)
+			rt.Get("/{id}", sectionHandler.GetByID)
+			rt.Post("/", sectionHandler.Create)
+			rt.Patch("/{id}", sectionHandler.Update)
+			rt.Delete("/{id}", sectionHandler.DeleteByID)
+		})
+
 		r.Route("/products", func(r chi.Router) {
 			storage := loader.NewJSONStorage[models.Product](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "products.json"))
 			repository := repositories.NewProductRepository(*storage)
@@ -95,14 +103,6 @@ func SetupRoutes(router *chi.Mux) {
 			r.Post("/", productHandler.Save)
 			r.Patch("/{id}", productHandler.Update)
 			r.Delete("/{id}", productHandler.DeleteById)
-		})
-
-		r.Route("/sections", func(rt chi.Router) {
-			rt.Get("/", sectionHandler.GetAll)
-			rt.Get("/{id}", sectionHandler.GetByID)
-			rt.Post("/", sectionHandler.Create)
-			rt.Patch("/{id}", sectionHandler.Update)
-			rt.Delete("/{id}", sectionHandler.DeleteByID)
 		})
 	})
 }
