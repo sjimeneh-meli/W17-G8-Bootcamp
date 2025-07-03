@@ -29,14 +29,14 @@ type BuyerRepository struct {
 func (r *BuyerRepository) Update(id int, buyer models.Buyer) (models.Buyer, error) {
 	_, exists := r.storage[id]
 	if !exists {
-		return models.Buyer{}, fmt.Errorf("%w. %s %d", error_message.ErrNotFound, "Buyer with Id", id)
+		return models.Buyer{}, fmt.Errorf("%w. %s %d %s", error_message.ErrNotFound, "Buyer with Id", id, "doesn't exists.")
 	}
 
 	updatedBuyer := r.storage[id]
 	if buyer.CardNumberId != "" {
 		existingCardNumberIds := r.GetCardNumberIds()
 		if slices.Contains(existingCardNumberIds, buyer.CardNumberId) {
-			return models.Buyer{}, fmt.Errorf("%w. %s %s", error_message.ErrAlreadyExists, "Card number with Id", buyer.CardNumberId)
+			return models.Buyer{}, fmt.Errorf("%w. %s %s %s", error_message.ErrAlreadyExists, "Card number with Id", buyer.CardNumberId, "already exists.")
 		}
 		updatedBuyer.CardNumberId = buyer.CardNumberId
 	}
@@ -63,7 +63,7 @@ func (r *BuyerRepository) GetAll() (map[int]models.Buyer, error) {
 func (r *BuyerRepository) GetById(id int) (models.Buyer, error) {
 	_, exists := r.storage[id]
 	if !exists {
-		return models.Buyer{}, fmt.Errorf("%w. %s %d", error_message.ErrNotFound, "Buyer with Id", id)
+		return models.Buyer{}, fmt.Errorf("%w. %s %d %s", error_message.ErrNotFound, "Buyer with Id", id, "doesn't exists.")
 	}
 
 	return r.storage[id], nil
@@ -72,7 +72,7 @@ func (r *BuyerRepository) GetById(id int) (models.Buyer, error) {
 func (r *BuyerRepository) DeleteById(id int) error {
 	_, exists := r.storage[id]
 	if !exists {
-		return fmt.Errorf("%w. %s %d", error_message.ErrNotFound, "Buyer with Id", id)
+		return fmt.Errorf("%w. %s %d %s", error_message.ErrNotFound, "Buyer with Id", id, "doesn't exists.")
 	}
 	delete(r.storage, id)
 
@@ -86,7 +86,7 @@ func (r *BuyerRepository) DeleteById(id int) error {
 func (r *BuyerRepository) Create(buyer models.Buyer) (models.Buyer, error) {
 	_, exists := r.storage[buyer.Id]
 	if exists {
-		return models.Buyer{}, fmt.Errorf("%w. %s %d", error_message.ErrAlreadyExists, "Buyer with Id", buyer.Id)
+		return models.Buyer{}, fmt.Errorf("%w. %s %d %s", error_message.ErrAlreadyExists, "Buyer with Id", buyer.Id, "already exists.")
 	}
 
 	r.storage[buyer.Id] = buyer
