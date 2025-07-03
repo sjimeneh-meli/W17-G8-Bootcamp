@@ -2,6 +2,7 @@ package routes
 
 import (
 	"fmt"
+
 	"net/http"
 	"os"
 
@@ -37,6 +38,23 @@ func SetupRoutes(router *chi.Mux) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte(`{"message": "API v1 is running", "status": "active"}`))
+		})
+
+		r.Route("/employee", func(rt chi.Router) {
+			employeeLoader := loader.NewJSONStorage[models.Employee](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "employees.json"))
+			employeeRepository, employeeLoaderErr := repositories.GetEmployeeRepository(employeeLoader)
+			if employeeLoaderErr != nil {
+				panic(employeeLoaderErr.Error())
+			}
+			employeeService := services.GetEmployeeService(employeeRepository)
+			employeeValidation := validations.GetEmployeeValidation()
+			employeeHandler := handlers.GetEmployeeHandler(employeeService, employeeValidation)
+
+			rt.Get("/", employeeHandler.GetAll)
+			rt.Get("/{id}", employeeHandler.GetById)
+			rt.Post("/", employeeHandler.Create)
+			rt.Patch("/{id}", employeeHandler.Update)
+			rt.Delete("/{id}", employeeHandler.DeleteById)
 		})
 
 		r.Route("/buyers", func(r chi.Router) {
