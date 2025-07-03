@@ -45,7 +45,7 @@ func (s *BuyerService) Create(buyer models.Buyer) (models.Buyer, error) {
 
 	existingCardNumbers := s.repository.GetCardNumberIds()
 	if slices.Contains(existingCardNumbers, buyer.CardNumberId) {
-		return models.Buyer{}, fmt.Errorf("%w - %s %s", error_message.ErrAlreadyExists, "card number with id:", buyer.CardNumberId)
+		return models.Buyer{}, fmt.Errorf("%w - %s %s %s", error_message.ErrAlreadyExists, "card number with id:", buyer.CardNumberId, "already exists.")
 	}
 
 	return s.repository.Create(buyer)
