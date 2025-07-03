@@ -11,17 +11,20 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/repositories"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/seeders"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/services"
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/validations"
 	"github.com/sajimenezher_meli/meli-frescos-8/pkg/loader"
 )
 
 func SetupRoutes(router *chi.Mux) {
-	buyerLoader := loader.NewJSONStorage[models.Buyer](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "buyers.json"))
-	buyerRepository, err := repositories.GetNewBuyerRepository(buyerLoader)
-	if err != nil {
-		panic(err.Error())
+
+	sectionLoader := loader.NewJSONStorage[models.Section](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "sections.json"))
+	sectionRepository, sectionLoaderErr := repositories.GetSectionRepository(sectionLoader)
+	if sectionLoaderErr != nil {
+		panic(sectionLoaderErr.Error())
 	}
-	buyerService := services.GetBuyerService(buyerRepository)
-	buyerHandler := handlers.GetBuyerHandler(buyerService)
+	sectionService := services.GetSectionService(sectionRepository)
+	sectionValidation := validations.GetSectionValidation()
+	sectionHandler := handlers.GetSectionHandler(sectionService, sectionValidation)
 
 	router.Get("/hello-world", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -37,6 +40,14 @@ func SetupRoutes(router *chi.Mux) {
 		})
 
 		r.Route("/buyers", func(r chi.Router) {
+			buyerLoader := loader.NewJSONStorage[models.Buyer](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "buyers.json"))
+			buyerRepository, err := repositories.GetNewBuyerRepository(buyerLoader)
+			if err != nil {
+				panic(err.Error())
+			}
+			buyerService := services.GetBuyerService(buyerRepository)
+			buyerHandler := handlers.GetBuyerHandler(buyerService)
+
 			r.Get("/", buyerHandler.GetAll())
 			r.Get("/{id}", buyerHandler.GetById())
 			r.Delete("/{id}", buyerHandler.DeleteById())
@@ -55,6 +66,7 @@ func SetupRoutes(router *chi.Mux) {
 			r.Put("/{id}", handler.Update)
 			r.Delete("/{id}", handler.Delete)
 		})
+
 		r.Route("/sellers", func(r chi.Router) {
 			sellerStorage := loader.NewJSONStorage[models.Seller](fmt.Sprintf("%s/%s", "docs/database", "sellers.json"))
 			sellerRepo := repositories.NewJSONSellerRepository(sellerStorage)
@@ -83,6 +95,14 @@ func SetupRoutes(router *chi.Mux) {
 			r.Post("/", productHandler.Save)
 			r.Patch("/{id}", productHandler.Update)
 			r.Delete("/{id}", productHandler.DeleteById)
+		})
+
+		r.Route("/sections", func(rt chi.Router) {
+			rt.Get("/", sectionHandler.GetAll)
+			rt.Get("/{id}", sectionHandler.GetByID)
+			rt.Post("/", sectionHandler.Create)
+			rt.Patch("/{id}", sectionHandler.Update)
+			rt.Delete("/{id}", sectionHandler.DeleteByID)
 		})
 	})
 }

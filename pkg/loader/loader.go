@@ -57,6 +57,7 @@ func (s *StorageJSON[T]) ReadAll() (map[int]T, error) {
 
 	var list []T
 	decoder := json.NewDecoder(file)
+
 	if err := decoder.Decode(&list); err != nil {
 		// Manejar el error si el JSON no es válido, pero el archivo sí existe.
 		return nil, fmt.Errorf("error decodificando JSON: %w", err)
