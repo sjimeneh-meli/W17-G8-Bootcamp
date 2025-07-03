@@ -13,45 +13,40 @@ func GetEmployeeService(repository repositories.EmployeeRepositoryI) EmployeeSer
 }
 
 type EmployeeServiceI interface {
-	GetAll() []models.Employee
-	Create(e models.Employee) error
-	GetById(id int) (models.Employee, error)
+	GetAll() []*models.Employee
+	Create(e *models.Employee) error
+	GetById(id int) (*models.Employee, error)
 	DeleteById(id int) error
+
 	ExistsWhCardNumber(id int, cardNumber string) bool
-	Update(e models.Employee) error
 }
 type employeeService struct {
 	repository repositories.EmployeeRepositoryI
 }
 
-func (s employeeService) GetAll() []models.Employee {
+func (s *employeeService) GetAll() []*models.Employee {
 	return s.repository.GetAll()
 }
 
-func (s employeeService) Create(e models.Employee) error {
+func (s *employeeService) GetById(id int) (*models.Employee, error) {
+	if model := s.repository.GetById(id); model != nil {
+		return model, nil
+	}
+	return nil, error_message.ErrNotFound
+}
+
+func (s *employeeService) Create(e *models.Employee) error {
 	s.repository.Create(e)
 	return nil
 }
 
-func (s employeeService) GetById(id int) (models.Employee, error) {
-	return s.repository.GetById(id)
-}
-
-func (s employeeService) DeleteById(id int) error {
+func (s *employeeService) DeleteById(id int) error {
 	if s.repository.DeleteById(id) {
 		return nil
 	}
 	return error_message.ErrNotFound
 }
-
-func (s employeeService) Update(e models.Employee) error {
-	if !s.repository.Update(e) {
-		return error_message.ErrNotFound
-	}
-	return nil
-}
-
-func (s employeeService) ExistsWhCardNumber(id int, cardNumber string) bool {
+func (s *employeeService) ExistsWhCardNumber(id int, cardNumber string) bool {
 	return s.repository.ExistsWhCardNumber(id, cardNumber)
 
 }

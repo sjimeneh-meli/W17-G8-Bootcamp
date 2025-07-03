@@ -50,11 +50,11 @@ func SetupRoutes(router *chi.Mux) {
 			employeeValidation := validations.GetEmployeeValidation()
 			employeeHandler := handlers.GetEmployeeHandler(employeeService, employeeValidation)
 
-			rt.Get("/", employeeHandler.GetAll())
-			rt.Get("/{id}", employeeHandler.GetById())
-			rt.Post("/", employeeHandler.Create())
-			rt.Patch("/{id}", employeeHandler.Update())
-			rt.Delete("/{id}", employeeHandler.DeleteById())
+			rt.Get("/", employeeHandler.GetAll)
+			rt.Get("/{id}", employeeHandler.GetById)
+			rt.Post("/", employeeHandler.Create)
+			rt.Patch("/{id}", employeeHandler.Update)
+			rt.Delete("/{id}", employeeHandler.DeleteById)
 		})
 
 		r.Route("/buyers", func(r chi.Router) {
