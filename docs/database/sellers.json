@@ -1,0 +1,695 @@
+[
+  {
+    "id": 17,
+    "cid": "23876543211",
+    "company_name": "Librería Central",
+    "address": "Calle 12 2215, La Plata",
+    "telephone": "+54 221 111-2222"
+  },
+  {
+    "id": 83,
+    "cid": "20897808987",
+    "company_name": "Energía Universa",
+    "address": "San Juan 809, Córdoba",
+    "telephone": "+54 351 700-9898"
+  },
+  {
+    "id": 80,
+    "cid": "21345981276",
+    "company_name": "Vinos del Sol",
+    "address": "Francia 102, Mendoza",
+    "telephone": "+54 261 287-1209"
+  },
+  {
+    "id": 4,
+    "cid": "30123456321",
+    "company_name": "Soluciones YPF S.A.",
+    "address": "Diagonal 80 100, La Plata",
+    "telephone": "+54 221 234-5678"
+  },
+  {
+    "id": 33,
+    "cid": "22221111012",
+    "company_name": "Energía Justa",
+    "address": "San Juan 450, San Juan",
+    "telephone": "+54 264 556-2332"
+  },
+  {
+    "id": 49,
+    "cid": "23345709212",
+    "company_name": "Sastrería Latino",
+    "address": "Ecuador 1839, Rosario",
+    "telephone": "+54 341 767-5678"
+  },
+  {
+    "id": 46,
+    "cid": "26346346354",
+    "company_name": "Autos del Sur",
+    "address": "6 de Enero 3030, Salta",
+    "telephone": "+54 387 555-3524"
+  },
+  {
+    "id": 99,
+    "cid": "21569347813",
+    "company_name": "Libros El Árbol",
+    "address": "Mitre 233, Rosario",
+    "telephone": "+54 341 883-9876"
+  },
+  {
+    "id": 26,
+    "cid": "22111233455",
+    "company_name": "Muebles Sol SRL",
+    "address": "Ruta 7 Km 9, Córdoba",
+    "telephone": "+54 351 777-8889"
+  },
+  {
+    "id": 27,
+    "cid": "21443332221",
+    "company_name": "Aceites Pampa",
+    "address": "Av. Eva Perón 767, Buenos Aires",
+    "telephone": "+54 11 5555-2222"
+  },
+  {
+    "id": 75,
+    "cid": "22523100909",
+    "company_name": "Personas y Sabores",
+    "address": "Belgrano 3301, Córdoba",
+    "telephone": "+54 351 225-4455"
+  },
+  {
+    "id": 98,
+    "cid": "25598332992",
+    "company_name": "Café Brown",
+    "address": "Brown 800, Buenos Aires",
+    "telephone": "+54 11 1100-5532"
+  },
+  {
+    "id": 55,
+    "cid": "20334567208",
+    "company_name": "Seguros Uno",
+    "address": "Av. 25 de Mayo 703, Chaco",
+    "telephone": "+54 3722 898-4242"
+  },
+  {
+    "id": 45,
+    "cid": "20910910910",
+    "company_name": "Bombas Guille S.A.",
+    "address": "Av. Santa Fe 910, Buenos Aires",
+    "telephone": "+54 11 3777-2020"
+  },
+  {
+    "id": 61,
+    "cid": "20987623217",
+    "company_name": "Carnes del Oeste",
+    "address": "Sánchez de Bustamante 101, La Pampa",
+    "telephone": "+54 2954 244-987"
+  },
+  {
+    "id": 50,
+    "cid": "21567823456",
+    "company_name": "Distribuidora Max",
+    "address": "Av. Belgrano 989, Buenos Aires",
+    "telephone": "+54 11 2244-5555"
+  },
+  {
+    "id": 14,
+    "cid": "29123456123",
+    "company_name": "Cosmética Soler",
+    "address": "San Juan 710, Rosario",
+    "telephone": "+54 341 876-5432"
+  },
+  {
+    "id": 8,
+    "cid": "20346578123",
+    "company_name": "Construcciones Andes S.A.",
+    "address": "Mitre 1540, Salta",
+    "telephone": "+54 387 869-4312"
+  },
+  {
+    "id": 86,
+    "cid": "29292929292",
+    "company_name": "Zapatería Los Andes",
+    "address": "Pasco 210, Ushuaia",
+    "telephone": "+54 2901 676-778"
+  },
+  {
+    "id": 74,
+    "cid": "21909098989",
+    "company_name": "Bazar Simón",
+    "address": "Entre Ríos 765, Buenos Aires",
+    "telephone": "+54 11 2181-4455"
+  },
+  {
+    "id": 62,
+    "cid": "22521234324",
+    "company_name": "Foto Click",
+    "address": "Castro Barros 1072, Córdoba",
+    "telephone": "+54 351 310-1271"
+  },
+  {
+    "id": 9,
+    "cid": "20876543890",
+    "company_name": "Celulares Uno",
+    "address": "Av. San Martín 900, Tucumán",
+    "telephone": "+54 381 123-4567"
+  },
+  {
+    "id": 89,
+    "cid": "26231112332",
+    "company_name": "Carnicería Sur",
+    "address": "Colón 155, Córdoba",
+    "telephone": "+54 351 222-2000"
+  },
+  {
+    "id": 2,
+    "cid": "20987654321",
+    "company_name": "Tecnologías Delta SRL",
+    "address": "Calle Falsa 123, Córdoba",
+    "telephone": "+54 351 654-3210"
+  },
+  {
+    "id": 41,
+    "cid": "20987324681",
+    "company_name": "Carnicería Don Luis",
+    "address": "San Martín 1234, Mendoza",
+    "telephone": "+54 261 123-4444"
+  },
+  {
+    "id": 7,
+    "cid": "20543217654",
+    "company_name": "Alimentos Gama",
+    "address": "Av. Belgrano 1300, Mendoza",
+    "telephone": "+54 261 567-1234"
+  },
+  {
+    "id": 92,
+    "cid": "22298866554",
+    "company_name": "Itech Group S.A.",
+    "address": "Sarmiento 505, Buenos Aires",
+    "telephone": "+54 11 3456-0033"
+  },
+  {
+    "id": 95,
+    "cid": "23567899432",
+    "company_name": "Bicicletería Boedo",
+    "address": "Boedo 98, Buenos Aires",
+    "telephone": "+54 11 4871-0123"
+  },
+  {
+    "id": 67,
+    "cid": "22998888777",
+    "company_name": "Insumos Don Julio",
+    "address": "Moreno 760, Rosario",
+    "telephone": "+54 341 212-2121"
+  },
+  {
+    "id": 44,
+    "cid": "21658743921",
+    "company_name": "Lubricantes Castor",
+    "address": "Av. Perito Moreno 402, Chubut",
+    "telephone": "+54 280 999-2525"
+  },
+  {
+    "id": 42,
+    "cid": "25123456789",
+    "company_name": "Calzados Tino",
+    "address": "Sarmiento 234, Córdoba",
+    "telephone": "+54 351 678-1002"
+  },
+  {
+    "id": 23,
+    "cid": "25671432479",
+    "company_name": "Eléctrica Luz",
+    "address": "Constitución 650, Tucumán",
+    "telephone": "+54 381 654-7723"
+  },
+  {
+    "id": 66,
+    "cid": "23778787878",
+    "company_name": "Colchones Casa",
+    "address": "Entre Ríos 345, Paraná",
+    "telephone": "+54 343 829-1234"
+  },
+  {
+    "id": 25,
+    "cid": "21876554433",
+    "company_name": "Agro Santa Fe",
+    "address": "Rivadavia 1150, Santa Fe",
+    "telephone": "+54 342 111-2233"
+  },
+  {
+    "id": 57,
+    "cid": "21193487276",
+    "company_name": "Carnicería El Ganado",
+    "address": "Lavalle 876, Córdoba",
+    "telephone": "+54 351 314-9090"
+  },
+  {
+    "id": 72,
+    "cid": "23445566778",
+    "company_name": "Carnicería Central",
+    "address": "Alvear 320, Córdoba",
+    "telephone": "+54 351 488-1212"
+  },
+  {
+    "id": 36,
+    "cid": "22765432098",
+    "company_name": "Pinturas Atlas",
+    "address": "Callao 99, Buenos Aires",
+    "telephone": "+54 11 1234-5678"
+  },
+  {
+    "id": 28,
+    "cid": "20913572468",
+    "company_name": "Bicicletas Norte",
+    "address": "Calle Libertad 15, Mendoza",
+    "telephone": "+54 261 678-9876"
+  },
+  {
+    "id": 40,
+    "cid": "23949503788",
+    "company_name": "Regalería Actual",
+    "address": "Peatonal 12, Buenos Aires",
+    "telephone": "+54 11 1235-0202"
+  },
+  {
+    "id": 96,
+    "cid": "21386754021",
+    "company_name": "Farmacia Moderna",
+    "address": "San Martín 99, San Juan",
+    "telephone": "+54 264 998-3382"
+  },
+  {
+    "id": 48,
+    "cid": "25432178891",
+    "company_name": "Despensa Rapidita",
+    "address": "Pueyrredón 1345, Córdoba",
+    "telephone": "+54 351 324-5775"
+  },
+  {
+    "id": 5,
+    "cid": "27234567890",
+    "company_name": "Distribuidora Sur S.A.",
+    "address": "Av. Luro 3501, Mar del Plata",
+    "telephone": "+54 223 345-6789"
+  },
+  {
+    "id": 30,
+    "cid": "28222113445",
+    "company_name": "Perfumería Natura",
+    "address": "Córdoba 250, Paraná",
+    "telephone": "+54 343 222-7894"
+  },
+  {
+    "id": 64,
+    "cid": "21998877665",
+    "company_name": "Almacén El Vecino",
+    "address": "San Luis 800, Rosario",
+    "telephone": "+54 341 111-1001"
+  },
+  {
+    "id": 58,
+    "cid": "25555555555",
+    "company_name": "Veterinaria Lila",
+    "address": "Belgrano 1289, Córdoba",
+    "telephone": "+54 351 120-1200"
+  },
+  {
+    "id": 20,
+    "cid": "24194534567",
+    "company_name": "Repuestos Mendoza",
+    "address": "Calle Sarmiento 1020, Mendoza",
+    "telephone": "+54 261 236-7581"
+  },
+  {
+    "id": 97,
+    "cid": "22288458203",
+    "company_name": "Estudio Jurídico Paz",
+    "address": "San Luis 320, Córdoba",
+    "telephone": "+54 351 455-2233"
+  },
+  {
+    "id": 10,
+    "cid": "20943215678",
+    "company_name": "Servicios Patagónicos SRL",
+    "address": "25 de Mayo 340, Neuquén",
+    "telephone": "+54 299 234-8765"
+  },
+  {
+    "id": 85,
+    "cid": "21567321112",
+    "company_name": "Joyería Pilar",
+    "address": "San Luis 543, Salta",
+    "telephone": "+54 387 651-1231"
+  },
+  {
+    "id": 43,
+    "cid": "24242424242",
+    "company_name": "Juguetería Luna",
+    "address": "Av. 25 de Mayo 600, Misiones",
+    "telephone": "+54 376 432-2222"
+  },
+  {
+    "id": 52,
+    "cid": "20131415161",
+    "company_name": "Papelera Sofía",
+    "address": "Urquiza 687, Concordia",
+    "telephone": "+54 345 764-8271"
+  },
+  {
+    "id": 54,
+    "cid": "24999988887",
+    "company_name": "Vidriería Luz",
+    "address": "Bv. San Juan 1612, Córdoba",
+    "telephone": "+54 351 111-4321"
+  },
+  {
+    "id": 13,
+    "cid": "26876543210",
+    "company_name": "Alfajores del Sur",
+    "address": "Calle 10 No. 325, Mar del Plata",
+    "telephone": "+54 223 654-3210"
+  },
+  {
+    "id": 60,
+    "cid": "26776323411",
+    "company_name": "Mueblería Patagonia",
+    "address": "Vélez Sarsfield 111, Neuquén",
+    "telephone": "+54 299 142-1230"
+  },
+  {
+    "id": 3,
+    "cid": "20456789012",
+    "company_name": "Electrodomésticos Norte",
+    "address": "Ruta 9 Km 12, Rosario",
+    "telephone": "+54 341 123-4567"
+  },
+  {
+    "id": 34,
+    "cid": "27789965743",
+    "company_name": "Agro del Este",
+    "address": "Francia 122, Tucumán",
+    "telephone": "+54 381 789-4322"
+  },
+  {
+    "id": 76,
+    "cid": "20978786766",
+    "company_name": "Jardinería Norte",
+    "address": "Ituzaingó 451, Posadas",
+    "telephone": "+54 376 501-2244"
+  },
+  {
+    "id": 51,
+    "cid": "22121234324",
+    "company_name": "Tienda Celeste",
+    "address": "La Rioja 2055, San Juan",
+    "telephone": "+54 264 234-8798"
+  },
+  {
+    "id": 21,
+    "cid": "28239411552",
+    "company_name": "Comidas El Gordo SRL",
+    "address": "Lavalle 4002, Buenos Aires",
+    "telephone": "+54 11 3255-0001"
+  },
+  {
+    "id": 22,
+    "cid": "20234321456",
+    "company_name": "Textil Patagonia",
+    "address": "Av. La Costa 245, Río Negro",
+    "telephone": "+54 294 765-1447"
+  },
+  {
+    "id": 47,
+    "cid": "21777788889",
+    "company_name": "Café Central",
+    "address": "Microcentro 101, Buenos Aires",
+    "telephone": "+54 11 4412-2323"
+  },
+  {
+    "id": 79,
+    "cid": "24800001112",
+    "company_name": "Cabañas el Lago",
+    "address": "Ruta 3 Km 281, Santa Cruz",
+    "telephone": "+54 2966 231-792"
+  },
+  {
+    "id": 6,
+    "cid": "27123456789",
+    "company_name": "Logística Express SRL",
+    "address": "Calle 47 No. 524, La Plata",
+    "telephone": "+54 221 123-9876"
+  },
+  {
+    "id": 19,
+    "cid": "21345623987",
+    "company_name": "Pinturería Prado",
+    "address": "Av. Maipú 378, San Luis",
+    "telephone": "+54 266 764-2233"
+  },
+  {
+    "id": 24,
+    "cid": "21111122223",
+    "company_name": "Verde Hogar S.A.",
+    "address": "Mitre 885, Chaco",
+    "telephone": "+54 3722 984-111"
+  },
+  {
+    "id": 91,
+    "cid": "21899881202",
+    "company_name": "Cerveza del Barrio",
+    "address": "Chile 300, Mendoza",
+    "telephone": "+54 261 776-2222"
+  },
+  {
+    "id": 37,
+    "cid": "22101010101",
+    "company_name": "Panadería Buen Pan",
+    "address": "Rivadavia 599, La Plata",
+    "telephone": "+54 221 478-1243"
+  },
+  {
+    "id": 39,
+    "cid": "23744748382",
+    "company_name": "Cerámica Andina",
+    "address": "Av. Litoraleña 232, Formosa",
+    "telephone": "+54 370 303-4646"
+  },
+  {
+    "id": 15,
+    "cid": "21432165498",
+    "company_name": "Farmacia Ruta",
+    "address": "Rivadavia 343, Salta",
+    "telephone": "+54 387 777-1234"
+  },
+  {
+    "id": 31,
+    "cid": "29291321314",
+    "company_name": "Lácteos Serra",
+    "address": "Rondeau 800, Rosario",
+    "telephone": "+54 341 339-8123"
+  },
+  {
+    "id": 56,
+    "cid": "22345678900",
+    "company_name": "Frenos Sur",
+    "address": "España 2340, Mendoza",
+    "telephone": "+54 261 800-9000"
+  },
+  {
+    "id": 81,
+    "cid": "24456344522",
+    "company_name": "Música Shop",
+    "address": "Alem 550, Buenos Aires",
+    "telephone": "+54 11 4321-2345"
+  },
+  {
+    "id": 32,
+    "cid": "23232323232",
+    "company_name": "Almacén Local",
+    "address": "Mitre 320, La Rioja",
+    "telephone": "+54 3822 654-888"
+  },
+  {
+    "id": 69,
+    "cid": "29876543217",
+    "company_name": "Cabañas Refugio",
+    "address": "Ruta 38 Km 104, Tucumán",
+    "telephone": "+54 381 501-2023"
+  },
+  {
+    "id": 84,
+    "cid": "22234455667",
+    "company_name": "Casa Libre SRL",
+    "address": "Salta 333, Tucumán",
+    "telephone": "+54 381 333-9876"
+  },
+  {
+    "id": 65,
+    "cid": "21123556777",
+    "company_name": "Pinturería Blanca",
+    "address": "España 222, Salta",
+    "telephone": "+54 387 395-8274"
+  },
+  {
+    "id": 59,
+    "cid": "22997788773",
+    "company_name": "Distribuidora Sarmiento",
+    "address": "Sarmiento 543, Córdoba",
+    "telephone": "+54 351 342-1231"
+  },
+  {
+    "id": 11,
+    "cid": "24123456781",
+    "company_name": "Fashion Lab",
+    "address": "Corrientes 2503, Buenos Aires",
+    "telephone": "+54 11 2345-7382"
+  },
+  {
+    "id": 63,
+    "cid": "21298572361",
+    "company_name": "Software Plus",
+    "address": "Libertador 436, Buenos Aires",
+    "telephone": "+54 11 8008-1000"
+  },
+  {
+    "id": 77,
+    "cid": "23001122334",
+    "company_name": "Imprenta Sudamericana",
+    "address": "Castelli 543, Chaco",
+    "telephone": "+54 3722 431-111"
+  },
+  {
+    "id": 90,
+    "cid": "24991421212",
+    "company_name": "Prestigio Moda",
+    "address": "San Lorenzo 1292, Tucumán",
+    "telephone": "+54 381 321-9002"
+  },
+  {
+    "id": 12,
+    "cid": "27345678901",
+    "company_name": "Automotores Centro S.A.",
+    "address": "Av. Rivadavia 7001, Córdoba",
+    "telephone": "+54 351 777-4422"
+  },
+  {
+    "id": 1,
+    "cid": "20123456001",
+    "company_name": "Comercial Alvarez S.A.",
+    "address": "Av. Siempre Viva 742, Buenos Aires",
+    "telephone": "+54 11 3456-7890"
+  },
+  {
+    "id": 35,
+    "cid": "20787890113",
+    "company_name": "InfoTech SRL",
+    "address": "Av. Pellegrini 1234, Rosario",
+    "telephone": "+54 341 222-5555"
+  },
+  {
+    "id": 53,
+    "cid": "22051823793",
+    "company_name": "Redes Chico SRL",
+    "address": "San Martín 333, Jujuy",
+    "telephone": "+54 388 544-3210"
+  },
+  {
+    "id": 94,
+    "cid": "24001122334",
+    "company_name": "Electro Gamma S.A.",
+    "address": "Vélez Sarsfield 601, Córdoba",
+    "telephone": "+54 351 245-1111"
+  },
+  {
+    "id": 71,
+    "cid": "22468931323",
+    "company_name": "Fábrica Vidmar",
+    "address": "Ruta 34 Km 12, Salta",
+    "telephone": "+54 387 812-9024"
+  },
+  {
+    "id": 88,
+    "cid": "21499881233",
+    "company_name": "Agroservicios Leon",
+    "address": "Av. Kennedy 798, Chaco",
+    "telephone": "+54 3722 567-211"
+  },
+  {
+    "id": 18,
+    "cid": "25765432109",
+    "company_name": "Importadora Andina",
+    "address": "Llambi Campbell 123, Santa Fe",
+    "telephone": "+54 342 876-2109"
+  },
+  {
+    "id": 73,
+    "cid": "23919281122",
+    "company_name": "Mercado Familiar",
+    "address": "Rivadavia 778, Rosario",
+    "telephone": "+54 341 932-1021"
+  },
+  {
+    "id": 38,
+    "cid": "20478956431",
+    "company_name": "Comercio Sur S.A.",
+    "address": "Los Paraísos 44, Neuquén",
+    "telephone": "+54 299 555-4444"
+  },
+  {
+    "id": 70,
+    "cid": "20913141817",
+    "company_name": "Vidrios Avenida",
+    "address": "Av. Nazca 1981, Buenos Aires",
+    "telephone": "+54 11 3322-2323"
+  },
+  {
+    "id": 87,
+    "cid": "21123456780",
+    "company_name": "Farmacia Norte",
+    "address": "Maipú 1200, Mendoza",
+    "telephone": "+54 261 322-4567"
+  },
+  {
+    "id": 29,
+    "cid": "26785196432",
+    "company_name": "Sistemas Be",
+    "address": "Av. Madariaga 999, Corrientes",
+    "telephone": "+54 379 123-4567"
+  },
+  {
+    "id": 68,
+    "cid": "24923232323",
+    "company_name": "Hogar Verde",
+    "address": "Belgrano 200, Río Cuarto",
+    "telephone": "+54 358 431-5288"
+  },
+  {
+    "id": 82,
+    "cid": "22728291922",
+    "company_name": "Farmacia Rubén",
+    "address": "Corrientes 888, Córdoba",
+    "telephone": "+54 351 822-7223"
+  },
+  {
+    "id": 16,
+    "cid": "22123123879",
+    "company_name": "Soluciones Limpias",
+    "address": "Av. San Martín 1450, Mendoza",
+    "telephone": "+54 261 555-8888"
+  },
+  {
+    "id": 78,
+    "cid": "22001098765",
+    "company_name": "Pet Shop La Mascota",
+    "address": "Corrientes 1637, La Plata",
+    "telephone": "+54 221 431-8840"
+  },
+  {
+    "id": 93,
+    "cid": "20567845678",
+    "company_name": "Soluciones Contables",
+    "address": "Reconquista 838, Buenos Aires",
+    "telephone": "+54 11 4322-5430"
+  }
+]

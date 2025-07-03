@@ -10,10 +10,10 @@ import (
 // Storage define la interfaz genérica para persistencia de datos
 type Storage[T any] interface {
 	// ReadAll lee todos los elementos del almacenamiento
-	ReadAll() ([]T, error)
+	ReadAll() (map[int]T, error)
 
 	// WriteAll escribe todos los elementos al almacenamiento
-	WriteAll(items []T) error
+	WriteAll(items []*T) error
 }
 
 // StorageJSON implementa Storage[T] para archivos JSON

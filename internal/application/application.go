@@ -36,7 +36,7 @@ func (app *Application) InitApplication() {
 	routes.SetupRoutes(router)
 
 	log.Println(fmt.Sprintf("Server starting on port http://%s/api/v1", app.PortServer))
-	
+
 	if err := http.ListenAndServe(app.PortServer, router); err != nil {
 		panic(fmt.Sprintf("Error starting server: %v", err))
 	}
