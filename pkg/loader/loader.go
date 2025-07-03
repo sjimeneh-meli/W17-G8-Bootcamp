@@ -14,6 +14,11 @@ type Storage[T any] interface {
 
 	// WriteAll escribe todos los elementos al almacenamiento
 	WriteAll(items []T) error
+
+	// MapToSlice convierte un mapa de tipo map[int]T a un slice de tipo []T.
+	// Itera sobre los valores del mapa de entrada y los agrega a un nuevo slice,
+	// que es luego retornado.
+	MapToSlice(items map[int]T) []T
 }
 
 // StorageJSON implementa Storage[T] para archivos JSON
@@ -30,17 +35,31 @@ func NewJSONStorage[T any](filePath string) *StorageJSON[T] {
 
 // ReadAll implementa Storage[T].ReadAll
 func (s *StorageJSON[T]) ReadAll() (map[int]T, error) {
-	file, err := os.Open(s.filepath)
-	fmt.Println(err)
+	// Usamos os.OpenFile con las banderas O_RDONLY (solo lectura), O_CREATE (crear si no existe)
+	// y 0644 para los permisos del archivo (lectura/escritura para el propietario, solo lectura para otros).
+	file, err := os.OpenFile(s.filepath, os.O_RDONLY|os.O_CREATE, 0644)
+
 	if err != nil {
-		return nil, fmt.Errorf("error abriendo el archivo: %w", err)
+		return nil, fmt.Errorf("error abriendo o creando el archivo: %w", err)
 	}
 	defer file.Close()
+
+	// Obtener el tamaño del archivo para verificar si está vacío.
+	fileInfo, err := file.Stat()
+	if err != nil {
+		return nil, fmt.Errorf("error obteniendo información del archivo: %w", err)
+	}
+
+	// Si el archivo está vacío, devuelve un mapa vacío para indicar que no hay datos.
+	if fileInfo.Size() == 0 {
+		return make(map[int]T), nil
+	}
 
 	var list []T
 	decoder := json.NewDecoder(file)
 
 	if err := decoder.Decode(&list); err != nil {
+		// Manejar el error si el JSON no es válido, pero el archivo sí existe.
 		return nil, fmt.Errorf("error decodificando JSON: %w", err)
 	}
 
