@@ -106,7 +106,7 @@ func (ph *productHandler) Save(w http.ResponseWriter, r *http.Request) {
 	// Map domain model to response / Mapear modelo de dominio a respuesta
 	productResponse := mappers.GetProductResponseFromModel(&newProduct)
 
-	response.JSON(w, http.StatusCreated, productResponse)
+	response.JSON(w, http.StatusCreated, responses.DataResponse{Data: productResponse})
 
 }
 
