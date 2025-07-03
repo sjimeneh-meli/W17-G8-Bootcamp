@@ -31,7 +31,12 @@ type sectionRepository struct {
 }
 
 func (r *sectionRepository) GetAll() []*models.Section {
-	return r.loader.MapToSlice(r.storage)
+	var list []*models.Section
+	for _, m := range r.loader.MapToSlice(r.storage) {
+		list = append(list, &m)
+	}
+
+	return list
 }
 
 func (r *sectionRepository) GetByID(id int) *models.Section {
@@ -46,7 +51,6 @@ func (r *sectionRepository) GetByID(id int) *models.Section {
 func (r *sectionRepository) Create(model *models.Section) {
 	model.Id = len(r.storage) + 1
 	r.storage[model.Id] = *model
-	//r.storage = append(r.storage, model)
 }
 
 func (r *sectionRepository) ExistsWithSectionNumber(id int, sectionNumber string) bool {
