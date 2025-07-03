@@ -3,7 +3,7 @@ package validations
 import (
 	"errors"
 
-	validation "github.com/go-ozzo/ozzo-validation"
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/requests"
 )
 
