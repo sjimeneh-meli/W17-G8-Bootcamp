@@ -14,13 +14,6 @@ import (
 )
 
 func SetupRoutes(router *chi.Mux) {
-	buyerLoader := loader.NewJSONStorage[models.Buyer](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "buyers.json"))
-	buyerRepository, err := repositories.GetNewBuyerRepository(buyerLoader)
-	if err != nil {
-		panic(err.Error())
-	}
-	buyerService := services.GetBuyerService(buyerRepository)
-	buyerHandler := handlers.GetBuyerHandler(buyerService)
 
 	sectionLoader := loader.NewJSONStorage[models.Section](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "sections.json"))
 	sectionRepository, sectionLoaderErr := repositories.GetSectionRepository(sectionLoader)
@@ -45,12 +38,33 @@ func SetupRoutes(router *chi.Mux) {
 		})
 
 		r.Route("/buyers", func(r chi.Router) {
+			buyerLoader := loader.NewJSONStorage[models.Buyer](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "buyers.json"))
+			buyerRepository, err := repositories.GetNewBuyerRepository(buyerLoader)
+			if err != nil {
+				panic(err.Error())
+			}
+			buyerService := services.GetBuyerService(buyerRepository)
+			buyerHandler := handlers.GetBuyerHandler(buyerService)
+
 			r.Get("/", buyerHandler.GetAll())
 			r.Get("/{id}", buyerHandler.GetById())
 			r.Delete("/{id}", buyerHandler.DeleteById())
 			r.Post("/", buyerHandler.PostBuyer())
 			r.Patch("/{id}", buyerHandler.PatchBuyer())
 		})
+
+		r.Route("/warehouse", func(r chi.Router) {
+			warehouseStorage := loader.NewJSONStorage[models.Warehouse](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "warehouse.json"))
+			repository := repositories.NewWarehouseRepository(*warehouseStorage)
+			service := services.NewWarehouseService(repository)
+			handler := handlers.NewWarehouseHandler(service)
+			r.Get("/{id}", handler.GetById)
+			r.Get("/", handler.GetAll)
+			r.Post("/", handler.Create)
+			r.Put("/{id}", handler.Update)
+			r.Delete("/{id}", handler.Delete)
+		})
+
 		r.Route("/sellers", func(r chi.Router) {
 			sellerStorage := loader.NewJSONStorage[models.Seller](fmt.Sprintf("%s/%s", "docs/database", "sellers.json"))
 			sellerRepo := repositories.NewJSONSellerRepository(sellerStorage)
