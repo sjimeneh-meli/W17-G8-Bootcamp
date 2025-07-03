@@ -133,6 +133,11 @@ func (pr *productRepository) Create(newProduct models.Product) (models.Product, 
 		return models.Product{}, err
 	}
 
+	// Get the new ID for the product
+	// Obtener el nuevo ID para el producto
+	idCount := len(productsMap) + 1
+	newProduct.Id = idCount
+
 	// Add the new product to the map
 	// Agregar el nuevo producto al mapa
 	productsMap[newProduct.Id] = newProduct

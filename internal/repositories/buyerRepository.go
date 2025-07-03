@@ -113,8 +113,7 @@ func (r *BuyerRepository) Save() error {
 	buyerArray := []models.Buyer{}
 
 	for _, buyer := range r.storage {
-		buyerCopy := buyer
-		buyerArray = append(buyerArray, buyerCopy)
+		buyerArray = append(buyerArray, buyer)
 	}
 
 	err := r.loader.WriteAll(buyerArray)
