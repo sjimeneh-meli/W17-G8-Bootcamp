@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"github.com/bootcamp-go/web/response"
 	"github.com/go-chi/chi/v5"
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/requests"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/responses"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/mappers"
-	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/validations"
 	"net/http"
 	"strconv"
 
@@ -52,14 +53,17 @@ func (h *SellerHandler) GetById(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *SellerHandler) Save(w http.ResponseWriter, r *http.Request) {
-	var sellerToCreate models.SellerRequest
+	var sellerToCreate requests.SellerRequest
 	data := r.Body
 	errorBody := json.NewDecoder(data).Decode(&sellerToCreate)
 	if errorBody != nil {
 		response.Error(w, http.StatusBadRequest, errorBody.Error())
 		return
 	}
-
+	if err := validations.ValidateSellerRequestStruct(sellerToCreate); err != nil {
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
 	sellerParced := mappers.ToRequestToSellerStruct(sellerToCreate)
 	sellerCreated, err := h.service.Save(sellerParced)
 
@@ -67,8 +71,9 @@ func (h *SellerHandler) Save(w http.ResponseWriter, r *http.Request) {
 		response.Error(w, http.StatusConflict, err.Error())
 		return
 	}
+	sellerResponse := mappers.ToSellerStructToResponse(sellerCreated[0])
 
-	response.JSON(w, http.StatusOK, responses.DataResponse{Data: sellerCreated})
+	response.JSON(w, http.StatusOK, responses.DataResponse{Data: sellerResponse})
 
 }
 
@@ -87,7 +92,7 @@ func (h *SellerHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	data := r.Body
-	var bodyFormated models.SellerRequest
+	var bodyFormated requests.SellerRequest
 	errBody := json.NewDecoder(data).Decode(&bodyFormated)
 
 	if errBody != nil {

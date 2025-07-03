@@ -7,9 +7,9 @@ import (
 )
 
 type SellerRepository interface {
-	GetAll() (map[int]models.Seller, error)
-	Save(seller models.Seller) (models.Seller, error)
-	Update(id int, seller models.Seller) (models.Seller, error)
+	GetAll() ([]models.Seller, error)
+	Save(seller models.Seller) ([]models.Seller, error)
+	Update(id int, seller models.Seller) ([]models.Seller, error)
 	Delete(id int) error
 }
 
@@ -24,19 +24,21 @@ func NewJSONSellerRepository(storage loader.Storage[models.Seller]) *JsonSellerR
 	}
 }
 
-func (r *JsonSellerRepository) GetAll() (map[int]models.Seller, error) {
+func (r *JsonSellerRepository) GetAll() ([]models.Seller, error) {
 	data, err := r.storage.ReadAll()
-	//fmt.Println(data)
+
 	if err != nil {
 		return nil, err
 	}
-	return data, err
+	itemSlice := r.storage.MapToSlice(data)
+
+	return itemSlice, err
 }
 
-func (r *JsonSellerRepository) Save(seller models.Seller) (models.Seller, error) {
-	sellers, err := r.GetAll()
+func (r *JsonSellerRepository) Save(seller models.Seller) ([]models.Seller, error) {
+	sellers, err := r.storage.ReadAll()
 	if err != nil {
-		return models.Seller{}, err
+		return []models.Seller{}, err
 	}
 	var id int
 	for _, value := range sellers {
@@ -44,7 +46,7 @@ func (r *JsonSellerRepository) Save(seller models.Seller) (models.Seller, error)
 			id = value.Id
 		}
 		if value.CID == seller.CID {
-			return models.Seller{}, error_message.ErrAlreadyExists
+			return []models.Seller{}, error_message.ErrAlreadyExists
 		}
 	}
 	seller.Id = id + 1
@@ -55,21 +57,21 @@ func (r *JsonSellerRepository) Save(seller models.Seller) (models.Seller, error)
 	err = r.storage.WriteAll(itemSlice)
 
 	if err != nil {
-		return models.Seller{}, err
+		return []models.Seller{}, err
 	}
 
-	return seller, nil
+	return []models.Seller{seller}, nil
 }
 
-func (r *JsonSellerRepository) Update(id int, seller models.Seller) (models.Seller, error) {
-	sellers, err := r.GetAll()
+func (r *JsonSellerRepository) Update(id int, seller models.Seller) ([]models.Seller, error) {
+	sellers, err := r.storage.ReadAll()
 	if err != nil {
-		return models.Seller{}, err
+		return nil, err
 	}
 	_, ok := sellers[id]
 
 	if !ok {
-		return models.Seller{}, error_message.ErrNotFound
+		return []models.Seller{}, error_message.ErrNotFound
 	}
 
 	existingSeller := sellers[id]
@@ -94,15 +96,15 @@ func (r *JsonSellerRepository) Update(id int, seller models.Seller) (models.Sell
 	err = r.storage.WriteAll(itemSlice)
 
 	if err != nil {
-		return models.Seller{}, err
+		return []models.Seller{}, err
 	}
 
-	return existingSeller, nil
+	return []models.Seller{existingSeller}, nil
 
 }
 
 func (r *JsonSellerRepository) Delete(id int) error {
-	sellers, err := r.GetAll()
+	sellers, err := r.storage.ReadAll()
 	if err != nil {
 		return err
 	}
