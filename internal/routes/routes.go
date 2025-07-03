@@ -15,7 +15,7 @@ import (
 )
 
 func SetupRoutes(router *chi.Mux) {
-	employeeLoader := loader.NewJSONStorage[models.Employee](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "employee.json"))
+	employeeLoader := loader.NewJSONStorage[models.Employee](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "employees.json"))
 	employeeRepository, employeeLoaderErr := repositories.GetEmployeeRepository(employeeLoader)
 	if employeeLoaderErr != nil {
 		panic(employeeLoaderErr.Error())
@@ -41,7 +41,7 @@ func SetupRoutes(router *chi.Mux) {
 			rt.Get("/", employeeHandler.GetAll())
 			rt.Get("/{id}", employeeHandler.GetById())
 			rt.Post("/", employeeHandler.Create())
-			rt.Patch("/{id}", employeeHandler.PatchEmployee())
+			rt.Patch("/{id}", employeeHandler.Update())
 			rt.Delete("/{id}", employeeHandler.DeleteById())
 		})
 	})

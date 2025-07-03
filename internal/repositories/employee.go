@@ -1,6 +1,8 @@
 package repositories
 
 import (
+	"fmt"
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/error_message"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 	"github.com/sajimenezher_meli/meli-frescos-8/pkg/loader"
 )
@@ -18,10 +20,11 @@ func GetEmployeeRepository(loader *loader.StorageJSON[models.Employee]) (Employe
 }
 
 type EmployeeRepositoryI interface {
-	GetAll() []*models.Employee
-	Create(e *models.Employee)
-	GetById(id int) *models.Employee
+	GetAll() []models.Employee
+	Create(e models.Employee)
+	GetById(id int) (models.Employee, error)
 	DeleteById(id int) bool
+	Update(e models.Employee) bool
 	ExistsWhCardNumber(id int, cardNumber string) bool
 }
 
@@ -30,21 +33,21 @@ type employeeRepository struct {
 	loader  *loader.StorageJSON[models.Employee]
 }
 
-func (r *employeeRepository) GetAll() []*models.Employee {
+func (r *employeeRepository) GetAll() []models.Employee {
 	return r.loader.MapToSlice(r.storage)
 }
-func (r *employeeRepository) GetById(id int) *models.Employee {
-	for _, e := range r.storage {
-		if e.Id == id {
-			return &e
-		}
+
+func (r *employeeRepository) GetById(id int) (models.Employee, error) {
+	_, exists := r.storage[id]
+	if !exists {
+		return models.Employee{}, fmt.Errorf("%w. %s %d", error_message.ErrNotFound, "employee with Id", id)
 	}
-	return nil
+	return r.storage[id], nil
 }
 
-func (r *employeeRepository) Create(e *models.Employee) {
+func (r *employeeRepository) Create(e models.Employee) {
 	e.Id = len(r.storage) + 1
-	r.storage[e.Id] = *e
+	r.storage[e.Id] = e
 }
 
 func (r *employeeRepository) ExistsWhCardNumber(id int, cardNumber string) bool {
@@ -54,6 +57,14 @@ func (r *employeeRepository) ExistsWhCardNumber(id int, cardNumber string) bool 
 		}
 	}
 	return false
+}
+
+func (r *employeeRepository) Update(e models.Employee) bool {
+	if _, exists := r.storage[e.Id]; !exists {
+		return false
+	}
+	r.storage[e.Id] = e
+	return true
 }
 
 func (r *employeeRepository) DeleteById(id int) bool {

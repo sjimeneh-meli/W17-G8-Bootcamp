@@ -26,7 +26,7 @@ type EmployeeHandlerI interface {
 	Create() http.HandlerFunc
 	GetById() http.HandlerFunc
 	DeleteById() http.HandlerFunc
-	PatchEmployee() http.HandlerFunc
+	Update() http.HandlerFunc
 }
 
 type EmployeeHandler struct {
@@ -34,11 +34,11 @@ type EmployeeHandler struct {
 	validation *validations.EmployeeValidation
 }
 
-func (h *EmployeeHandler) PatchEmployee() http.HandlerFunc {
+func (h *EmployeeHandler) Update() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var (
-			request  *requests.EmployeeRequest = &requests.EmployeeRequest{}
-			response *responses.DataResponse   = &responses.DataResponse{}
+			request  requests.EmployeeRequest = requests.EmployeeRequest{}
+			response *responses.DataResponse  = &responses.DataResponse{}
 		)
 
 		w.Header().Set("Content-Type", "application/json")
@@ -59,14 +59,13 @@ func (h *EmployeeHandler) PatchEmployee() http.HandlerFunc {
 			return
 		}
 
-		if reqErr := json.NewDecoder(r.Body).Decode(request); reqErr != nil {
+		if reqErr := json.NewDecoder(r.Body).Decode(&request); reqErr != nil {
 			response.SetError(error_message.ErrInvalidInput.Error())
 			w.WriteHeader(http.StatusExpectationFailed)
 			json.NewEncoder(w).Encode(response)
 			return
 		}
-
-		if valErr := h.validation.ValidateEmployeeRequestStruct(*request); valErr != nil {
+		if valErr := h.validation.ValidateEmployeeRequestStruct(request); valErr != nil {
 			response.SetError(valErr.Error())
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			json.NewEncoder(w).Encode(response)
@@ -79,8 +78,14 @@ func (h *EmployeeHandler) PatchEmployee() http.HandlerFunc {
 			json.NewEncoder(w).Encode(response)
 			return
 		}
-
 		mappers.UpdateEmployeeModelFromRequest(employee, request)
+
+		if err := h.service.Update(employee); err != nil {
+			response.SetError(err.Error())
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(response)
+			return
+		}
 
 		response.Data = mappers.GetEmployeeResponseFromModel(employee)
 		w.WriteHeader(http.StatusOK)
@@ -98,8 +103,8 @@ func (h *EmployeeHandler) GetAll() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var (
 			response         *responses.DataResponse = &responses.DataResponse{}
-			employeeResponse []*responses.EmployeeResponse
-			employee         []*models.Employee
+			employeeResponse []responses.EmployeeResponse
+			employee         []models.Employee
 		)
 
 		w.Header().Set("Content-Type", "application/json")
@@ -122,21 +127,21 @@ func (h *EmployeeHandler) GetAll() http.HandlerFunc {
 func (h *EmployeeHandler) Create() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var (
-			request  *requests.EmployeeRequest = &requests.EmployeeRequest{}
-			response *responses.DataResponse   = &responses.DataResponse{}
-			employee *models.Employee
+			request  requests.EmployeeRequest = requests.EmployeeRequest{}
+			response *responses.DataResponse  = &responses.DataResponse{}
+			employee models.Employee
 		)
 
 		w.Header().Set("Content-Type", "application/json")
 
-		if reqErr := json.NewDecoder(r.Body).Decode(request); reqErr != nil {
+		if reqErr := json.NewDecoder(r.Body).Decode(&request); reqErr != nil {
 			response.SetError(error_message.ErrInvalidInput.Error())
 			w.WriteHeader(http.StatusExpectationFailed)
 			json.NewEncoder(w).Encode(response)
 			return
 		}
 
-		if valErr := h.validation.ValidateEmployeeRequestStruct(*request); valErr != nil {
+		if valErr := h.validation.ValidateEmployeeRequestStruct(request); valErr != nil {
 			response.SetError(valErr.Error())
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			json.NewEncoder(w).Encode(response)
@@ -176,7 +181,7 @@ func (h *EmployeeHandler) GetById() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var (
 			response         *responses.DataResponse = &responses.DataResponse{}
-			employeeResponse *responses.EmployeeResponse
+			employeeResponse responses.EmployeeResponse
 		)
 
 		w.Header().Set("Content-Type", "application/json")
