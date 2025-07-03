@@ -26,3 +26,22 @@ func ToRequest(warehouseRequest requests.WarehouseRequest) models.Warehouse {
 		MinimumTemperature: warehouseRequest.MinimumTemperature,
 	}
 }
+
+func ApplyPatch(existing models.Warehouse, patch requests.WarehousePatchRequest) models.Warehouse {
+	if patch.Address != nil {
+		existing.Address = *patch.Address
+	}
+	if patch.Telephone != nil {
+		existing.Telephone = *patch.Telephone
+	}
+	if patch.WareHouseCode != nil {
+		existing.WareHouseCode = *patch.WareHouseCode
+	}
+	if patch.MinimumCapacity != nil {
+		existing.MinimumCapacity = *patch.MinimumCapacity
+	}
+	if patch.MinimumTemperature != nil {
+		existing.MinimumTemperature = *patch.MinimumTemperature
+	}
+	return existing
+}

@@ -88,7 +88,6 @@ func (r *WarehouseRepositoryImpl) Delete(id int) error {
 		return fmt.Errorf("%w: %v", error_message.ErrInternalServerError, err)
 	}
 
-	// Verificar que el warehouse existe
 	if _, exists := warehouses[id]; !exists {
 		return fmt.Errorf("%w: warehouse with id %d", error_message.ErrNotFound, id)
 	}
@@ -110,12 +109,10 @@ func (r *WarehouseRepositoryImpl) Update(id int, warehouse models.Warehouse) (mo
 		return models.Warehouse{}, fmt.Errorf("%w: %v", error_message.ErrInternalServerError, err)
 	}
 
-	// Verificar que el warehouse existe
 	if _, exists := warehouses[id]; !exists {
 		return models.Warehouse{}, fmt.Errorf("%w: warehouse with id %d", error_message.ErrNotFound, id)
 	}
 
-	// Asignar el ID al warehouse y actualizarlo
 	warehouse.Id = id
 	warehouses[id] = warehouse
 

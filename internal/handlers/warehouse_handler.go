@@ -40,10 +40,9 @@ func (h *WarehouseHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Mapear a DTOs para la respuesta
-	warehouseResponses := make(map[int]responses.WarehouseResponse)
-	for id, warehouse := range warehouses {
-		warehouseResponses[id] = mappers.ToResponse(warehouse)
+	warehouseResponses := make([]responses.WarehouseResponse, 0)
+	for _, warehouse := range warehouses {
+		warehouseResponses = append(warehouseResponses, mappers.ToResponse(warehouse))
 	}
 
 	response.JSON(w, http.StatusOK, responses.DataResponse{
@@ -63,7 +62,6 @@ func (h *WarehouseHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validar que el código de almacén sea único
 	if err := h.warehouseService.ValidateCodeUniqueness(warehouseRequest.WareHouseCode); err != nil {
 		if errors.Is(err, error_message.ErrAlreadyExists) {
 			response.Error(w, http.StatusConflict, err.Error())
@@ -108,7 +106,6 @@ func (h *WarehouseHandler) GetById(w http.ResponseWriter, r *http.Request) {
 
 	warehouse, err := h.warehouseService.GetById(id)
 	if err != nil {
-		// Determinar el código HTTP basado en el tipo de error
 		if errors.Is(err, error_message.ErrNotFound) {
 			response.Error(w, http.StatusNotFound, err.Error())
 			return
@@ -141,7 +138,6 @@ func (h *WarehouseHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.warehouseService.Delete(id); err != nil {
-		// Determinar el código HTTP basado en el tipo de error
 		if errors.Is(err, error_message.ErrNotFound) {
 			response.Error(w, http.StatusNotFound, err.Error())
 			return
@@ -172,19 +168,49 @@ func (h *WarehouseHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var warehouseRequest requests.WarehouseRequest
-	if err := json.NewDecoder(r.Body).Decode(&warehouseRequest); err != nil {
+	existingWarehouse, err := h.warehouseService.GetById(id)
+	if err != nil {
+		if errors.Is(err, error_message.ErrNotFound) {
+			response.Error(w, http.StatusNotFound, err.Error())
+			return
+		}
+		if errors.Is(err, error_message.ErrInternalServerError) {
+			response.Error(w, http.StatusInternalServerError, "Error al buscar el warehouse en la base de datos")
+			return
+		}
+		response.Error(w, http.StatusInternalServerError, "Error al obtener el warehouse")
+		return
+	}
+
+	var warehousePatchRequest requests.WarehousePatchRequest
+	if err := json.NewDecoder(r.Body).Decode(&warehousePatchRequest); err != nil {
 		response.Error(w, http.StatusBadRequest, "Formato JSON inválido")
 		return
 	}
 
-	if err := validations.ValidateWarehouseRequestStruct(warehouseRequest); err != nil {
+	if err := validations.ValidateWarehousePatchRequest(warehousePatchRequest); err != nil {
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	warehouse := mappers.ToRequest(warehouseRequest)
-	updatedWarehouse, err := h.warehouseService.Update(id, warehouse)
+	updatedWarehouse := mappers.ApplyPatch(existingWarehouse, warehousePatchRequest)
+
+	if warehousePatchRequest.WareHouseCode != nil && *warehousePatchRequest.WareHouseCode != existingWarehouse.WareHouseCode {
+		if err := h.warehouseService.ValidateCodeUniqueness(*warehousePatchRequest.WareHouseCode); err != nil {
+			if errors.Is(err, error_message.ErrAlreadyExists) {
+				response.Error(w, http.StatusConflict, err.Error())
+				return
+			}
+			if errors.Is(err, error_message.ErrInternalServerError) {
+				response.Error(w, http.StatusInternalServerError, "Error al validar la unicidad del código en la base de datos")
+				return
+			}
+			response.Error(w, http.StatusInternalServerError, "Error al validar el código del warehouse")
+			return
+		}
+	}
+
+	finalWarehouse, err := h.warehouseService.Update(id, updatedWarehouse)
 	if err != nil {
 		if errors.Is(err, error_message.ErrNotFound) {
 			response.Error(w, http.StatusNotFound, err.Error())
@@ -202,7 +228,7 @@ func (h *WarehouseHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	warehouseResponse := mappers.ToResponse(updatedWarehouse)
+	warehouseResponse := mappers.ToResponse(finalWarehouse)
 	response.JSON(w, http.StatusOK, responses.DataResponse{
 		Data: warehouseResponse,
 	})

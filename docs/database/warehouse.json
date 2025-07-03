@@ -1,10 +1,10 @@
 [
   {
     "id": 1,
-    "address": "Calle Principal 123, Ciudad Industrial",
+    "address": "Nueva dirección",
     "telephone": "+1-555-0101",
     "warehouse_code": "WH001",
-    "minimum_capacity": 1000,
+    "minimum_capacity": 150,
     "minimum_temperature": -5
   },
   {
