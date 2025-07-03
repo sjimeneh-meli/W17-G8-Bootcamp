@@ -15,6 +15,15 @@ import (
 
 func SetupRoutes(router *chi.Mux) {
 
+	sectionLoader := loader.NewJSONStorage[models.Section](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "sections.json"))
+	sectionRepository, sectionLoaderErr := repositories.GetSectionRepository(sectionLoader)
+	if sectionLoaderErr != nil {
+		panic(sectionLoaderErr.Error())
+	}
+	sectionService := services.GetSectionService(sectionRepository)
+	sectionValidation := validations.GetSectionValidation()
+	sectionHandler := handlers.GetSectionHandler(sectionService, sectionValidation)
+
 	router.Get("/hello-world", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -55,6 +64,7 @@ func SetupRoutes(router *chi.Mux) {
 			r.Put("/{id}", handler.Update)
 			r.Delete("/{id}", handler.Delete)
 		})
+
 		r.Route("/sellers", func(r chi.Router) {
 			sellerStorage := loader.NewJSONStorage[models.Seller](fmt.Sprintf("%s/%s", "docs/database", "sellers.json"))
 			sellerRepo := repositories.NewJSONSellerRepository(sellerStorage)
@@ -66,6 +76,14 @@ func SetupRoutes(router *chi.Mux) {
 			r.Post("/", sellerHandler.Save)
 			r.Patch("/{id}", sellerHandler.Update)
 			r.Delete("/{id}", sellerHandler.Delete)
+		})
+
+		r.Route("/sections", func(rt chi.Router) {
+			rt.Get("/", sectionHandler.GetAll)
+			rt.Get("/{id}", sectionHandler.GetByID)
+			rt.Post("/", sectionHandler.Create)
+			rt.Patch("/{id}", sectionHandler.Update)
+			rt.Delete("/{id}", sectionHandler.DeleteByID)
 		})
 	})
 }
