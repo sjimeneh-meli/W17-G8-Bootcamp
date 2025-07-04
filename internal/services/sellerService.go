@@ -7,10 +7,10 @@ import (
 )
 
 type SellerService interface {
-	GetAll() (map[int]models.Seller, error)
+	GetAll() ([]models.Seller, error)
 	GetById(id int) (models.Seller, error)
-	Save(seller models.Seller) (models.Seller, error)
-	Update(id int, seller models.Seller) (models.Seller, error)
+	Save(seller models.Seller) ([]models.Seller, error)
+	Update(id int, seller models.Seller) ([]models.Seller, error)
 	Delete(id int) error
 }
 
@@ -24,7 +24,7 @@ func NewJSONSellerService(repo repositories.SellerRepository) *JsonSellerService
 	}
 }
 
-func (s *JsonSellerService) GetAll() (map[int]models.Seller, error) {
+func (s *JsonSellerService) GetAll() ([]models.Seller, error) {
 	sellers, err := s.repo.GetAll()
 	return sellers, err
 }
@@ -34,19 +34,22 @@ func (s *JsonSellerService) GetById(id int) (models.Seller, error) {
 	if err != nil {
 		return models.Seller{}, error_message.ErrNotFound
 	}
-	_, ok := sellers[id]
-	if !ok {
-		return models.Seller{}, error_message.ErrNotFound
+
+	for _, seller := range sellers {
+		if seller.Id == id {
+			return seller, nil
+		}
 	}
-	return sellers[id], nil
+
+	return models.Seller{}, error_message.ErrNotFound
 }
 
-func (s *JsonSellerService) Save(seller models.Seller) (models.Seller, error) {
+func (s *JsonSellerService) Save(seller models.Seller) ([]models.Seller, error) {
 	sellerCreated, err := s.repo.Save(seller)
 	return sellerCreated, err
 }
 
-func (s *JsonSellerService) Update(id int, seller models.Seller) (models.Seller, error) {
+func (s *JsonSellerService) Update(id int, seller models.Seller) ([]models.Seller, error) {
 	sellerFounded, err := s.repo.Update(id, seller)
 	return sellerFounded, err
 }
