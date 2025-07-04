@@ -27,12 +27,6 @@ func SetupRoutes(router *chi.Mux) {
 	sectionValidation := validations.GetSectionValidation()
 	sectionHandler := handlers.GetSectionHandler(sectionService, sectionValidation)
 
-	router.Get("/hello-world", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"message": "Hello World from Chi Router!"}`))
-	})
-
 	router.Route("/api/v1", func(r chi.Router) {
 		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
