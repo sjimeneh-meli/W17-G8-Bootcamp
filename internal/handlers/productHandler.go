@@ -17,12 +17,12 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/validations"
 )
 
-// productHandler handles HTTP requests for product operations.
+// ProductHandler handles HTTP requests for product operations.
 // It acts as a bridge between HTTP requests and business logic services.
 //
-// productHandler maneja las peticiones HTTP para operaciones de productos.
+// ProductHandler maneja las peticiones HTTP para operaciones de productos.
 // Actúa como un puente entre las peticiones HTTP y los servicios de lógica de negocio.
-type productHandler struct {
+type ProductHandler struct {
 	service services.ProductServiceI
 }
 
@@ -31,8 +31,8 @@ type productHandler struct {
 //
 // NewProductHandler crea una nueva instancia del manejador de productos con el servicio proporcionado.
 // Sigue el patrón de inyección de dependencias para mejor testabilidad y modularidad.
-func NewProductHandler(service services.ProductServiceI) *productHandler {
-	return &productHandler{
+func NewProductHandler(service services.ProductServiceI) *ProductHandler {
+	return &ProductHandler{
 		service: service,
 	}
 }
@@ -42,7 +42,7 @@ func NewProductHandler(service services.ProductServiceI) *productHandler {
 //
 // GetAll obtiene todos los productos del sistema.
 // Retorna 200 OK con los datos de productos o códigos de estado de error apropiados.
-func (ph *productHandler) GetAll(w http.ResponseWriter, r *http.Request) {
+func (ph *ProductHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	products, err := ph.service.GetAll()
 
 	if err != nil {
@@ -66,7 +66,7 @@ func (ph *productHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 // Save crea un nuevo producto en el sistema.
 // Valida la carga útil de la petición y retorna 201 Created en caso de éxito.
 // Retorna 400 Bad Request para errores de validación o 409 Conflict si el producto ya existe.
-func (ph *productHandler) Save(w http.ResponseWriter, r *http.Request) {
+func (ph *ProductHandler) Save(w http.ResponseWriter, r *http.Request) {
 	var productRequest requests.ProductRequest
 
 	// Parse JSON request body / Parsear el cuerpo de la petición JSON
@@ -115,7 +115,7 @@ func (ph *productHandler) Save(w http.ResponseWriter, r *http.Request) {
 //
 // GetById obtiene un producto específico por su ID.
 // Valida el parámetro ID y retorna 200 OK con los datos del producto o 404 Not Found.
-func (ph *productHandler) GetById(w http.ResponseWriter, r *http.Request) {
+func (ph *ProductHandler) GetById(w http.ResponseWriter, r *http.Request) {
 
 	// Extract and validate ID from URL path / Extraer y validar ID de la ruta URL
 	idString := strings.TrimSpace(chi.URLParam(r, "id"))
@@ -159,7 +159,7 @@ func (ph *productHandler) GetById(w http.ResponseWriter, r *http.Request) {
 //
 // Update modifica un producto existente por su ID.
 // Valida el parámetro ID y la carga útil de la petición, retorna 200 OK en caso de éxito.
-func (ph *productHandler) Update(w http.ResponseWriter, r *http.Request) {
+func (ph *ProductHandler) Update(w http.ResponseWriter, r *http.Request) {
 	// Extract and validate ID from URL path / Extraer y validar ID de la ruta URL
 	idString := strings.TrimSpace(chi.URLParam(r, "id"))
 
@@ -210,7 +210,7 @@ func (ph *productHandler) Update(w http.ResponseWriter, r *http.Request) {
 //
 // DeleteById elimina un producto del sistema por su ID.
 // Valida el parámetro ID y retorna 204 No Content en caso de eliminación exitosa.
-func (ph *productHandler) DeleteById(w http.ResponseWriter, r *http.Request) {
+func (ph *ProductHandler) DeleteById(w http.ResponseWriter, r *http.Request) {
 	// Extract and validate ID from URL path / Extraer y validar ID de la ruta URL
 	idString := strings.TrimSpace(chi.URLParam(r, "id"))
 

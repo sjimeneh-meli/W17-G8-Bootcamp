@@ -2,13 +2,13 @@ package application
 
 import (
 	"fmt"
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/config"
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/container"
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/routes"
+	"github.com/sajimenezher_meli/meli-frescos-8/pkg/database"
 	"log"
 	"net/http"
 	"os"
-
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
-	"github.com/sajimenezher_meli/meli-frescos-8/internal/routes"
 )
 
 type Application struct {
@@ -28,12 +28,20 @@ func (app *Application) SetEnvironment() {
 }
 
 func (app *Application) InitApplication() {
-	router := chi.NewRouter()
+	// 1. Load configuration
+	cfg := config.LoadConfig()
 
-	router.Use(middleware.Logger)
-	router.Use(middleware.Recoverer)
+	// 2. Initialize database
+	db := database.InitDB(cfg)
+	defer db.Close()
 
-	routes.SetupRoutes(router)
+	c, err := container.NewContainer(db)
+
+	if err != nil {
+		log.Fatal(fmt.Sprintf("error initialized container dependencies %v", err))
+	}
+
+	router := routes.SetupRoutes(c)
 
 	log.Println(fmt.Sprintf("Server starting on port http://%s/api/v1", app.PortServer))
 
