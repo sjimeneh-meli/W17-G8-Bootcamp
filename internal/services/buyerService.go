@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"fmt"
 	"slices"
 
@@ -16,41 +17,49 @@ func GetBuyerService(repo repositories.BuyerRepositoryI) BuyerServiceI {
 }
 
 type BuyerServiceI interface {
-	GetAll() (map[int]models.Buyer, error)
-	GetById(id int) (models.Buyer, error)
-	DeleteById(id int) error
-	Create(buyer models.Buyer) (models.Buyer, error)
-	Update(buyerId int, buyer models.Buyer) (models.Buyer, error)
+	GetAll(ctx context.Context) (map[int]models.Buyer, error)
+	GetById(ctx context.Context, id int) (models.Buyer, error)
+	DeleteById(ictx context.Context, d int) error
+	Create(ctx context.Context, buyer models.Buyer) (models.Buyer, error)
+	Update(ctx context.Context, buyerId int, buyer models.Buyer) (models.Buyer, error)
 }
 
 type BuyerService struct {
 	repository repositories.BuyerRepositoryI
 }
 
-func (s *BuyerService) GetAll() (map[int]models.Buyer, error) {
-	return s.repository.GetAll()
+func (s *BuyerService) GetAll(ctx context.Context) (map[int]models.Buyer, error) {
+	return s.repository.GetAll(ctx)
 }
 
-func (s *BuyerService) GetById(id int) (models.Buyer, error) {
-	return s.repository.GetById(id)
+func (s *BuyerService) GetById(ctx context.Context, id int) (models.Buyer, error) {
+	return s.repository.GetById(ctx, id)
 }
 
-func (s *BuyerService) DeleteById(id int) error {
-	return s.repository.DeleteById(id)
+func (s *BuyerService) DeleteById(ctx context.Context, id int) error {
+	return s.repository.DeleteById(ctx, id)
 }
 
-func (s *BuyerService) Create(buyer models.Buyer) (models.Buyer, error) {
-	newId := s.repository.GetNewId()
-	buyer.Id = newId
+func (s *BuyerService) Create(ctx context.Context, buyer models.Buyer) (models.Buyer, error) {
 
-	existingCardNumbers := s.repository.GetCardNumberIds()
+	existingCardNumbers, err := s.repository.GetCardNumberIds()
+	if err != nil {
+		return models.Buyer{}, err
+	}
 	if slices.Contains(existingCardNumbers, buyer.CardNumberId) {
 		return models.Buyer{}, fmt.Errorf("%w - %s %s %s", error_message.ErrAlreadyExists, "card number with id:", buyer.CardNumberId, "already exists.")
 	}
 
-	return s.repository.Create(buyer)
+	return s.repository.Create(ctx, buyer)
 }
 
-func (s *BuyerService) Update(id int, buyer models.Buyer) (models.Buyer, error) {
-	return s.repository.Update(id, buyer)
+func (s *BuyerService) Update(ctx context.Context, id int, buyer models.Buyer) (models.Buyer, error) {
+	existingCardNumbers, err := s.repository.GetCardNumberIds()
+	if err != nil {
+		return models.Buyer{}, err
+	}
+	if slices.Contains(existingCardNumbers, buyer.CardNumberId) {
+		return models.Buyer{}, fmt.Errorf("%w - %s %s %s", error_message.ErrAlreadyExists, "card number with id:", buyer.CardNumberId, "already exists.")
+	}
+	return s.repository.Update(ctx, id, buyer)
 }

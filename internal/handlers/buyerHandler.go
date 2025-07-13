@@ -1,9 +1,11 @@
 package handlers
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/bootcamp-go/web/request"
 	"github.com/bootcamp-go/web/response"
@@ -37,13 +39,16 @@ type BuyerHandler struct {
 
 func (h *BuyerHandler) GetAll() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+		defer cancel()
+
 		var (
 			requestResponse *responses.DataResponse = &responses.DataResponse{}
 			buyerResponse   []*responses.BuyerResponse
 			buyers          []*models.Buyer
 		)
 
-		buyersMap, err := h.service.GetAll()
+		buyersMap, err := h.service.GetAll(ctx)
 		if err != nil {
 			response.Error(w, http.StatusInternalServerError, err.Error())
 			return
@@ -59,6 +64,9 @@ func (h *BuyerHandler) GetAll() http.HandlerFunc {
 
 func (h *BuyerHandler) GetById() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+		defer cancel()
+
 		var (
 			requestResponse *responses.DataResponse = &responses.DataResponse{}
 			buyerResponse   *responses.BuyerResponse
@@ -71,7 +79,7 @@ func (h *BuyerHandler) GetById() http.HandlerFunc {
 			return
 		}
 
-		buyer, err = h.service.GetById(id)
+		buyer, err = h.service.GetById(ctx, id)
 		if err != nil {
 
 			if errors.Is(err, error_message.ErrNotFound) {
@@ -91,13 +99,16 @@ func (h *BuyerHandler) GetById() http.HandlerFunc {
 
 func (h *BuyerHandler) DeleteById() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+		defer cancel()
+
 		id, err := strconv.Atoi(chi.URLParam(r, "id"))
 		if err != nil {
 			response.Error(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		err = h.service.DeleteById(id)
+		err = h.service.DeleteById(ctx, id)
 		if err != nil {
 
 			if errors.Is(err, error_message.ErrNotFound) {
@@ -114,6 +125,9 @@ func (h *BuyerHandler) DeleteById() http.HandlerFunc {
 
 func (h *BuyerHandler) PostBuyer() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+		defer cancel()
+
 		var requestResponse *responses.DataResponse = &responses.DataResponse{}
 
 		requestBuyer := requests.BuyerRequest{}
@@ -126,7 +140,7 @@ func (h *BuyerHandler) PostBuyer() http.HandlerFunc {
 		}
 
 		modelBuyer := mappers.GetModelBuyerFromRequest(requestBuyer)
-		buyerDb, err := h.service.Create(*modelBuyer)
+		buyerDb, err := h.service.Create(ctx, *modelBuyer)
 		if err != nil {
 
 			if errors.Is(err, error_message.ErrAlreadyExists) {
@@ -147,6 +161,9 @@ func (h *BuyerHandler) PostBuyer() http.HandlerFunc {
 
 func (h *BuyerHandler) PatchBuyer() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+		defer cancel()
+
 		var requestResponse *responses.DataResponse = &responses.DataResponse{}
 
 		id, err := strconv.Atoi(chi.URLParam(r, "id"))
@@ -165,7 +182,7 @@ func (h *BuyerHandler) PatchBuyer() http.HandlerFunc {
 		}
 
 		modelBuyer := mappers.GetModelBuyerFromRequest(requestBuyer)
-		buyerDb, err := h.service.Update(id, *modelBuyer)
+		buyerDb, err := h.service.Update(ctx, id, *modelBuyer)
 		if err != nil {
 
 			if errors.Is(err, error_message.ErrNotFound) {

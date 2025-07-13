@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"context"
 	"fmt"
 	"slices"
 
@@ -10,15 +11,13 @@ import (
 )
 
 type BuyerRepositoryI interface {
-	GetAll() (map[int]models.Buyer, error)
-	GetById(id int) (models.Buyer, error)
-	DeleteById(id int) error
-	Create(buyer models.Buyer) (models.Buyer, error)
-	Update(buyerId int, buyer models.Buyer) (models.Buyer, error)
+	GetAll(ctx context.Context) (map[int]models.Buyer, error)
+	GetById(ctx context.Context, id int) (models.Buyer, error)
+	DeleteById(ctx context.Context, id int) error
+	Create(ctx context.Context, buyer models.Buyer) (models.Buyer, error)
+	Update(ctx context.Context, buyerId int, buyer models.Buyer) (models.Buyer, error)
 
-	Save() error
-	GetNewId() int
-	GetCardNumberIds() []string
+	GetCardNumberIds() ([]string, error)
 }
 
 type BuyerRepository struct {
@@ -26,7 +25,7 @@ type BuyerRepository struct {
 	loader  loader.Storage[models.Buyer]
 }
 
-func (r *BuyerRepository) Update(id int, buyer models.Buyer) (models.Buyer, error) {
+func (r *BuyerRepository) Update(ctx context.Context, id int, buyer models.Buyer) (models.Buyer, error) {
 	_, exists := r.storage[id]
 	if !exists {
 		return models.Buyer{}, fmt.Errorf("%w. %s %d %s", error_message.ErrNotFound, "Buyer with Id", id, "doesn't exists.")
@@ -34,7 +33,7 @@ func (r *BuyerRepository) Update(id int, buyer models.Buyer) (models.Buyer, erro
 
 	updatedBuyer := r.storage[id]
 	if buyer.CardNumberId != "" {
-		existingCardNumberIds := r.GetCardNumberIds()
+		existingCardNumberIds, _ := r.GetCardNumberIds()
 		if slices.Contains(existingCardNumberIds, buyer.CardNumberId) {
 			return models.Buyer{}, fmt.Errorf("%w. %s %s %s", error_message.ErrAlreadyExists, "Card number with Id", buyer.CardNumberId, "already exists.")
 		}
@@ -56,11 +55,11 @@ func (r *BuyerRepository) Update(id int, buyer models.Buyer) (models.Buyer, erro
 	return updatedBuyer, nil
 }
 
-func (r *BuyerRepository) GetAll() (map[int]models.Buyer, error) {
+func (r *BuyerRepository) GetAll(ctx context.Context) (map[int]models.Buyer, error) {
 	return r.storage, nil
 }
 
-func (r *BuyerRepository) GetById(id int) (models.Buyer, error) {
+func (r *BuyerRepository) GetById(ctx context.Context, id int) (models.Buyer, error) {
 	_, exists := r.storage[id]
 	if !exists {
 		return models.Buyer{}, fmt.Errorf("%w. %s %d %s", error_message.ErrNotFound, "Buyer with Id", id, "doesn't exists.")
@@ -69,7 +68,7 @@ func (r *BuyerRepository) GetById(id int) (models.Buyer, error) {
 	return r.storage[id], nil
 }
 
-func (r *BuyerRepository) DeleteById(id int) error {
+func (r *BuyerRepository) DeleteById(ctx context.Context, id int) error {
 	_, exists := r.storage[id]
 	if !exists {
 		return fmt.Errorf("%w. %s %d %s", error_message.ErrNotFound, "Buyer with Id", id, "doesn't exists.")
@@ -83,7 +82,10 @@ func (r *BuyerRepository) DeleteById(id int) error {
 	return nil
 }
 
-func (r *BuyerRepository) Create(buyer models.Buyer) (models.Buyer, error) {
+func (r *BuyerRepository) Create(ctx context.Context, buyer models.Buyer) (models.Buyer, error) {
+	newId := r.GetNewId()
+	buyer.Id = newId
+
 	_, exists := r.storage[buyer.Id]
 	if exists {
 		return models.Buyer{}, fmt.Errorf("%w. %s %d %s", error_message.ErrAlreadyExists, "Buyer with Id", buyer.Id, "already exists.")
@@ -135,10 +137,10 @@ func GetNewBuyerRepository(loader loader.Storage[models.Buyer]) (BuyerRepository
 	}, nil
 }
 
-func (r *BuyerRepository) GetCardNumberIds() []string {
+func (r *BuyerRepository) GetCardNumberIds() ([]string, error) {
 	cardNumbers := []string{}
 	for _, buyer := range r.storage {
 		cardNumbers = append(cardNumbers, buyer.CardNumberId)
 	}
-	return cardNumbers
+	return cardNumbers, nil
 }

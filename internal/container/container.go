@@ -4,6 +4,8 @@ package container
 import (
 	"database/sql"
 	"fmt"
+	"os"
+
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/repositories"
@@ -11,7 +13,6 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/services"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/validations"
 	"github.com/sajimenezher_meli/meli-frescos-8/pkg/loader"
-	"os"
 )
 
 type Container struct {
@@ -81,11 +82,13 @@ func (c *Container) initializeEmployeeHandler() error {
 }
 
 func (c *Container) initializeBuyerHandler() error {
-	buyerLoader := loader.NewJSONStorage[models.Buyer](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "buyers.json"))
-	buyerRepository, err := repositories.GetNewBuyerRepository(buyerLoader)
-	if err != nil {
+	//buyerLoader := loader.NewJSONStorage[models.Buyer](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "buyers.json"))
+	//buyerRepository, err := repositories.GetNewBuyerRepository(buyerLoader)
+	buyerRepository := repositories.GetNewBuyerMySQLRepository(c.StorageDB)
+	/*if err != nil {
 		return err
 	}
+	*/
 	buyerService := services.GetBuyerService(buyerRepository)
 	c.BuyerHandler = handlers.GetBuyerHandler(buyerService)
 	return nil

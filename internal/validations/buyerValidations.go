@@ -19,5 +19,5 @@ func IsNotAnEmptyBuyer(r requests.BuyerRequest) error {
 	if r.CardNumberId != "" || r.FirstName != "" || r.LastName != "" {
 		return nil
 	}
-	return errors.New("at least one of card_number_id, first_name, or last_name is required")
+	return errors.New("at least one of id_card_number, first_name, or last_name is required")
 }
