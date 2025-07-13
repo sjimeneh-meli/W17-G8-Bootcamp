@@ -73,7 +73,13 @@ func SetupRoutes(c *container.Container) *chi.Mux {
 			r.Post("/", c.ProductHandler.Save)
 			r.Patch("/{id}", c.ProductHandler.Update)
 			r.Delete("/{id}", c.ProductHandler.DeleteById)
+
+			//Product Records
+			r.Get("/reportRecords", c.ProductRecordHandler.GetReportByIdProduct)
 		})
+
+		r.Post("/productRecords", c.ProductRecordHandler.Create)
+
 	})
 
 	return router

@@ -15,13 +15,14 @@ import (
 )
 
 type Container struct {
-	EmployeeHandler  handlers.EmployeeHandlerI
-	BuyerHandler     handlers.BuyerHandlerI
-	WarehouseHandler *handlers.WarehouseHandler
-	SellerHandler    *handlers.SellerHandler
-	SectionHandler   handlers.SectionHandlerI
-	ProductHandler   *handlers.ProductHandler
-	StorageDB        *sql.DB
+	EmployeeHandler      handlers.EmployeeHandlerI
+	BuyerHandler         handlers.BuyerHandlerI
+	WarehouseHandler     *handlers.WarehouseHandler
+	SellerHandler        *handlers.SellerHandler
+	SectionHandler       handlers.SectionHandlerI
+	ProductHandler       *handlers.ProductHandler
+	ProductRecordHandler handlers.ProductRecordHandlerI
+	StorageDB            *sql.DB
 }
 
 // Strategy para manejo de errores
@@ -59,6 +60,7 @@ func NewContainer(storeDB *sql.DB) (*Container, error) {
 		{"seller handler", container.initializeSellerHandler},
 		{"section handler", container.initializeSectionHandler},
 		{"product handler", container.initializeProductHandler},
+		{"product record handler", container.initializeProductRecordHandler},
 	}
 
 	if err := errorHandler.Execute(tasks); err != nil {
@@ -128,6 +130,17 @@ func (c *Container) initializeProductHandler() error {
 	// Ejecutar seeder
 	ps := seeders.NewSeeder(service)
 	ps.LoadAllData()
+
+	return nil
+}
+
+func (c *Container) initializeProductRecordHandler() error {
+	productRecordDb := c.StorageDB
+	productRecordRepository := repositories.NewProductRecordRepository(productRecordDb)
+	productRecordService := services.NewProductRecordService(productRecordRepository)
+	productRecordHandler := handlers.NewProductRecordHandler(productRecordService)
+
+	c.ProductRecordHandler = productRecordHandler
 
 	return nil
 }
