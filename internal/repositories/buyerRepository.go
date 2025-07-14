@@ -10,6 +10,7 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/pkg/loader"
 )
 
+// BuyerRepositoryI defines the interface for buyer repository operations
 type BuyerRepositoryI interface {
 	GetAll(ctx context.Context) (map[int]models.Buyer, error)
 	GetById(ctx context.Context, id int) (models.Buyer, error)
@@ -21,11 +22,14 @@ type BuyerRepositoryI interface {
 	ExistBuyerById(ctx context.Context, buyerId int) (bool, error)
 }
 
+// BuyerRepository implements BuyerRepositoryI for in-memory storage with file persistence
 type BuyerRepository struct {
 	storage map[int]models.Buyer
 	loader  loader.Storage[models.Buyer]
 }
 
+// Update updates an existing buyer in the repository
+// Validates that the buyer exists and checks for duplicate card numbers
 func (r *BuyerRepository) Update(ctx context.Context, id int, buyer models.Buyer) (models.Buyer, error) {
 	_, exists := r.storage[id]
 	if !exists {
@@ -56,10 +60,13 @@ func (r *BuyerRepository) Update(ctx context.Context, id int, buyer models.Buyer
 	return updatedBuyer, nil
 }
 
+// GetAll retrieves all buyers from the repository
 func (r *BuyerRepository) GetAll(ctx context.Context) (map[int]models.Buyer, error) {
 	return r.storage, nil
 }
 
+// GetById retrieves a buyer by their ID
+// Returns an error if the buyer doesn't exist
 func (r *BuyerRepository) GetById(ctx context.Context, id int) (models.Buyer, error) {
 	_, exists := r.storage[id]
 	if !exists {
@@ -69,6 +76,8 @@ func (r *BuyerRepository) GetById(ctx context.Context, id int) (models.Buyer, er
 	return r.storage[id], nil
 }
 
+// DeleteById removes a buyer from the repository by their ID
+// Returns an error if the buyer doesn't exist
 func (r *BuyerRepository) DeleteById(ctx context.Context, id int) error {
 	_, exists := r.storage[id]
 	if !exists {
@@ -83,6 +92,8 @@ func (r *BuyerRepository) DeleteById(ctx context.Context, id int) error {
 	return nil
 }
 
+// Create adds a new buyer to the repository
+// Generates a new ID and validates that the buyer doesn't already exist
 func (r *BuyerRepository) Create(ctx context.Context, buyer models.Buyer) (models.Buyer, error) {
 	newId := r.GetNewId()
 	buyer.Id = newId
@@ -102,6 +113,8 @@ func (r *BuyerRepository) Create(ctx context.Context, buyer models.Buyer) (model
 	return buyer, nil
 }
 
+// GetNewId generates a new unique ID for buyers
+// Finds the highest existing ID and returns the next number
 func (r *BuyerRepository) GetNewId() int {
 	lastId := 0
 	for _, buyer := range r.storage {
@@ -112,6 +125,7 @@ func (r *BuyerRepository) GetNewId() int {
 	return (lastId + 1)
 }
 
+// Save persists all buyers to the storage using the loader
 func (r *BuyerRepository) Save() error {
 	buyerArray := []models.Buyer{}
 
@@ -126,6 +140,8 @@ func (r *BuyerRepository) Save() error {
 	return nil
 }
 
+// GetNewBuyerRepository creates and returns a new instance of BuyerRepository
+// Loads existing buyers from the storage using the provided loader
 func GetNewBuyerRepository(loader loader.Storage[models.Buyer]) (BuyerRepositoryI, error) {
 	storage, err := loader.ReadAll()
 	if err != nil {
@@ -138,6 +154,8 @@ func GetNewBuyerRepository(loader loader.Storage[models.Buyer]) (BuyerRepository
 	}, nil
 }
 
+// GetCardNumberIds retrieves all card number IDs from the repository
+// Returns a slice of all existing card number IDs
 func (r *BuyerRepository) GetCardNumberIds() ([]string, error) {
 	cardNumbers := []string{}
 	for _, buyer := range r.storage {
@@ -146,6 +164,8 @@ func (r *BuyerRepository) GetCardNumberIds() ([]string, error) {
 	return cardNumbers, nil
 }
 
+// ExistBuyerById checks if a buyer with the given ID exists in the repository
+// Returns true if the buyer exists, false otherwise
 func (r *BuyerRepository) ExistBuyerById(ctx context.Context, buyerId int) (bool, error) {
 	_, exists := r.storage[buyerId]
 	if exists {

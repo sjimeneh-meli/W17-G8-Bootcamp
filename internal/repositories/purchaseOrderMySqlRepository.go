@@ -10,6 +10,7 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 )
 
+// PurchaseOrderRepositoryI defines the interface for purchase order repository operations
 type PurchaseOrderRepositoryI interface {
 	GetAll(ctx context.Context) (map[int]models.PurchaseOrder, error)
 	Create(ctx context.Context, order models.PurchaseOrder) (models.PurchaseOrder, error)
@@ -18,16 +19,19 @@ type PurchaseOrderRepositoryI interface {
 	GetAllPurchaseOrdersReports(ctx context.Context) ([]models.PurchaseOrderReport, error)
 }
 
+// MySqlPurchaseOrderRepository implements PurchaseOrderRepositoryI for MySQL database
 type MySqlPurchaseOrderRepository struct {
 	db *sql.DB
 }
 
+// GetNewPurchaseOrderMySQLRepository creates and returns a new instance of MySqlPurchaseOrderRepository
 func GetNewPurchaseOrderMySQLRepository(db *sql.DB) PurchaseOrderRepositoryI {
 	return &MySqlPurchaseOrderRepository{
 		db: db,
 	}
 }
 
+// GetAll retrieves all purchase orders from the database and returns them as a map with order ID as key
 func (r *MySqlPurchaseOrderRepository) GetAll(ctx context.Context) (map[int]models.PurchaseOrder, error) {
 	orders := make(map[int]models.PurchaseOrder)
 
@@ -55,6 +59,7 @@ func (r *MySqlPurchaseOrderRepository) GetAll(ctx context.Context) (map[int]mode
 	return orders, nil
 }
 
+// Create inserts a new purchase order into the database and returns the created order with its generated ID
 func (r *MySqlPurchaseOrderRepository) Create(ctx context.Context, order models.PurchaseOrder) (models.PurchaseOrder, error) {
 	query := `insert into purchase_orders (order_number, order_date, tracking_code, buyer_id, product_record_id)
 	values (?, ?, ?, ?, ?)`
@@ -73,6 +78,8 @@ func (r *MySqlPurchaseOrderRepository) Create(ctx context.Context, order models.
 	return order, nil
 }
 
+// GetPurchaseOrdersReportByBuyerId retrieves a purchase order report for a specific buyer ID
+// Returns buyer information along with the count of purchase orders they have made
 func (r *MySqlPurchaseOrderRepository) GetPurchaseOrdersReportByBuyerId(ctx context.Context, buyerId int) (models.PurchaseOrderReport, error) {
 	report := models.PurchaseOrderReport{}
 
@@ -94,6 +101,8 @@ group by b.id;`
 	return report, nil
 }
 
+// GetAllPurchaseOrdersReports retrieves purchase order reports for all buyers
+// Returns a slice of reports containing buyer information and their purchase order counts
 func (r *MySqlPurchaseOrderRepository) GetAllPurchaseOrdersReports(ctx context.Context) ([]models.PurchaseOrderReport, error) {
 	reports := []models.PurchaseOrderReport{}
 
@@ -121,6 +130,8 @@ order by b.id;`
 	return reports, nil
 }
 
+// ExistPurchaseOrderByOrderNumber checks if a purchase order with the given order number already exists in the database
+// Returns true if the order number exists, false otherwise
 func (r *MySqlPurchaseOrderRepository) ExistPurchaseOrderByOrderNumber(ctx context.Context, orderNumber string) (bool, error) {
 	query := "SELECT 1 FROM purchase_orders WHERE order_number = ? LIMIT 1;"
 

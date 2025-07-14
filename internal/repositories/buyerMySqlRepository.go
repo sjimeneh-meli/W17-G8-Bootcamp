@@ -11,16 +11,20 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 )
 
+// MySqlBuyerRepository implements BuyerRepositoryI for MySQL database operations
 type MySqlBuyerRepository struct {
 	db *sql.DB
 }
 
+// GetNewBuyerMySQLRepository creates and returns a new instance of MySqlBuyerRepository
 func GetNewBuyerMySQLRepository(db *sql.DB) BuyerRepositoryI {
 	return &MySqlBuyerRepository{
 		db: db,
 	}
 }
 
+// GetAll retrieves all buyers from the MySQL database
+// Returns a map with buyer ID as key and buyer model as value
 func (r *MySqlBuyerRepository) GetAll(ctx context.Context) (map[int]models.Buyer, error) {
 	buyers := make(map[int]models.Buyer)
 
@@ -45,6 +49,8 @@ func (r *MySqlBuyerRepository) GetAll(ctx context.Context) (map[int]models.Buyer
 	return buyers, nil
 }
 
+// GetById retrieves a buyer by their ID from the MySQL database
+// Returns an error if the buyer doesn't exist
 func (r *MySqlBuyerRepository) GetById(ctx context.Context, id int) (models.Buyer, error) {
 	buyer := models.Buyer{}
 
@@ -66,6 +72,8 @@ func (r *MySqlBuyerRepository) GetById(ctx context.Context, id int) (models.Buye
 	return buyer, nil
 }
 
+// DeleteById removes a buyer from the MySQL database by their ID
+// Returns an error if the buyer doesn't exist
 func (r *MySqlBuyerRepository) DeleteById(ctx context.Context, id int) error {
 	query := "delete from buyers where id = ?"
 
@@ -86,6 +94,8 @@ func (r *MySqlBuyerRepository) DeleteById(ctx context.Context, id int) error {
 	return nil
 }
 
+// Create inserts a new buyer into the MySQL database
+// Returns the created buyer with its generated ID
 func (r *MySqlBuyerRepository) Create(ctx context.Context, buyer models.Buyer) (models.Buyer, error) {
 	query := `insert into buyers (id_card_number, first_name, last_name) values (?, ?, ?)`
 
@@ -104,6 +114,9 @@ func (r *MySqlBuyerRepository) Create(ctx context.Context, buyer models.Buyer) (
 	return buyer, nil
 }
 
+// Update modifies an existing buyer in the MySQL database
+// Only updates the fields that are provided (non-empty values)
+// Returns an error if the buyer doesn't exist
 func (r *MySqlBuyerRepository) Update(ctx context.Context, buyerId int, buyer models.Buyer) (models.Buyer, error) {
 	updates := []string{}
 	values := []interface{}{}
@@ -145,6 +158,8 @@ func (r *MySqlBuyerRepository) Update(ctx context.Context, buyerId int, buyer mo
 	return updatedUser, nil
 }
 
+// GetCardNumberIds retrieves all card number IDs from the MySQL database
+// Returns a slice of all existing card number IDs
 func (r *MySqlBuyerRepository) GetCardNumberIds() ([]string, error) {
 	cardNumberIds := []string{}
 
@@ -167,6 +182,8 @@ func (r *MySqlBuyerRepository) GetCardNumberIds() ([]string, error) {
 	return cardNumberIds, nil
 }
 
+// ExistBuyerById checks if a buyer with the given ID exists in the MySQL database
+// Returns true if the buyer exists, false otherwise
 func (r *MySqlBuyerRepository) ExistBuyerById(ctx context.Context, buyerId int) (bool, error) {
 	query := "SELECT 1 FROM buyers WHERE id = ? LIMIT 1;"
 

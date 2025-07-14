@@ -7,6 +7,8 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/requests"
 )
 
+// ValidateBuyerRequestStruct validates that all required fields in BuyerRequest are present
+// Uses ozzo-validation to ensure CardNumberId, FirstName, and LastName are not empty
 func ValidateBuyerRequestStruct(r requests.BuyerRequest) error {
 	return validation.ValidateStruct(&r,
 		validation.Field(&r.CardNumberId, validation.Required),
@@ -15,6 +17,8 @@ func ValidateBuyerRequestStruct(r requests.BuyerRequest) error {
 	)
 }
 
+// IsNotAnEmptyBuyer validates that at least one field in BuyerRequest is provided
+// Used for PATCH operations where partial updates are allowed
 func IsNotAnEmptyBuyer(r requests.BuyerRequest) error {
 	if r.CardNumberId != "" || r.FirstName != "" || r.LastName != "" {
 		return nil

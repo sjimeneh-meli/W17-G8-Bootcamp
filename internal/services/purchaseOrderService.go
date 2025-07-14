@@ -9,6 +9,7 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/repositories"
 )
 
+// GetPurchaseOrderService creates and returns a new instance of PurchaseOrderService with the required repositories
 func GetPurchaseOrderService(purchaseOrderRepository repositories.PurchaseOrderRepositoryI, buyerRepository repositories.BuyerRepositoryI) PurchaseOrderServiceI {
 	return &PurchaseOrderService{
 		PurchaseOrderRepository: purchaseOrderRepository,
@@ -17,21 +18,26 @@ func GetPurchaseOrderService(purchaseOrderRepository repositories.PurchaseOrderR
 	}
 }
 
+// PurchaseOrderServiceI defines the interface for purchase order service operations
 type PurchaseOrderServiceI interface {
 	GetAll(ctx context.Context) (map[int]models.PurchaseOrder, error)
 	GetPurchaseOrdersReport(ctx context.Context, id *int) ([]models.PurchaseOrderReport, error)
 	Create(ctx context.Context, order models.PurchaseOrder) (models.PurchaseOrder, error)
 }
 
+// PurchaseOrderService implements PurchaseOrderServiceI and contains business logic for purchase order operations
 type PurchaseOrderService struct {
 	PurchaseOrderRepository repositories.PurchaseOrderRepositoryI
 	BuyerRepository         repositories.BuyerRepositoryI
 }
 
+// GetAll retrieves all purchase orders from the repository
 func (s *PurchaseOrderService) GetAll(ctx context.Context) (map[int]models.PurchaseOrder, error) {
 	return s.PurchaseOrderRepository.GetAll(ctx)
 }
 
+// GetPurchaseOrdersReport retrieves purchase order reports
+// If id is provided, returns report for that specific buyer, otherwise returns reports for all buyers
 func (s *PurchaseOrderService) GetPurchaseOrdersReport(ctx context.Context, id *int) ([]models.PurchaseOrderReport, error) {
 	if id != nil {
 		reports := []models.PurchaseOrderReport{}
@@ -45,6 +51,8 @@ func (s *PurchaseOrderService) GetPurchaseOrdersReport(ctx context.Context, id *
 	return s.PurchaseOrderRepository.GetAllPurchaseOrdersReports(ctx)
 }
 
+// Create creates a new purchase order with validation
+// Validates that the order number doesn't already exist and that the buyer exists
 func (s *PurchaseOrderService) Create(ctx context.Context, order models.PurchaseOrder) (models.PurchaseOrder, error) {
 	//Valido que el order number no exista.
 

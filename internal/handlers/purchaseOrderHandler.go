@@ -18,22 +18,27 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/validations"
 )
 
+// GetPurchaseOrderHandler creates and returns a new instance of PurchaseOrderHandler
 func GetPurchaseOrderHandler(service services.PurchaseOrderServiceI) PurchaseOrderHandlerI {
 	return &PurchaseOrderHandler{
 		service: service,
 	}
 }
 
+// PurchaseOrderHandlerI defines the interface for purchase order HTTP handlers
 type PurchaseOrderHandlerI interface {
 	GetAll() http.HandlerFunc
 	GetPurchaseOrdersReport() http.HandlerFunc
 	PostPurchaseOrder() http.HandlerFunc
 }
 
+// PurchaseOrderHandler implements PurchaseOrderHandlerI and handles HTTP requests for purchase order operations
 type PurchaseOrderHandler struct {
 	service services.PurchaseOrderServiceI
 }
 
+// PostPurchaseOrder handles HTTP POST requests to create a new purchase order
+// Validates the request body and returns appropriate HTTP status codes
 func (h *PurchaseOrderHandler) PostPurchaseOrder() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
@@ -81,6 +86,8 @@ func (h *PurchaseOrderHandler) PostPurchaseOrder() http.HandlerFunc {
 	}
 }
 
+// GetAll handles HTTP GET requests to retrieve all purchase orders
+// Returns a JSON response with all purchase orders
 func (h *PurchaseOrderHandler) GetAll() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
@@ -104,6 +111,8 @@ func (h *PurchaseOrderHandler) GetAll() http.HandlerFunc {
 	}
 }
 
+// GetPurchaseOrdersReport handles HTTP GET requests to retrieve purchase order reports
+// Accepts an optional 'id' query parameter to filter by buyer ID
 func (h *PurchaseOrderHandler) GetPurchaseOrdersReport() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
@@ -136,6 +145,7 @@ func (h *PurchaseOrderHandler) GetPurchaseOrdersReport() http.HandlerFunc {
 	}
 }
 
+// purchaseOrderMapToPurchaseOrderList converts a map of purchase orders to a slice of purchase order pointers
 func purchaseOrderMapToPurchaseOrderList(orders map[int]models.PurchaseOrder) []*models.PurchaseOrder {
 	ordersList := []*models.PurchaseOrder{}
 
