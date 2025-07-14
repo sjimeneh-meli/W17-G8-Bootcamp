@@ -17,6 +17,8 @@ type BuyerRepositoryI interface {
 	Create(ctx context.Context, buyer models.Buyer) (models.Buyer, error)
 	Update(ctx context.Context, buyerId int, buyer models.Buyer) (models.Buyer, error)
 
+	GetPurchaseOrdersReportByBuyerId(ctx context.Context, buyerId int) (models.PurchaseOrderReport, error)
+	GetPurchaseOrdersReport(ctx context.Context) ([]models.PurchaseOrderReport, error)
 	GetCardNumberIds() ([]string, error)
 }
 
@@ -143,4 +145,12 @@ func (r *BuyerRepository) GetCardNumberIds() ([]string, error) {
 		cardNumbers = append(cardNumbers, buyer.CardNumberId)
 	}
 	return cardNumbers, nil
+}
+
+func (r *BuyerRepository) GetPurchaseOrdersReportByBuyerId(ctx context.Context, buyerId int) (models.PurchaseOrderReport, error) {
+	return models.PurchaseOrderReport{}, nil
+}
+
+func (r *BuyerRepository) GetPurchaseOrdersReport(ctx context.Context) ([]models.PurchaseOrderReport, error) {
+	return []models.PurchaseOrderReport{}, nil
 }
