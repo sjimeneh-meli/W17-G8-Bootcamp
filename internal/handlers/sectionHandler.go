@@ -36,41 +36,34 @@ type SectionHandler struct {
 }
 
 func (h *SectionHandler) GetAll(w http.ResponseWriter, r *http.Request) {
+	var responseJson *responses.DataResponse = &responses.DataResponse{}
 
-	var (
-		responseJson     *responses.DataResponse = &responses.DataResponse{}
-		sectionsResponse []*responses.SectionResponse
-		sections         []*models.Section
-	)
+	sections, srvErr := h.service.GetAll()
+	if srvErr != nil {
+		response.Error(w, http.StatusNotFound, srvErr.Error())
+		return
+	}
 
-	sections = h.service.GetAll()
-	sectionsResponse = mappers.GetListSectionResponseFromListModel(sections)
-	responseJson.Data = sectionsResponse
-
+	responseJson.Data = mappers.GetListSectionResponseFromListModel(sections)
 	response.JSON(w, http.StatusOK, responseJson)
-
 }
 
 func (h *SectionHandler) GetByID(w http.ResponseWriter, r *http.Request) {
-
-	var (
-		responseJson    *responses.DataResponse = &responses.DataResponse{}
-		sectionResponse *responses.SectionResponse
-	)
+	var responseJson *responses.DataResponse = &responses.DataResponse{}
 
 	idParam, convErr := strconv.Atoi(chi.URLParam(r, "id"))
 	if convErr != nil {
 		response.Error(w, http.StatusExpectationFailed, convErr.Error())
+		return
 	}
 
 	section, srvErr := h.service.GetByID(idParam)
 	if srvErr != nil {
 		response.Error(w, http.StatusNotFound, srvErr.Error())
+		return
 	}
 
-	sectionResponse = mappers.GetSectionResponseFromModel(section)
-	responseJson.Data = sectionResponse
-
+	responseJson.Data = mappers.GetSectionResponseFromModel(section)
 	response.JSON(w, http.StatusOK, responseJson)
 
 }
@@ -145,6 +138,10 @@ func (h *SectionHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	mappers.UpdateSectionModelFromRequest(section, request)
+	if srvErr := h.service.Update(section); srvErr != nil {
+		response.Error(w, http.StatusExpectationFailed, srvErr.Error())
+		return
+	}
 
 	responseJson.Data = mappers.GetSectionResponseFromModel(section)
 	response.JSON(w, http.StatusOK, responseJson)
