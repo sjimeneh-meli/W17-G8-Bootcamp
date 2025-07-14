@@ -13,9 +13,10 @@ func GetSectionService(repository repositories.SectionRepositoryI) SectionServic
 }
 
 type SectionServiceI interface {
-	GetAll() []*models.Section
+	GetAll() ([]*models.Section, error)
 	GetByID(id int) (*models.Section, error)
 	Create(model *models.Section) error
+	Update(model *models.Section) error
 	DeleteByID(id int) error
 
 	ExistsWithSectionNumber(id int, sectionNumber string) bool
@@ -25,27 +26,32 @@ type sectionService struct {
 	repository repositories.SectionRepositoryI
 }
 
-func (s *sectionService) GetAll() []*models.Section {
+func (s *sectionService) GetAll() ([]*models.Section, error) {
 	return s.repository.GetAll()
 }
 
 func (s *sectionService) GetByID(id int) (*models.Section, error) {
-	if model := s.repository.GetByID(id); model != nil {
+	if model, err := s.repository.GetByID(id); err != nil {
+		return model, error_message.ErrNotFound
+	} else {
 		return model, nil
 	}
-	return nil, error_message.ErrNotFound
+
 }
 
 func (s *sectionService) Create(model *models.Section) error {
-	s.repository.Create(model)
-	return nil
+	return s.repository.Create(model)
+}
+
+func (s *sectionService) Update(model *models.Section) error {
+	return s.repository.Update(model)
 }
 
 func (s *sectionService) DeleteByID(id int) error {
-	if s.repository.DeleteByID(id) {
-		return nil
+	if err := s.repository.DeleteByID(id); err != nil {
+		return error_message.ErrNotFound
 	}
-	return error_message.ErrNotFound
+	return nil
 }
 
 func (s *sectionService) ExistsWithSectionNumber(id int, sectionNumber string) bool {
