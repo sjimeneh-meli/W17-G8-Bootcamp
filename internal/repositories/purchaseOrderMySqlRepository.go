@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/error_message"
@@ -12,6 +13,9 @@ import (
 type PurchaseOrderRepositoryI interface {
 	GetAll(ctx context.Context) (map[int]models.PurchaseOrder, error)
 	Create(ctx context.Context, order models.PurchaseOrder) (models.PurchaseOrder, error)
+	GetOrderNumbers(ctx context.Context) ([]string, error)
+	GetPurchaseOrdersReportByBuyerId(ctx context.Context, buyerId int) (models.PurchaseOrderReport, error)
+	GetAllPurchaseOrdersReports(ctx context.Context) ([]models.PurchaseOrderReport, error)
 }
 
 type MySqlPurchaseOrderRepository struct {
@@ -51,7 +55,77 @@ func (r *MySqlPurchaseOrderRepository) GetAll(ctx context.Context) (map[int]mode
 	return orders, nil
 }
 
+func (r *MySqlPurchaseOrderRepository) GetOrderNumbers(ctx context.Context) ([]string, error) {
+	orderNumbers := []string{}
+	query := "select order_number from purchase_orders"
+
+	rows, err := r.db.QueryContext(ctx, query)
+	if err != nil {
+		return orderNumbers, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		orderNumber := ""
+		err = rows.Scan(&orderNumber)
+		if err != nil {
+			return []string{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
+		}
+
+		orderNumbers = append(orderNumbers, orderNumber)
+	}
+	return orderNumbers, nil
+}
+
 func (r *MySqlPurchaseOrderRepository) Create(ctx context.Context, order models.PurchaseOrder) (models.PurchaseOrder, error) {
 	return models.PurchaseOrder{}, nil
 	//Implementar luego
+}
+
+func (r *MySqlPurchaseOrderRepository) GetPurchaseOrdersReportByBuyerId(ctx context.Context, buyerId int) (models.PurchaseOrderReport, error) {
+	report := models.PurchaseOrderReport{}
+
+	query := `select b.id, b.id_card_number, b.first_name, b.last_name, count(po.id) as "purchase_orders_count"
+from productos_frescos.buyers b
+inner join productos_frescos.purchase_orders po on po.buyer_id = b.id
+where b.id = ?
+group by b.id;`
+	row := r.db.QueryRowContext(ctx, query, buyerId)
+
+	err := row.Scan(&report.Id, &report.IdCardNumber, &report.FirstName, &report.LastName, &report.PurchaseOrderCount)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return models.PurchaseOrderReport{}, fmt.Errorf("%w. %s %d %s", error_message.ErrNotFound, "Buyer with Id", buyerId, "doesn't exists.")
+		}
+		return models.PurchaseOrderReport{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
+	}
+
+	return report, nil
+}
+
+func (r *MySqlPurchaseOrderRepository) GetAllPurchaseOrdersReports(ctx context.Context) ([]models.PurchaseOrderReport, error) {
+	reports := []models.PurchaseOrderReport{}
+
+	query := `select b.id, b.id_card_number, b.first_name, b.last_name, count(po.id) as "purchase_orders_count"
+from productos_frescos.buyers b
+inner join productos_frescos.purchase_orders po on po.buyer_id = b.id
+group by b.id
+order by b.id;`
+
+	rows, err := r.db.QueryContext(ctx, query)
+	if err != nil {
+		return []models.PurchaseOrderReport{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		report := models.PurchaseOrderReport{}
+		err := rows.Scan(&report.Id, &report.IdCardNumber, &report.FirstName, &report.LastName, &report.PurchaseOrderCount)
+		if err != nil {
+			return []models.PurchaseOrderReport{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
+		}
+
+		reports = append(reports, report)
+	}
+	return reports, nil
 }

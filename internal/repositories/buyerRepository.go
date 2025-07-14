@@ -17,9 +17,8 @@ type BuyerRepositoryI interface {
 	Create(ctx context.Context, buyer models.Buyer) (models.Buyer, error)
 	Update(ctx context.Context, buyerId int, buyer models.Buyer) (models.Buyer, error)
 
-	GetPurchaseOrdersReportByBuyerId(ctx context.Context, buyerId int) (models.PurchaseOrderReport, error)
-	GetPurchaseOrdersReport(ctx context.Context) ([]models.PurchaseOrderReport, error)
 	GetCardNumberIds() ([]string, error)
+	ExistBuyerById(ctx context.Context, buyerId int) (bool, error)
 }
 
 type BuyerRepository struct {
@@ -147,10 +146,10 @@ func (r *BuyerRepository) GetCardNumberIds() ([]string, error) {
 	return cardNumbers, nil
 }
 
-func (r *BuyerRepository) GetPurchaseOrdersReportByBuyerId(ctx context.Context, buyerId int) (models.PurchaseOrderReport, error) {
-	return models.PurchaseOrderReport{}, nil
-}
-
-func (r *BuyerRepository) GetPurchaseOrdersReport(ctx context.Context) ([]models.PurchaseOrderReport, error) {
-	return []models.PurchaseOrderReport{}, nil
+func (r *BuyerRepository) ExistBuyerById(ctx context.Context, buyerId int) (bool, error) {
+	_, exists := r.storage[buyerId]
+	if exists {
+		return true, nil
+	}
+	return false, nil
 }

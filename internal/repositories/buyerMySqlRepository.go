@@ -167,54 +167,17 @@ func (r *MySqlBuyerRepository) GetCardNumberIds() ([]string, error) {
 	return cardNumberIds, nil
 }
 
-func (r *MySqlBuyerRepository) GetPurchaseOrdersReportByBuyerId(ctx context.Context, buyerId int) (models.PurchaseOrderReport, error) {
+func (r *MySqlBuyerRepository) ExistBuyerById(ctx context.Context, buyerId int) (bool, error) {
+	query := "SELECT 1 FROM buyers WHERE id = ? LIMIT 1;"
 
-	report := models.PurchaseOrderReport{}
+	var exists int64
+	err := r.db.QueryRowContext(ctx, query, buyerId).Scan(&exists)
 
-	query := `select b.id, b.id_card_number, b.first_name, b.last_name, count(po.id) as "purchase_orders_count"
-from productos_frescos.buyers b
-inner join productos_frescos.purchase_orders po on po.buyer_id = b.id
-where b.id = ?
-group by b.id;`
-	row := r.db.QueryRowContext(ctx, query, buyerId)
-
-	err := row.Scan(&report.Id, &report.IdCardNumber, &report.FirstName, &report.LastName, &report.PurchaseOrderCount)
 	if err != nil {
-
 		if errors.Is(err, sql.ErrNoRows) {
-			return models.PurchaseOrderReport{}, fmt.Errorf("%w. %s %d %s", error_message.ErrNotFound, "Buyer with Id", buyerId, "doesn't exists.")
+			return false, nil
 		}
-
-		return models.PurchaseOrderReport{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
+		return false, fmt.Errorf("error al verificar la existencia del producto: %w", err)
 	}
-
-	return report, nil
-}
-
-func (r *MySqlBuyerRepository) GetPurchaseOrdersReport(ctx context.Context) ([]models.PurchaseOrderReport, error) {
-	reports := []models.PurchaseOrderReport{}
-
-	query := `select b.id, b.id_card_number, b.first_name, b.last_name, count(po.id) as "purchase_orders_count"
-from productos_frescos.buyers b
-inner join productos_frescos.purchase_orders po on po.buyer_id = b.id
-group by b.id
-order by b.id;`
-
-	rows, err := r.db.QueryContext(ctx, query)
-
-	if err != nil {
-		return []models.PurchaseOrderReport{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		report := models.PurchaseOrderReport{}
-		err := rows.Scan(&report.Id, &report.IdCardNumber, &report.FirstName, &report.LastName, &report.PurchaseOrderCount)
-		if err != nil {
-			return []models.PurchaseOrderReport{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
-		}
-
-		reports = append(reports, report)
-	}
-	return reports, nil
+	return true, nil
 }

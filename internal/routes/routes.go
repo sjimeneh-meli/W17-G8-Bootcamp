@@ -39,7 +39,7 @@ func SetupRoutes(c *container.Container) *chi.Mux {
 			r.Delete("/{id}", c.BuyerHandler.DeleteById())
 			r.Post("/", c.BuyerHandler.PostBuyer())
 			r.Patch("/{id}", c.BuyerHandler.PatchBuyer())
-			r.Get("/reportPurchaseOrders", c.BuyerHandler.GetPurchaseOrdersReport())
+			r.Get("/reportPurchaseOrders", c.PurchaseOrderHandler.GetPurchaseOrdersReport())
 		})
 
 		r.Route("/warehouse", func(r chi.Router) {

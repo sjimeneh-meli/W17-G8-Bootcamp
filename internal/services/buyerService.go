@@ -22,8 +22,6 @@ type BuyerServiceI interface {
 	DeleteById(ictx context.Context, d int) error
 	Create(ctx context.Context, buyer models.Buyer) (models.Buyer, error)
 	Update(ctx context.Context, buyerId int, buyer models.Buyer) (models.Buyer, error)
-
-	GetPurchaseOrdersReport(ctx context.Context, id *int) ([]models.PurchaseOrderReport, error)
 }
 
 type BuyerService struct {
@@ -64,18 +62,4 @@ func (s *BuyerService) Update(ctx context.Context, id int, buyer models.Buyer) (
 		return models.Buyer{}, fmt.Errorf("%w - %s %s %s", error_message.ErrAlreadyExists, "card number with id:", buyer.CardNumberId, "already exists.")
 	}
 	return s.repository.Update(ctx, id, buyer)
-}
-
-func (s *BuyerService) GetPurchaseOrdersReport(ctx context.Context, id *int) ([]models.PurchaseOrderReport, error) {
-	if id != nil {
-		reports := []models.PurchaseOrderReport{}
-		report, err := s.repository.GetPurchaseOrdersReportByBuyerId(ctx, *id)
-		if err != nil {
-			return reports, err
-		}
-		reports = append(reports, report)
-		return reports, nil
-	}
-	return s.repository.GetPurchaseOrdersReport(ctx)
-	//Implementar el repository de múltiples reports
 }
