@@ -10,6 +10,6 @@ type ProductResponse struct {
 	ProductCode                    string  `json:"product_code"`
 	RecommendedFreezingTemperature float64 `json:"recommended_freezing_temperature"`
 	Width                          float64 `json:"width"`
-	ProductTypeID                  int     `json:"product_type_id"`
-	SellerID                       *int    `json:"seller_id,omitempty"` // Usamos un puntero para indicar que no es obligatorio
+	ProductTypeID                  int64   `json:"product_type_id"`
+	SellerID                       *int64  `json:"seller_id,omitempty"` // Usamos un puntero para indicar que no es obligatorio
 }

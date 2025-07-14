@@ -7,7 +7,6 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/repositories"
-	"github.com/sajimenezher_meli/meli-frescos-8/internal/seeders"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/services"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/validations"
 	"github.com/sajimenezher_meli/meli-frescos-8/pkg/loader"
@@ -122,22 +121,21 @@ func (c *Container) initializeSectionHandler() error {
 }
 
 func (c *Container) initializeProductHandler() error {
-	storage := loader.NewJSONStorage[models.Product](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "products.json"))
-	repository := repositories.NewProductRepository(*storage)
-	service := services.NewProductService(repository)
-	c.ProductHandler = handlers.NewProductHandler(service)
-
-	// Ejecutar seeder
-	ps := seeders.NewSeeder(service)
-	ps.LoadAllData()
-
+	productDB := c.StorageDB
+	productRepository := repositories.NewProductRepository(productDB)
+	productService := services.NewProductService(productRepository)
+	c.ProductHandler = handlers.NewProductHandler(productService)
 	return nil
 }
 
 func (c *Container) initializeProductRecordHandler() error {
 	productRecordDb := c.StorageDB
 	productRecordRepository := repositories.NewProductRecordRepository(productRecordDb)
-	productRecordService := services.NewProductRecordService(productRecordRepository)
+
+	productRepository := repositories.NewProductRepository(productRecordDb)
+	productService := services.NewProductService(productRepository)
+
+	productRecordService := services.NewProductRecordService(productRecordRepository, productService)
 	productRecordHandler := handlers.NewProductRecordHandler(productRecordService)
 
 	c.ProductRecordHandler = productRecordHandler

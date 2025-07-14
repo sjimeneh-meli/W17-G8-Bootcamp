@@ -27,11 +27,13 @@ type IProductRecordRepository interface {
 	// GetReportByIdProduct - Genera un reporte para un producto específico con el conteo de registros
 	GetReportByIdProduct(ctx context.Context, id int64) (*models.ProductRecordReport, error)
 
+	// GetReport - Generates a report showing all products information and the count of their records
+	// GetReport - Genera un reporte que muestra la información de todos los productos y el conteo de sus registros
 	GetReport(ctx context.Context) ([]*models.ProductRecordReport, error)
 
-	// ExistProductByID - Checks if a product exists in the database
-	// ExistProductByID - Verifica si un producto existe en la base de datos
-	ExistProductByID(ctx context.Context, id int64) (bool, error)
+	// ExistProductRecordByID - Checks if a product record exists in the database
+	// ExistProductRecordByID - Verifica si un registro de producto existe en la base de datos
+	ExistProductRecordByID(ctx context.Context, id int64) bool
 }
 
 // NewProductRecordRepository - Constructor function that creates a new repository instance
@@ -69,7 +71,9 @@ func (prr *productRecordRepository) Create(ctx context.Context, pr *models.Produ
 // GetReportByIdProduct - Genera un reporte que muestra la información del producto y el conteo de sus registros
 func (prr *productRecordRepository) GetReportByIdProduct(ctx context.Context, id int64) (*models.ProductRecordReport, error) {
 	// Complex SQL query using LEFT JOIN to get product info and count records
+	// Uses count(*) since we're filtering by WHERE clause, ensuring at least one product exists
 	// Consulta SQL compleja usando LEFT JOIN para obtener información del producto y contar registros
+	// Usa count(*) ya que estamos filtrando por WHERE clause, asegurando que al menos un producto existe
 	query := `
 	SELECT p.id as product_id, p.description, count(*) as records_count
 	FROM 
@@ -106,7 +110,9 @@ func (prr *productRecordRepository) GetReportByIdProduct(ctx context.Context, id
 func (prr *productRecordRepository) GetReport(ctx context.Context) (reports []*models.ProductRecordReport, err error) {
 
 	// Complex SQL query using LEFT JOIN to get product info and count records
+	// Uses const for immutability and count(pr.product_id) to count only non-null values (actual records)
 	// Consulta SQL compleja usando LEFT JOIN para obtener información del producto y contar registros
+	// Usa const para inmutabilidad y count(pr.product_id) para contar solo valores no nulos (registros reales)
 	const query = `
         SELECT
             p.id as product_id,
@@ -119,32 +125,48 @@ func (prr *productRecordRepository) GetReport(ctx context.Context) (reports []*m
         GROUP BY
             p.id, p.description`
 
+	// Prepare statement for better performance and security against SQL injection
+	// Prepara la consulta para mejor rendimiento y seguridad contra inyección SQL
 	stmt, err := prr.DB.PrepareContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare product report query: %w", err)
 	}
+	// Ensure statement is closed to prevent resource leaks
+	// Asegura que la consulta se cierre para prevenir fugas de recursos
 	defer stmt.Close()
 
 	// Execute query and scan results into the report struct
 	// Ejecuta la consulta y escanea los resultados en la estructura del reporte
 	rows, err := stmt.QueryContext(ctx)
-	
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute product report query: %w", err)
 	}
+	// Ensure rows are closed to prevent resource leaks
+	// Asegura que las filas se cierren para prevenir fugas de recursos
 	defer rows.Close()
 
+	// Initialize empty slice to hold the reports
+	// Inicializa un slice vacío para almacenar los reportes
 	reports = []*models.ProductRecordReport{}
 
+	// Iterate through all rows and scan each one into a ProductRecordReport struct
+	// Itera a través de todas las filas y escanea cada una en una estructura ProductRecordReport
 	for rows.Next() {
 		var pr models.ProductRecordReport
 
+		// Scan current row values into the struct fields
+		// Escanea los valores de la fila actual en los campos de la estructura
 		if err := rows.Scan(&pr.ProductId, &pr.Description, &pr.RecordsCount); err != nil {
 			return nil, fmt.Errorf("failed to scan product record row: %w", err)
 		}
+		// Append the scanned report to the results slice
+		// Agrega el reporte escaneado al slice de resultados
 		reports = append(reports, &pr)
 	}
 
+	// Check for any errors that occurred during iteration
+	// Verifica si ocurrieron errores durante la iteración
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("error iterating product record rows: %w", err)
 	}
@@ -152,26 +174,28 @@ func (prr *productRecordRepository) GetReport(ctx context.Context) (reports []*m
 	return reports, nil
 }
 
-// ExistProductByID - Validates if a product exists in the database by its ID
-// ExistProductByID - Valida si un producto existe en la base de datos por su ID
-func (prr *productRecordRepository) ExistProductByID(ctx context.Context, id int64) (bool, error) {
-	// Simple query to check product existence using LIMIT 1 for efficiency
-	// Consulta simple para verificar la existencia del producto usando LIMIT 1 por eficiencia
-	query := "SELECT 1 FROM products WHERE id = ? LIMIT 1;"
+// ExistProductRecordByID - Validates if a product record exists in the database by its ID
+// ExistProductRecordByID - Valida si un registro de producto existe en la base de datos por su ID
+func (prr *productRecordRepository) ExistProductRecordByID(ctx context.Context, id int64) bool {
+	// Simple query to check product record existence using LIMIT 1 for efficiency
+	// Consulta simple para verificar la existencia del registro de producto usando LIMIT 1 por eficiencia
+	query := "SELECT 1 FROM product_records WHERE id = ? LIMIT 1;"
 
+	// Use int64 to match the database return type for consistency
+	// Usa int64 para coincidir con el tipo de retorno de la base de datos por consistencia
 	var exists int64
 	err := prr.DB.QueryRowContext(ctx, query, id).Scan(&exists)
 
 	if err != nil {
-		// If no rows found, product doesn't exist (not an error)
-		// Si no se encuentran filas, el producto no existe (no es un error)
+		// If no rows found, product record doesn't exist (not an error)
+		// Si no se encuentran filas, el registro del producto no existe (no es un error)
 		if errors.Is(err, sql.ErrNoRows) {
-			return false, nil
+			return false
 		}
 		// Any other error is a real database error / Cualquier otro error es un error real de base de datos
-		return false, fmt.Errorf("error al verificar la existencia del producto: %w", err)
+		return false
 	}
 
-	// If we reach here, product exists / Si llegamos aquí, el producto existe
-	return true, nil
+	// If we reach here, product record exists / Si llegamos aquí, el registro de producto existe
+	return true
 }
