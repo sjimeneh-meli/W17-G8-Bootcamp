@@ -16,13 +16,14 @@ import (
 )
 
 type Container struct {
-	EmployeeHandler  handlers.EmployeeHandlerI
-	BuyerHandler     handlers.BuyerHandlerI
-	WarehouseHandler *handlers.WarehouseHandler
-	SellerHandler    *handlers.SellerHandler
-	SectionHandler   handlers.SectionHandlerI
-	ProductHandler   *handlers.ProductHandler
-	StorageDB        *sql.DB
+	EmployeeHandler      handlers.EmployeeHandlerI
+	BuyerHandler         handlers.BuyerHandlerI
+	WarehouseHandler     *handlers.WarehouseHandler
+	SellerHandler        *handlers.SellerHandler
+	SectionHandler       handlers.SectionHandlerI
+	ProductHandler       *handlers.ProductHandler
+	PurchaseOrderHandler handlers.PurchaseOrderHandlerI
+	StorageDB            *sql.DB
 }
 
 // Strategy para manejo de errores
@@ -60,6 +61,7 @@ func NewContainer(storeDB *sql.DB) (*Container, error) {
 		{"seller handler", container.initializeSellerHandler},
 		{"section handler", container.initializeSectionHandler},
 		{"product handler", container.initializeProductHandler},
+		{"purchase order handler", container.initializePurchaseOrderHandler},
 	}
 
 	if err := errorHandler.Execute(tasks); err != nil {
@@ -132,5 +134,12 @@ func (c *Container) initializeProductHandler() error {
 	ps := seeders.NewSeeder(service)
 	ps.LoadAllData()
 
+	return nil
+}
+
+func (c *Container) initializePurchaseOrderHandler() error {
+	purchaseOrderRepository := repositories.GetNewPurchaseOrderMySQLRepository(c.StorageDB)
+	purchaseOrderService := services.GetPurchaseOrderService(purchaseOrderRepository)
+	c.PurchaseOrderHandler = handlers.GetPurchaseOrderHandler(purchaseOrderService)
 	return nil
 }

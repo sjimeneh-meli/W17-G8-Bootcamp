@@ -23,9 +23,11 @@ func GetNewBuyerMySQLRepository(db *sql.DB) BuyerRepositoryI {
 
 func (r *MySqlBuyerRepository) GetAll(ctx context.Context) (map[int]models.Buyer, error) {
 	buyers := make(map[int]models.Buyer)
-	rows, err := r.db.QueryContext(ctx, "select id, id_card_number, first_name, last_name from buyers")
+
+	query := "select id, id_card_number, first_name, last_name from buyers"
+	rows, err := r.db.QueryContext(ctx, query)
 	if err != nil {
-		return buyers, err
+		return buyers, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
 	}
 	defer rows.Close()
 
@@ -34,7 +36,7 @@ func (r *MySqlBuyerRepository) GetAll(ctx context.Context) (map[int]models.Buyer
 		buyer := models.Buyer{}
 		err = rows.Scan(&buyer.Id, &buyer.CardNumberId, &buyer.FirstName, &buyer.LastName)
 		if err != nil {
-			return buyers, err
+			return buyers, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
 		}
 		tempBuyersMap[buyer.Id] = buyer
 	}
@@ -46,10 +48,11 @@ func (r *MySqlBuyerRepository) GetAll(ctx context.Context) (map[int]models.Buyer
 func (r *MySqlBuyerRepository) GetById(ctx context.Context, id int) (models.Buyer, error) {
 	buyer := models.Buyer{}
 
-	row := r.db.QueryRowContext(ctx, "select id, id_card_number, first_name, last_name from buyers where id = ?", id)
+	query := "select id, id_card_number, first_name, last_name from buyers where id = ?"
+	row := r.db.QueryRowContext(ctx, query, id)
 	err := row.Err()
 	if err != nil {
-		return buyer, nil
+		return buyer, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
 	}
 
 	err = row.Scan(&buyer.Id, &buyer.CardNumberId, &buyer.FirstName, &buyer.LastName)
@@ -64,8 +67,9 @@ func (r *MySqlBuyerRepository) GetById(ctx context.Context, id int) (models.Buye
 }
 
 func (r *MySqlBuyerRepository) DeleteById(ctx context.Context, id int) error {
+	query := "delete from buyers where id = ?"
 
-	result, err := r.db.ExecContext(ctx, "delete from buyers where id = ?", id)
+	result, err := r.db.ExecContext(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("%w. %s", error_message.ErrInternalServerError, err)
 	}
@@ -83,7 +87,9 @@ func (r *MySqlBuyerRepository) DeleteById(ctx context.Context, id int) error {
 }
 
 func (r *MySqlBuyerRepository) Create(ctx context.Context, buyer models.Buyer) (models.Buyer, error) {
-	result, err := r.db.ExecContext(ctx, `insert into buyers (id, id_card_number, first_name, last_name) values (?, ?, ?, ?)`, buyer.Id, buyer.CardNumberId, buyer.FirstName, buyer.LastName)
+	query := `insert into buyers (id, id_card_number, first_name, last_name) values (?, ?, ?, ?)`
+
+	result, err := r.db.ExecContext(ctx, query, buyer.Id, buyer.CardNumberId, buyer.FirstName, buyer.LastName)
 
 	if err != nil {
 		return models.Buyer{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
@@ -142,7 +148,8 @@ func (r *MySqlBuyerRepository) Update(ctx context.Context, buyerId int, buyer mo
 func (r *MySqlBuyerRepository) GetCardNumberIds() ([]string, error) {
 	cardNumberIds := []string{}
 
-	rows, err := r.db.Query("select id_card_number from buyers")
+	query := "select id_card_number from buyers"
+	rows, err := r.db.Query(query)
 	if err != nil {
 		return []string{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
 	}
@@ -163,11 +170,13 @@ func (r *MySqlBuyerRepository) GetCardNumberIds() ([]string, error) {
 func (r *MySqlBuyerRepository) GetPurchaseOrdersReportByBuyerId(ctx context.Context, buyerId int) (models.PurchaseOrderReport, error) {
 
 	report := models.PurchaseOrderReport{}
-	row := r.db.QueryRowContext(ctx, `select b.id, b.id_card_number, b.first_name, b.last_name, count(po.id) as "purchase_orders_count"
+
+	query := `select b.id, b.id_card_number, b.first_name, b.last_name, count(po.id) as "purchase_orders_count"
 from productos_frescos.buyers b
 inner join productos_frescos.purchase_orders po on po.buyer_id = b.id
 where b.id = ?
-group by b.id;`, buyerId)
+group by b.id;`
+	row := r.db.QueryRowContext(ctx, query, buyerId)
 
 	err := row.Scan(&report.Id, &report.IdCardNumber, &report.FirstName, &report.LastName, &report.PurchaseOrderCount)
 	if err != nil {
@@ -183,12 +192,15 @@ group by b.id;`, buyerId)
 }
 
 func (r *MySqlBuyerRepository) GetPurchaseOrdersReport(ctx context.Context) ([]models.PurchaseOrderReport, error) {
-
 	reports := []models.PurchaseOrderReport{}
-	rows, err := r.db.QueryContext(ctx, `select b.id, b.id_card_number, b.first_name, b.last_name, count(po.id) as "purchase_orders_count"
+
+	query := `select b.id, b.id_card_number, b.first_name, b.last_name, count(po.id) as "purchase_orders_count"
 from productos_frescos.buyers b
 inner join productos_frescos.purchase_orders po on po.buyer_id = b.id
-group by b.id;`)
+group by b.id
+order by b.id;`
+
+	rows, err := r.db.QueryContext(ctx, query)
 
 	if err != nil {
 		return []models.PurchaseOrderReport{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
