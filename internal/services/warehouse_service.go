@@ -9,7 +9,7 @@ import (
 )
 
 type WarehouseService interface {
-	GetAll() (map[int]models.Warehouse, error)
+	GetAll() ([]models.Warehouse, error)
 	Create(warehouse models.Warehouse) (models.Warehouse, error)
 	ValidateCodeUniqueness(code string) error
 	GetById(id int) (models.Warehouse, error)
@@ -25,7 +25,7 @@ func NewWarehouseService(warehouseRepository repositories.WarehouseRepository) *
 	return &WarehouseServiceImpl{warehouseRepository: warehouseRepository}
 }
 
-func (s *WarehouseServiceImpl) GetAll() (map[int]models.Warehouse, error) {
+func (s *WarehouseServiceImpl) GetAll() ([]models.Warehouse, error) {
 	return s.warehouseRepository.GetAll()
 }
 

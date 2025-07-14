@@ -1,15 +1,15 @@
 package repositories
 
 import (
+	"database/sql"
 	"fmt"
 
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/error_message"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
-	"github.com/sajimenezher_meli/meli-frescos-8/pkg/loader"
 )
 
 type WarehouseRepository interface {
-	GetAll() (map[int]models.Warehouse, error)
+	GetAll() ([]models.Warehouse, error)
 	Create(warehouse models.Warehouse) (models.Warehouse, error)
 	ExistsByCode(code string) (bool, error)
 	GetById(id int) (models.Warehouse, error)
@@ -18,85 +18,90 @@ type WarehouseRepository interface {
 }
 
 type WarehouseRepositoryImpl struct {
-	loader loader.StorageJSON[models.Warehouse]
+	db *sql.DB
 }
 
-func NewWarehouseRepository(loader loader.StorageJSON[models.Warehouse]) *WarehouseRepositoryImpl {
-	return &WarehouseRepositoryImpl{loader: loader}
+func NewWarehouseRepository(db *sql.DB) *WarehouseRepositoryImpl {
+	return &WarehouseRepositoryImpl{db: db}
 }
 
-func (r *WarehouseRepositoryImpl) GetAll() (map[int]models.Warehouse, error) {
-	warehouses, err := r.loader.ReadAll()
+func (r *WarehouseRepositoryImpl) GetAll() ([]models.Warehouse, error) {
+	//1. Correr la query
+	rows, err := r.db.Query("SELECT `id` , `address` , `telephone` , `warehouse_code` , `minimum_capacity` , `minimum_temperature` FROM `warehouse`")
 	if err != nil {
+		fmt.Printf("warehouse: %v\n", err.Error())
 		return nil, fmt.Errorf("%w: %v", error_message.ErrInternalServerError, err)
 	}
 
+	//2. Mapear los resultados
+	warehouses := []models.Warehouse{}
+	for rows.Next() {
+		var w models.Warehouse
+		err := rows.Scan(&w.Id, &w.Address, &w.Telephone, &w.WareHouseCode, &w.MinimumCapacity, &w.MinimumTemperature)
+		if err != nil {
+			return nil, fmt.Errorf("%w: %v", error_message.ErrInternalServerError, err)
+		}
+		warehouses = append(warehouses, w)
+
+	}
 	return warehouses, nil
+
 }
 
 func (r *WarehouseRepositoryImpl) Create(warehouse models.Warehouse) (models.Warehouse, error) {
-	warehouses, err := r.loader.ReadAll()
+	result, err := r.db.Exec("INSERT INTO `warehouse`(`address`, `telephone`, `warehouse_code` , `minimum_capacity` , `minimum_temperature` , `locality_id` ) VALUES (?,?,?,?,?,?)",
+		warehouse.Address, warehouse.Telephone, warehouse.WareHouseCode, warehouse.MinimumCapacity, warehouse.MinimumTemperature, warehouse.LocalityId)
+	if err != nil {
+		fmt.Printf("warehouse: %v\n", err.Error())
+		return models.Warehouse{}, fmt.Errorf("%w: %v", error_message.ErrInternalServerError, err)
+	}
+
+	lastInsertId, err := result.LastInsertId()
 	if err != nil {
 		return models.Warehouse{}, fmt.Errorf("%w: %v", error_message.ErrInternalServerError, err)
 	}
-
-	warehouse.Id = len(warehouses) + 1
-
-	warehouses[warehouse.Id] = warehouse
-
-	warehousesSlice := r.loader.MapToSlice(warehouses)
-
-	if err := r.loader.WriteAll(warehousesSlice); err != nil {
-		return models.Warehouse{}, fmt.Errorf("%w: %v", error_message.ErrInternalServerError, err)
-	}
+	warehouse.Id = int(lastInsertId)
 
 	return warehouse, nil
 }
 
 func (r *WarehouseRepositoryImpl) ExistsByCode(code string) (bool, error) {
-	warehouses, err := r.loader.ReadAll()
+	row := r.db.QueryRow("SELECT COUNT(*) FROM `warehouse` WHERE `warehouse_code` = ?", code)
+
+	var count int
+	err := row.Scan(&count)
 	if err != nil {
 		return false, fmt.Errorf("%w: %v", error_message.ErrInternalServerError, err)
 	}
 
-	for _, warehouse := range warehouses {
-		if warehouse.WareHouseCode == code {
-			return true, nil
-		}
-	}
-
-	return false, nil
+	return count > 0, nil
 }
 
 func (r *WarehouseRepositoryImpl) GetById(id int) (models.Warehouse, error) {
-	warehouses, err := r.loader.ReadAll()
-	if err != nil {
-		return models.Warehouse{}, fmt.Errorf("%w: %v", error_message.ErrInternalServerError, err)
-	}
+	row := r.db.QueryRow(
+		"SELECT `id`,`address`, `telephone`, `warehouse_code` , `minimum_capacity` , `minimum_temperature` FROM `warehouse` WHERE `id` = ?",
+		id,
+	)
 
-	warehouse, exists := warehouses[id]
-	if !exists {
-		return models.Warehouse{}, fmt.Errorf("%w: warehouse with id %d", error_message.ErrNotFound, id)
+	var warehouse models.Warehouse
+	err := row.Scan(&warehouse.Id, &warehouse.Address, &warehouse.Telephone, &warehouse.WareHouseCode, &warehouse.MinimumCapacity, &warehouse.MinimumTemperature)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return models.Warehouse{}, fmt.Errorf("%w: warehouse with id %d", error_message.ErrNotFound, id)
+		}
+		return models.Warehouse{}, fmt.Errorf("%w: %v", error_message.ErrInternalServerError, err)
 	}
 
 	return warehouse, nil
 }
 
 func (r *WarehouseRepositoryImpl) Delete(id int) error {
-	warehouses, err := r.loader.ReadAll()
+	_, err := r.db.Exec("DELETE FROM `warehouse` WHERE `id` = ? ", id)
 	if err != nil {
-		return fmt.Errorf("%w: %v", error_message.ErrInternalServerError, err)
-	}
-
-	if _, exists := warehouses[id]; !exists {
-		return fmt.Errorf("%w: warehouse with id %d", error_message.ErrNotFound, id)
-	}
-
-	delete(warehouses, id)
-
-	warehousesSlice := r.loader.MapToSlice(warehouses)
-
-	if err := r.loader.WriteAll(warehousesSlice); err != nil {
+		if err == sql.ErrNoRows {
+			return fmt.Errorf("%w: warehouse with id %d", error_message.ErrNotFound, id)
+		}
+		fmt.Printf("warehouse: %v\n", err.Error())
 		return fmt.Errorf("%w: %v", error_message.ErrInternalServerError, err)
 	}
 
@@ -104,22 +109,19 @@ func (r *WarehouseRepositoryImpl) Delete(id int) error {
 }
 
 func (r *WarehouseRepositoryImpl) Update(id int, warehouse models.Warehouse) (models.Warehouse, error) {
-	warehouses, err := r.loader.ReadAll()
+	result, err := r.db.Exec("UPDATE `warehouse` SET `address` = ?, `telephone` = ?, `warehouse_code` = ?, `minimum_capacity` = ?, `minimum_temperature` = ? WHERE `id` = ?",
+		warehouse.Address, warehouse.Telephone, warehouse.WareHouseCode, warehouse.MinimumCapacity, warehouse.MinimumTemperature, id)
 	if err != nil {
 		return models.Warehouse{}, fmt.Errorf("%w: %v", error_message.ErrInternalServerError, err)
 	}
 
-	if _, exists := warehouses[id]; !exists {
-		return models.Warehouse{}, fmt.Errorf("%w: warehouse with id %d", error_message.ErrNotFound, id)
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return models.Warehouse{}, fmt.Errorf("%w: %v", error_message.ErrInternalServerError, err)
 	}
 
-	warehouse.Id = id
-	warehouses[id] = warehouse
-
-	warehousesSlice := r.loader.MapToSlice(warehouses)
-
-	if err := r.loader.WriteAll(warehousesSlice); err != nil {
-		return models.Warehouse{}, fmt.Errorf("%w: %v", error_message.ErrInternalServerError, err)
+	if rowsAffected == 0 {
+		return models.Warehouse{}, fmt.Errorf("%w: warehouse with id %d", error_message.ErrNotFound, id)
 	}
 
 	return warehouse, nil

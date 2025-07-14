@@ -4,6 +4,8 @@ package container
 import (
 	"database/sql"
 	"fmt"
+	"os"
+
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/repositories"
@@ -11,7 +13,6 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/services"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/validations"
 	"github.com/sajimenezher_meli/meli-frescos-8/pkg/loader"
-	"os"
 )
 
 type Container struct {
@@ -92,8 +93,7 @@ func (c *Container) initializeBuyerHandler() error {
 }
 
 func (c *Container) initializeWarehouseHandler() error {
-	warehouseStorage := loader.NewJSONStorage[models.Warehouse](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "warehouse.json"))
-	repository := repositories.NewWarehouseRepository(*warehouseStorage)
+	repository := repositories.NewWarehouseRepository(c.StorageDB)
 	service := services.NewWarehouseService(repository)
 	c.WarehouseHandler = handlers.NewWarehouseHandler(service)
 	return nil
