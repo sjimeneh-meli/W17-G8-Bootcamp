@@ -19,6 +19,7 @@ func GetModelPurchaseOrderFromRequest(por requests.PurchaseOrderRequest) *models
 
 func GetResponsePurchaseOrderFromModel(po *models.PurchaseOrder) *responses.PurchaseOrderResponse {
 	return &responses.PurchaseOrderResponse{
+		Id:              po.Id,
 		OrderNumber:     po.OrderNumber,
 		OrderDate:       po.OrderDate,
 		TrackingCode:    po.TrackingCode,

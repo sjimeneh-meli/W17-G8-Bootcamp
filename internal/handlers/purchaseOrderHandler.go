@@ -7,12 +7,15 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/bootcamp-go/web/request"
 	"github.com/bootcamp-go/web/response"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/error_message"
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/requests"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/responses"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/mappers"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/services"
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/validations"
 )
 
 func GetPurchaseOrderHandler(service services.PurchaseOrderServiceI) PurchaseOrderHandlerI {
@@ -24,10 +27,58 @@ func GetPurchaseOrderHandler(service services.PurchaseOrderServiceI) PurchaseOrd
 type PurchaseOrderHandlerI interface {
 	GetAll() http.HandlerFunc
 	GetPurchaseOrdersReport() http.HandlerFunc
+	PostPurchaseOrder() http.HandlerFunc
 }
 
 type PurchaseOrderHandler struct {
 	service services.PurchaseOrderServiceI
+}
+
+func (h *PurchaseOrderHandler) PostPurchaseOrder() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+		defer cancel()
+
+		var (
+			requestResponse *responses.DataResponse       = &responses.DataResponse{}
+			requestOrder    requests.PurchaseOrderRequest = requests.PurchaseOrderRequest{}
+		)
+
+		err := request.JSON(r, &requestOrder)
+		if err != nil {
+			response.Error(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		err = validations.ValidatePurchaseOrderRequestStruct(requestOrder)
+		if err != nil {
+			response.Error(w, http.StatusUnprocessableEntity, err.Error())
+			return
+		}
+
+		modelOrder := mappers.GetModelPurchaseOrderFromRequest(requestOrder)
+		orderDb, err := h.service.Create(ctx, *modelOrder)
+		if err != nil {
+
+			if errors.Is(err, error_message.ErrAlreadyExists) {
+				response.Error(w, http.StatusConflict, err.Error())
+				return
+			}
+
+			if errors.Is(err, error_message.ErrNotFound) {
+				response.Error(w, http.StatusConflict, err.Error())
+				return
+			}
+
+			response.Error(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		orderResponse := mappers.GetResponsePurchaseOrderFromModel(&orderDb)
+		requestResponse.Data = orderResponse
+
+		response.JSON(w, http.StatusCreated, requestResponse)
+	}
 }
 
 func (h *PurchaseOrderHandler) GetAll() http.HandlerFunc {

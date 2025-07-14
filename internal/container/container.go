@@ -139,7 +139,8 @@ func (c *Container) initializeProductHandler() error {
 
 func (c *Container) initializePurchaseOrderHandler() error {
 	purchaseOrderRepository := repositories.GetNewPurchaseOrderMySQLRepository(c.StorageDB)
-	purchaseOrderService := services.GetPurchaseOrderService(purchaseOrderRepository)
+	buyerRepository := repositories.GetNewBuyerMySQLRepository(c.StorageDB)
+	purchaseOrderService := services.GetPurchaseOrderService(purchaseOrderRepository, buyerRepository)
 	c.PurchaseOrderHandler = handlers.GetPurchaseOrderHandler(purchaseOrderService)
 	return nil
 }

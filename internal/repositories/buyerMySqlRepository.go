@@ -87,9 +87,9 @@ func (r *MySqlBuyerRepository) DeleteById(ctx context.Context, id int) error {
 }
 
 func (r *MySqlBuyerRepository) Create(ctx context.Context, buyer models.Buyer) (models.Buyer, error) {
-	query := `insert into buyers (id, id_card_number, first_name, last_name) values (?, ?, ?, ?)`
+	query := `insert into buyers (id_card_number, first_name, last_name) values (?, ?, ?)`
 
-	result, err := r.db.ExecContext(ctx, query, buyer.Id, buyer.CardNumberId, buyer.FirstName, buyer.LastName)
+	result, err := r.db.ExecContext(ctx, query, buyer.CardNumberId, buyer.FirstName, buyer.LastName)
 
 	if err != nil {
 		return models.Buyer{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())

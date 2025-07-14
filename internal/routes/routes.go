@@ -79,6 +79,7 @@ func SetupRoutes(c *container.Container) *chi.Mux {
 
 		r.Route("/purchaseOrders", func(r chi.Router) {
 			r.Get("/", c.PurchaseOrderHandler.GetAll())
+			r.Post("/", c.PurchaseOrderHandler.PostPurchaseOrder())
 		})
 	})
 

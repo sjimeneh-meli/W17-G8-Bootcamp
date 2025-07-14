@@ -13,7 +13,7 @@ import (
 type PurchaseOrderRepositoryI interface {
 	GetAll(ctx context.Context) (map[int]models.PurchaseOrder, error)
 	Create(ctx context.Context, order models.PurchaseOrder) (models.PurchaseOrder, error)
-	GetOrderNumbers(ctx context.Context) ([]string, error)
+	ExistPurchaseOrderByOrderNumber(ctx context.Context, orderNumber string) (bool, error)
 	GetPurchaseOrdersReportByBuyerId(ctx context.Context, buyerId int) (models.PurchaseOrderReport, error)
 	GetAllPurchaseOrdersReports(ctx context.Context) ([]models.PurchaseOrderReport, error)
 }
@@ -55,31 +55,22 @@ func (r *MySqlPurchaseOrderRepository) GetAll(ctx context.Context) (map[int]mode
 	return orders, nil
 }
 
-func (r *MySqlPurchaseOrderRepository) GetOrderNumbers(ctx context.Context) ([]string, error) {
-	orderNumbers := []string{}
-	query := "select order_number from purchase_orders"
-
-	rows, err := r.db.QueryContext(ctx, query)
-	if err != nil {
-		return orderNumbers, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		orderNumber := ""
-		err = rows.Scan(&orderNumber)
-		if err != nil {
-			return []string{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
-		}
-
-		orderNumbers = append(orderNumbers, orderNumber)
-	}
-	return orderNumbers, nil
-}
-
 func (r *MySqlPurchaseOrderRepository) Create(ctx context.Context, order models.PurchaseOrder) (models.PurchaseOrder, error) {
-	return models.PurchaseOrder{}, nil
-	//Implementar luego
+	query := `insert into purchase_orders (order_number, order_date, tracking_code, buyer_id, product_record_id)
+	values (?, ?, ?, ?, ?)`
+
+	result, err := r.db.ExecContext(ctx, query, order.OrderNumber, order.OrderDate, order.TrackingCode, order.BuyerId, order.ProductRecordId)
+	if err != nil {
+		return models.PurchaseOrder{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
+	}
+
+	lastId, err := result.LastInsertId()
+	if err != nil {
+		return models.PurchaseOrder{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
+	}
+
+	order.Id = int(lastId)
+	return order, nil
 }
 
 func (r *MySqlPurchaseOrderRepository) GetPurchaseOrdersReportByBuyerId(ctx context.Context, buyerId int) (models.PurchaseOrderReport, error) {
@@ -128,4 +119,19 @@ order by b.id;`
 		reports = append(reports, report)
 	}
 	return reports, nil
+}
+
+func (r *MySqlPurchaseOrderRepository) ExistPurchaseOrderByOrderNumber(ctx context.Context, orderNumber string) (bool, error) {
+	query := "SELECT 1 FROM purchase_orders WHERE order_number = ? LIMIT 1;"
+
+	var exists int64
+	err := r.db.QueryRowContext(ctx, query, orderNumber).Scan(&exists)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return false, nil
+		}
+		return false, fmt.Errorf("error al verificar la existencia del order number: %w", err)
+	}
+	return true, nil
 }
