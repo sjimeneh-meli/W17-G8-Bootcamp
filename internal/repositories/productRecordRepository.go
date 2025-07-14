@@ -27,6 +27,8 @@ type IProductRecordRepository interface {
 	// GetReportByIdProduct - Genera un reporte para un producto específico con el conteo de registros
 	GetReportByIdProduct(ctx context.Context, id int64) (*models.ProductRecordReport, error)
 
+	GetReport(ctx context.Context) ([]*models.ProductRecordReport, error)
+
 	// ExistProductByID - Checks if a product exists in the database
 	// ExistProductByID - Verifica si un producto existe en la base de datos
 	ExistProductByID(ctx context.Context, id int64) (bool, error)
@@ -82,17 +84,72 @@ func (prr *productRecordRepository) GetReportByIdProduct(ctx context.Context, id
 
 	// Execute query and scan results into the report struct
 	// Ejecuta la consulta y escanea los resultados en la estructura del reporte
-	err := prr.DB.QueryRowContext(ctx, query, id).Scan(&productRecordReport.ProductId, &productRecordReport.Description, &productRecordReport.RecordsCount)
+	err := prr.DB.QueryRowContext(ctx, query, id).Scan(
+		&productRecordReport.ProductId,
+		&productRecordReport.Description,
+		&productRecordReport.RecordsCount,
+	)
 
 	if err != nil {
 		// Handle case when no product is found / Maneja el caso cuando no se encuentra ningún producto
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, error_message.ErrNotFound
+			return nil, error_message.ErrDependencyNotFound
 		}
 		return nil, fmt.Errorf("error to scan product record report %w", err)
 	}
 
 	return &productRecordReport, nil
+}
+
+// GetReport - Generates a report showing products information and the count of its records
+// GetReport - Genera un reporte que muestra la información de los productos y el conteo de sus registros
+func (prr *productRecordRepository) GetReport(ctx context.Context) (reports []*models.ProductRecordReport, err error) {
+
+	// Complex SQL query using LEFT JOIN to get product info and count records
+	// Consulta SQL compleja usando LEFT JOIN para obtener información del producto y contar registros
+	const query = `
+        SELECT
+            p.id as product_id,
+            p.description,
+            count(pr.product_id) as records_count
+        FROM
+            products p
+        LEFT JOIN
+            product_records pr ON pr.product_id = p.id
+        GROUP BY
+            p.id, p.description`
+
+	stmt, err := prr.DB.PrepareContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to prepare product report query: %w", err)
+	}
+	defer stmt.Close()
+
+	// Execute query and scan results into the report struct
+	// Ejecuta la consulta y escanea los resultados en la estructura del reporte
+	rows, err := stmt.QueryContext(ctx)
+	
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute product report query: %w", err)
+	}
+	defer rows.Close()
+
+	reports = []*models.ProductRecordReport{}
+
+	for rows.Next() {
+		var pr models.ProductRecordReport
+
+		if err := rows.Scan(&pr.ProductId, &pr.Description, &pr.RecordsCount); err != nil {
+			return nil, fmt.Errorf("failed to scan product record row: %w", err)
+		}
+		reports = append(reports, &pr)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating product record rows: %w", err)
+	}
+
+	return reports, nil
 }
 
 // ExistProductByID - Validates if a product exists in the database by its ID

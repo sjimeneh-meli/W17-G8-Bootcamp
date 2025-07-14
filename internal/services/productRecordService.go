@@ -19,6 +19,8 @@ type ProductRecordServiceI interface {
 	// GetReportByIdProduct - Generates a report for a specific product with business validation
 	// GetReportByIdProduct - Genera un reporte para un producto específico con validación de negocio
 	GetReportByIdProduct(ctx context.Context, id int64) (*models.ProductRecordReport, error)
+
+	GetReport(ctx context.Context) ([]*models.ProductRecordReport, error)
 }
 
 // productRecordService - Service layer implementation that handles business logic for product records
@@ -77,4 +79,8 @@ func (prs *productRecordService) GetReportByIdProduct(ctx context.Context, id in
 	// If validation passes, delegate to repository for data retrieval
 	// Si la validación pasa, delega al repositorio para la recuperación de datos
 	return prs.Repository.GetReportByIdProduct(ctx, id)
+}
+
+func (prs *productRecordService) GetReport(ctx context.Context) ([]*models.ProductRecordReport, error) {
+	return prs.Repository.GetReport(ctx)
 }

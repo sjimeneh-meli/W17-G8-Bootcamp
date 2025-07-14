@@ -67,7 +67,7 @@ func (prh *productRecordHandler) Create(w http.ResponseWriter, r *http.Request) 
 	v := validations.GetProductRecordValidation()
 	err = v.ValidateProductRecordRequestStruct(productRecordRequest)
 	if err != nil {
-		response.Error(w, http.StatusBadRequest, err.Error())
+		response.Error(w, http.StatusUnprocessableEntity, err.Error())
 		return
 	}
 
@@ -83,7 +83,7 @@ func (prh *productRecordHandler) Create(w http.ResponseWriter, r *http.Request) 
 		// ERROR MAPPING: Map business errors to appropriate HTTP status codes
 		// MAPEO DE ERRORES: Mapear errores de negocio a códigos de estado HTTP apropiados
 		if errors.Is(err, error_message.ErrDependencyNotFound) {
-			response.Error(w, http.StatusNotFound, err.Error())
+			response.Error(w, http.StatusConflict, err.Error())
 			return
 		}
 		response.Error(w, http.StatusInternalServerError, err.Error())
@@ -110,37 +110,46 @@ func (prh *productRecordHandler) GetReportByIdProduct(w http.ResponseWriter, r *
 	// URL PARAMETER EXTRACTION: Extract and validate ID parameter from query string
 	// EXTRACCIÓN DE PARÁMETROS URL: Extraer y validar parámetro ID del query string
 	idString := strings.TrimSpace(r.URL.Query().Get("id"))
+
 	if idString == "" {
-		response.Error(w, http.StatusBadRequest, "error: id is required")
-		return
-	}
-
-	// INPUT SANITIZATION: Convert string ID to integer with validation
-	// SANITIZACIÓN DE ENTRADA: Convertir ID string a entero con validación
-	idInt, err := strconv.Atoi(idString)
-	if err != nil {
-		response.Error(w, http.StatusBadRequest, "error: id not is a number")
-		return
-	}
-
-	// BUSINESS LOGIC DELEGATION: Call service layer for report generation
-	// DELEGACIÓN DE LÓGICA DE NEGOCIO: Llamar a la capa de servicio para generación de reportes
-	productRecordReport, err := prh.Service.GetReportByIdProduct(ctx, int64(idInt))
-
-	if err != nil {
-		// ERROR MAPPING: Map service layer errors to HTTP status codes
-		// MAPEO DE ERRORES: Mapear errores de capa de servicio a códigos de estado HTTP
-		if errors.Is(err, error_message.ErrNotFound) {
-			response.Error(w, http.StatusNotFound, err.Error())
+		report, err := prh.Service.GetReport(ctx)
+		if err != nil {
+			response.Error(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		response.Error(w, http.StatusInternalServerError, err.Error())
-		return
-	}
 
-	// RESPONSE FORMATTING: Format successful response with report data as array
-	// FORMATEO DE RESPUESTA: Formatear respuesta exitosa con datos del reporte como array
-	response.JSON(w, http.StatusOK, responses.DataResponse{
-		Data: []*models.ProductRecordReport{productRecordReport},
-	})
+		response.JSON(w, http.StatusOK, responses.DataResponse{Data: report})
+
+	} else {
+
+		// INPUT SANITIZATION: Convert string ID to integer with validation
+		// SANITIZACIÓN DE ENTRADA: Convertir ID string a entero con validación
+		idInt, err := strconv.Atoi(idString)
+		if err != nil {
+			response.Error(w, http.StatusBadRequest, "error: id not is a number")
+			return
+		}
+
+		// BUSINESS LOGIC DELEGATION: Call service layer for report generation
+		// DELEGACIÓN DE LÓGICA DE NEGOCIO: Llamar a la capa de servicio para generación de reportes
+		productRecordReport, err := prh.Service.GetReportByIdProduct(ctx, int64(idInt))
+
+		if err != nil {
+			// ERROR MAPPING: Map service layer errors to HTTP status codes
+			// MAPEO DE ERRORES: Mapear errores de capa de servicio a códigos de estado HTTP
+			if errors.Is(err, error_message.ErrDependencyNotFound) {
+				response.Error(w, http.StatusConflict, err.Error())
+				return
+			}
+			response.Error(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		// RESPONSE FORMATTING: Format successful response with report data as array
+		// FORMATEO DE RESPUESTA: Formatear respuesta exitosa con datos del reporte como array
+		response.JSON(w, http.StatusOK, responses.DataResponse{
+			Data: []*models.ProductRecordReport{productRecordReport},
+		})
+
+	}
 }
