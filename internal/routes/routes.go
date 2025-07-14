@@ -75,7 +75,7 @@ func SetupRoutes(c *container.Container) *chi.Mux {
 			r.Delete("/{id}", c.ProductHandler.DeleteById)
 
 			//Product Records
-			r.Get("/reportRecords", c.ProductRecordHandler.GetReportByIdProduct)
+			r.Get("/reportRecords", c.ProductRecordHandler.GetReport)
 		})
 
 		r.Post("/productRecords", c.ProductRecordHandler.Create)

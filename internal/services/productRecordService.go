@@ -73,7 +73,7 @@ func (prs *productRecordService) GetReportByIdProduct(ctx context.Context, id in
 	// BUSINESS RULE: Cannot generate report for non-existent product
 	// REGLA DE NEGOCIO: No se puede generar reporte para un producto que no existe
 	if !exist {
-		return &models.ProductRecordReport{}, fmt.Errorf("error: product by id : %d does not exist %w", id, error_message.ErrNotFound)
+		return &models.ProductRecordReport{}, fmt.Errorf("error: product by id : %d does not exist %w", id, error_message.ErrDependencyNotFound)
 	}
 
 	// If validation passes, delegate to repository for data retrieval

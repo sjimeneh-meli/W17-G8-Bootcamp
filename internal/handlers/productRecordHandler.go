@@ -28,7 +28,7 @@ type ProductRecordHandlerI interface {
 
 	// GetReportByIdProduct - Handles HTTP GET requests for product record reports
 	// GetReportByIdProduct - Maneja las peticiones HTTP GET para reportes de registros de productos
-	GetReportByIdProduct(w http.ResponseWriter, r *http.Request)
+	GetReport(w http.ResponseWriter, r *http.Request)
 }
 
 // productRecordHandler - Handler layer implementation for product record HTTP operations
@@ -98,9 +98,9 @@ func (prh *productRecordHandler) Create(w http.ResponseWriter, r *http.Request) 
 	})
 }
 
-// GetReportByIdProduct - HTTP handler for retrieving product record reports with URL parameter processing
-// GetReportByIdProduct - Manejador HTTP para obtener reportes de registros de productos con procesamiento de parámetros URL
-func (prh *productRecordHandler) GetReportByIdProduct(w http.ResponseWriter, r *http.Request) {
+// GetReport - HTTP handler for retrieving product record reports with URL parameter processing
+// GetReport - Manejador HTTP para obtener reportes de registros de productos con procesamiento de parámetros URL
+func (prh *productRecordHandler) GetReport(w http.ResponseWriter, r *http.Request) {
 	// CONTEXT MANAGEMENT: Create context with longer timeout for report generation
 	// GESTIÓN DE CONTEXTO: Crear contexto con timeout más largo para generación de reportes
 	parentCtx := context.Background()
