@@ -100,8 +100,8 @@ func (c *Container) initializeWarehouseHandler() error {
 }
 
 func (c *Container) initializeSellerHandler() error {
-	sellerStorage := loader.NewJSONStorage[models.Seller](fmt.Sprintf("%s/%s", "docs/database", "sellers.json"))
-	sellerRepo := repositories.NewJSONSellerRepository(sellerStorage)
+	//sellerStorage := loader.NewJSONStorage[models.Seller](fmt.Sprintf("%s/%s", "docs/database", "sellers.json"))
+	sellerRepo := repositories.NewSQLSellerRepository(c.StorageDB)
 	sellerService := services.NewJSONSellerService(sellerRepo)
 	c.SellerHandler = handlers.NewSellerHandler(sellerService)
 	return nil
