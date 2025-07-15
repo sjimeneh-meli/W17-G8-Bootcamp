@@ -5,19 +5,11 @@ import (
 	"fmt"
 
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
-	tools "github.com/sajimenezher_meli/meli-frescos-8/pkg"
-	"github.com/sajimenezher_meli/meli-frescos-8/pkg/loader"
+	"github.com/sajimenezher_meli/meli-frescos-8/pkg/database"
 )
 
-func GetSectionRepository(loader *loader.StorageJSON[models.Section], db *sql.DB) (SectionRepositoryI, error) {
-	storage, err := loader.ReadAll()
-	if err != nil {
-		return nil, err
-	}
-
+func GetSectionRepository(db *sql.DB) (SectionRepositoryI, error) {
 	return &sectionRepository{
-		storage:   storage,
-		loader:    loader,
 		database:  db,
 		tablename: "sections",
 	}, nil
@@ -33,8 +25,6 @@ type SectionRepositoryI interface {
 }
 
 type sectionRepository struct {
-	storage   map[int]models.Section
-	loader    *loader.StorageJSON[models.Section]
 	database  *sql.DB
 	tablename string
 }
@@ -42,7 +32,7 @@ type sectionRepository struct {
 func (r *sectionRepository) GetAll() ([]*models.Section, error) {
 	columns := []string{"Id", "section_number", "current_capacity", "current_temperature", "maximum_capacity", "minimum_capacity", "minimum_temperature", "product_type_id", "warehouse_id"}
 
-	rows, err := r.Select(r.tablename, columns, "")
+	rows, err := database.Select(r.database, r.tablename, columns, "")
 
 	if err != nil {
 		return nil, err
@@ -77,7 +67,7 @@ func (r *sectionRepository) GetAll() ([]*models.Section, error) {
 
 func (r *sectionRepository) GetByID(id int) (*models.Section, error) {
 	columns := []string{"Id", "section_number", "current_capacity", "current_temperature", "maximum_capacity", "minimum_capacity", "minimum_temperature", "product_type_id", "warehouse_id"}
-	row := r.SelectOne(r.tablename, columns, "Id = ?", id)
+	row := database.SelectOne(r.database, r.tablename, columns, "Id = ?", id)
 
 	var section models.Section
 
@@ -109,7 +99,7 @@ func (r *sectionRepository) Create(model *models.Section) error {
 	data["product_type_id"] = model.ProductTypeID
 	data["warehouse_id"] = model.WarehouseID
 
-	result, err := r.Insert(r.tablename, data)
+	result, err := database.Insert(r.database, r.tablename, data)
 
 	if err != nil {
 		return err
@@ -144,7 +134,7 @@ func (r *sectionRepository) Update(model *models.Section) error {
 }
 
 func (r *sectionRepository) ExistsWithSectionNumber(id int, sectionNumber string) bool {
-	row := r.SelectOne(r.tablename, []string{"COUNT(Id)"}, "section_number = ? AND Id <> ?", sectionNumber, id)
+	row := database.SelectOne(r.database, r.tablename, []string{"COUNT(Id)"}, "section_number = ? AND Id <> ?", sectionNumber, id)
 	var count string
 	if err := row.Scan(&count); err != nil {
 		return true
@@ -154,45 +144,9 @@ func (r *sectionRepository) ExistsWithSectionNumber(id int, sectionNumber string
 }
 
 func (r *sectionRepository) DeleteByID(id int) error {
-	_, err := r.Delete(r.tablename, "Id = ?", id)
+	_, err := database.Delete(r.database, r.tablename, "Id = ?", id)
 	if err != nil {
 		return err
 	}
 	return nil
-}
-
-func (r *sectionRepository) SelectOne(tablename string, fields []string, condition string, values ...any) *sql.Row {
-	columns := tools.SliceToString(fields, ",")
-	sqlStatement := fmt.Sprintf("SELECT %s FROM %s", columns, tablename)
-	if condition != "" {
-		sqlStatement = fmt.Sprintf("%s WHERE %s", sqlStatement, condition)
-	}
-
-	return r.database.QueryRow(sqlStatement, values...)
-}
-
-func (r *sectionRepository) Select(tablename string, fields []string, condition string, values ...any) (*sql.Rows, error) {
-	columns := tools.SliceToString(fields, ",")
-	sqlStatement := fmt.Sprintf("SELECT %s FROM %s", columns, tablename)
-	if condition != "" {
-		sqlStatement = fmt.Sprintf("%s WHERE %s", sqlStatement, condition)
-	}
-
-	return r.database.Query(sqlStatement, values...)
-}
-
-func (r *sectionRepository) Insert(tablename string, data map[any]any) (sql.Result, error) {
-	keys, values := tools.GetSlicesOfKeyAndValuesFromMap(data)
-	columns := tools.SliceToString(keys, ",")
-	placeholders := tools.SliceToString(tools.FillNewSlice(len(data), "?"), ",")
-
-	sqlStatement := fmt.Sprintf("INSERT INTO %s(%s) VALUES (%s);", tablename, columns, placeholders)
-
-	return r.database.Exec(sqlStatement, values...)
-}
-
-func (r *sectionRepository) Delete(tablename string, condition string, values ...any) (sql.Result, error) {
-	sqlStatement := fmt.Sprintf("DELETE FROM %s WHERE %s;", tablename, condition)
-
-	return r.database.Exec(sqlStatement, values...)
 }
