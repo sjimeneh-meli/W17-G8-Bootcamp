@@ -71,16 +71,21 @@ func SetupRoutes(c *container.Container) *chi.Mux {
 		r.Route("/products", func(r chi.Router) {
 
 			r.Get("/", c.ProductHandler.GetAll)
-			r.Get("/{id}", c.ProductHandler.GetById)
-			r.Post("/", c.ProductHandler.Save)
+			r.Get("/{id}", c.ProductHandler.Get)
+			r.Post("/", c.ProductHandler.Create)
 			r.Patch("/{id}", c.ProductHandler.Update)
-			r.Delete("/{id}", c.ProductHandler.DeleteById)
+			r.Delete("/{id}", c.ProductHandler.Delete)
+
+			//Product Records
+			r.Get("/reportRecords", c.ProductRecordHandler.GetReport)
 		})
 
 		r.Route("/purchaseOrders", func(r chi.Router) {
 			r.Get("/", c.PurchaseOrderHandler.GetAll())
 			r.Post("/", c.PurchaseOrderHandler.PostPurchaseOrder())
 		})
+		r.Post("/productRecords", c.ProductRecordHandler.Create)
+
 	})
 
 	return router
