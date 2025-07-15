@@ -1,9 +1,12 @@
 package handlers
 
 import (
-	"encoding/json"
+	"context"
+	"errors"
+	"github.com/bootcamp-go/web/request"
 	"github.com/bootcamp-go/web/response"
 	"github.com/go-chi/chi/v5"
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/error_message"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/requests"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/responses"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/mappers"
@@ -12,152 +15,197 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/validations"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 func GetEmployeeHandler(service services.EmployeeServiceI, validation *validations.EmployeeValidation) EmployeeHandlerI {
 	return &EmployeeHandler{
-		service:    service,
-		validation: validation,
+		service: service,
 	}
 }
 
 type EmployeeHandlerI interface {
-	GetAll(w http.ResponseWriter, r *http.Request)
-	Create(w http.ResponseWriter, r *http.Request)
-	GetById(w http.ResponseWriter, r *http.Request)
-	DeleteById(w http.ResponseWriter, r *http.Request)
-	Update(w http.ResponseWriter, r *http.Request)
+	GetAllEmployee() http.HandlerFunc
+	PostEmployee() http.HandlerFunc
+	GetByIdEmployee() http.HandlerFunc
+	DeleteByIdEmployee() http.HandlerFunc
+	PatchEmployee() http.HandlerFunc
 }
 
 type EmployeeHandler struct {
-	service    services.EmployeeServiceI
-	validation *validations.EmployeeValidation
+	service services.EmployeeServiceI
 }
 
-func (h *EmployeeHandler) GetAll(w http.ResponseWriter, r *http.Request) {
-	{
+func (h *EmployeeHandler) GetAllEmployee() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+		defer cancel()
+
 		var (
-			responseJson     *responses.DataResponse = &responses.DataResponse{}
+			requestResponse  *responses.DataResponse = &responses.DataResponse{}
 			employeeResponse []*responses.EmployeeResponse
 			employee         []*models.Employee
 		)
 
-		employee = h.service.GetAll()
+		employeeMap, err := h.service.GetAll(ctx)
+		if err != nil {
+			response.Error(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		employee = employeeMapToList(employeeMap)
 		employeeResponse = mappers.GetListEmployeeResponseFromListModel(employee)
-		responseJson.Data = employeeResponse
+		requestResponse.Data = employeeResponse
 
-		response.JSON(w, http.StatusOK, responseJson)
+		response.JSON(w, http.StatusOK, requestResponse)
 	}
 }
-func (h *EmployeeHandler) GetById(w http.ResponseWriter, r *http.Request) {
+func (h *EmployeeHandler) GetByIdEmployee() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+		defer cancel()
 
-	var (
-		responseJson     *responses.DataResponse = &responses.DataResponse{}
-		employeeResponse *responses.EmployeeResponse
-	)
+		var (
+			requestResponse  *responses.DataResponse = &responses.DataResponse{}
+			employeeResponse *responses.EmployeeResponse
+			employee         models.Employee
+		)
 
-	idParam, convErr := strconv.Atoi(chi.URLParam(r, "id"))
-	if convErr != nil {
-		response.Error(w, http.StatusExpectationFailed, convErr.Error())
+		id, err := strconv.Atoi(chi.URLParam(r, "id"))
+		if err != nil {
+			response.Error(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		employee, err = h.service.GetById(ctx, id)
+		if err != nil {
+
+			if errors.Is(err, error_message.ErrNotFound) {
+				response.Error(w, http.StatusNotFound, err.Error())
+				return
+			}
+
+			response.Error(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		employeeResponse = mappers.GetEmployeeResponseFromModel(&employee)
+		requestResponse.Data = employeeResponse
+		response.JSON(w, http.StatusOK, requestResponse)
 	}
-
-	employee, srvErr := h.service.GetById(idParam)
-	if srvErr != nil {
-		response.Error(w, http.StatusNotFound, srvErr.Error())
-	}
-
-	employeeResponse = mappers.GetEmployeeResponseFromModel(employee)
-	responseJson.Data = employeeResponse
-
-	response.JSON(w, http.StatusOK, responseJson)
-
 }
-func (h *EmployeeHandler) Create(w http.ResponseWriter, r *http.Request) {
-	var (
-		request      *requests.EmployeeRequest = &requests.EmployeeRequest{}
-		responseJson *responses.DataResponse   = &responses.DataResponse{}
-		employee     *models.Employee
-	)
+func (h *EmployeeHandler) PostEmployee() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+		defer cancel()
 
-	if reqErr := json.NewDecoder(r.Body).Decode(&request); reqErr != nil {
-		response.Error(w, http.StatusExpectationFailed, reqErr.Error())
-		return
+		var requestResponse *responses.DataResponse = &responses.DataResponse{}
+
+		requestEmployee := requests.EmployeeRequest{}
+		request.JSON(r, &requestEmployee)
+
+		err := validations.ValidateEmployeeRequestStruct(requestEmployee)
+		if err != nil {
+			response.Error(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		modelEmployee := mappers.GetEmployeeModelFromRequest(requestEmployee)
+		employeeDb, err := h.service.Create(ctx, *modelEmployee)
+		if err != nil {
+
+			if errors.Is(err, error_message.ErrAlreadyExists) {
+				response.Error(w, http.StatusConflict, err.Error())
+				return
+			}
+
+			response.Error(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		employeeResponse := mappers.GetEmployeeResponseFromModel(&employeeDb)
+		requestResponse.Data = employeeResponse
+
+		response.JSON(w, http.StatusCreated, requestResponse)
 	}
-
-	if valErr := h.validation.ValidateEmployeeRequestStruct(*request); valErr != nil {
-		response.Error(w, http.StatusUnprocessableEntity, valErr.Error())
-		return
-	}
-
-	employee = mappers.GetEmployeeModelFromRequest(request)
-
-	if h.service.ExistsWhCardNumber(employee.Id, employee.CardNumberID) {
-		response.Error(w, http.StatusConflict, "Already exist with same card_number_id")
-		return
-	}
-
-	if srvErr := h.service.Create(employee); srvErr != nil {
-		response.Error(w, http.StatusExpectationFailed, srvErr.Error())
-		return
-	}
-
-	responseJson.Data = mappers.GetEmployeeResponseFromModel(employee)
-	response.JSON(w, http.StatusCreated, responseJson)
-
 }
-func (h *EmployeeHandler) Update(w http.ResponseWriter, r *http.Request) {
+func (h *EmployeeHandler) PatchEmployee() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+		defer cancel()
 
-	var (
-		request      *requests.EmployeeRequest = &requests.EmployeeRequest{}
-		responseJson *responses.DataResponse   = &responses.DataResponse{}
-	)
+		var requestResponse *responses.DataResponse = &responses.DataResponse{}
 
-	idParam, convErr := strconv.Atoi(chi.URLParam(r, "id"))
-	if convErr != nil {
-		response.Error(w, http.StatusExpectationFailed, convErr.Error())
-		return
+		id, err := strconv.Atoi(chi.URLParam(r, "id"))
+		if err != nil {
+			response.Error(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		requestEmployee := requests.EmployeeRequest{}
+		request.JSON(r, &requestEmployee)
+
+		err = validations.IsNotAnEmptyEmployee(requestEmployee)
+		if err != nil {
+			response.Error(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		modelEmployee := mappers.GetEmployeeModelFromRequest(requestEmployee)
+		employeeDb, err := h.service.Update(ctx, id, *modelEmployee)
+		if err != nil {
+
+			if errors.Is(err, error_message.ErrNotFound) {
+				response.Error(w, http.StatusNotFound, err.Error())
+				return
+			}
+
+			if errors.Is(err, error_message.ErrAlreadyExists) {
+				response.Error(w, http.StatusConflict, err.Error())
+				return
+			}
+
+			response.Error(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		employeeResponse := mappers.GetEmployeeResponseFromModel(&employeeDb)
+		requestResponse.Data = employeeResponse
+
+		response.JSON(w, http.StatusOK, requestResponse)
+
 	}
-
-	employee, srvErr := h.service.GetById(idParam)
-	if srvErr != nil {
-		response.Error(w, http.StatusNotFound, srvErr.Error())
-		return
-	}
-
-	if reqErr := json.NewDecoder(r.Body).Decode(request); reqErr != nil {
-		response.Error(w, http.StatusExpectationFailed, reqErr.Error())
-		return
-	}
-
-	if valErr := h.validation.ValidateEmployeeRequestStruct(*request); valErr != nil {
-		response.Error(w, http.StatusUnprocessableEntity, valErr.Error())
-		return
-	}
-
-	if h.service.ExistsWhCardNumber(employee.Id, request.CardNumberID) {
-		response.Error(w, http.StatusConflict, "")
-		return
-	}
-
-	mappers.UpdateEmployeeModelFromRequest(employee, request)
-
-	responseJson.Data = mappers.GetEmployeeResponseFromModel(employee)
-	response.JSON(w, http.StatusOK, responseJson)
 }
-func (h *EmployeeHandler) DeleteById(w http.ResponseWriter, r *http.Request) {
+func (h *EmployeeHandler) DeleteByIdEmployee() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+		defer cancel()
 
-	idParam, convErr := strconv.Atoi(chi.URLParam(r, "id"))
-	if convErr != nil {
-		response.Error(w, http.StatusExpectationFailed, convErr.Error())
-		return
+		id, err := strconv.Atoi(chi.URLParam(r, "id"))
+		if err != nil {
+			response.Error(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		err = h.service.DeleteById(ctx, id)
+		if err != nil {
+
+			if errors.Is(err, error_message.ErrNotFound) {
+				response.Error(w, http.StatusNotFound, err.Error())
+				return
+			}
+
+			response.Error(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
 	}
+}
 
-	srvErr := h.service.DeleteById(idParam)
-	if srvErr != nil {
-		response.Error(w, http.StatusNotFound, srvErr.Error())
-		return
+func employeeMapToList(employee map[int]models.Employee) []*models.Employee {
+	employeeList := []*models.Employee{}
+	for _, empl := range employee {
+		employeeList = append(employeeList, &empl)
 	}
-
-	w.WriteHeader(http.StatusNoContent)
-
+	return employeeList
 }

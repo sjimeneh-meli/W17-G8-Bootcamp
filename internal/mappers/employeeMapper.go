@@ -6,8 +6,9 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 )
 
-func GetEmployeeModelFromRequest(request *requests.EmployeeRequest) *models.Employee {
+func GetEmployeeModelFromRequest(request requests.EmployeeRequest) *models.Employee {
 	return &models.Employee{
+		Id:           0,
 		CardNumberID: request.CardNumberID,
 		FirstName:    request.FirstName,
 		LastName:     request.LastName,
