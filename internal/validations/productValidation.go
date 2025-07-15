@@ -24,7 +24,6 @@ func (v ProductValidation) ValidateProductRequestStruct(r requests.ProductReques
 		validation.Field(&r.ExpirationRate, validation.Required),
 		validation.Field(&r.RecommendedFreezingTemperature, validation.Required),
 		validation.Field(&r.FreezingRate, validation.Required),
-		validation.Field(&r.ProductTypeID, validation.Required),
 		//validation.Field(&r.SellerID, validation.Required), this is optional
 	)
 }
