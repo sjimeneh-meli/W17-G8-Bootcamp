@@ -151,7 +151,9 @@ func (c *Container) initializeProductRecordHandler() error {
 func (c *Container) initializePurchaseOrderHandler() error {
 	purchaseOrderRepository := repositories.GetNewPurchaseOrderMySQLRepository(c.StorageDB)
 	buyerRepository := repositories.GetNewBuyerMySQLRepository(c.StorageDB)
-	purchaseOrderService := services.GetPurchaseOrderService(purchaseOrderRepository, buyerRepository)
+	productRecordsRepository := repositories.NewProductRecordRepository(c.StorageDB)
+
+	purchaseOrderService := services.GetPurchaseOrderService(purchaseOrderRepository, buyerRepository, productRecordsRepository)
 	c.PurchaseOrderHandler = handlers.GetPurchaseOrderHandler(purchaseOrderService)
 	return nil
 }

@@ -10,11 +10,11 @@ import (
 )
 
 // GetPurchaseOrderService creates and returns a new instance of PurchaseOrderService with the required repositories
-func GetPurchaseOrderService(purchaseOrderRepository repositories.PurchaseOrderRepositoryI, buyerRepository repositories.BuyerRepositoryI) PurchaseOrderServiceI {
+func GetPurchaseOrderService(purchaseOrderRepository repositories.PurchaseOrderRepositoryI, buyerRepository repositories.BuyerRepositoryI, productRecordRepository repositories.IProductRecordRepository) PurchaseOrderServiceI {
 	return &PurchaseOrderService{
 		PurchaseOrderRepository: purchaseOrderRepository,
 		BuyerRepository:         buyerRepository,
-		//ProductRecordRepository: IProductRecordRepository
+		ProductRecordRepository: productRecordRepository,
 	}
 }
 
@@ -29,6 +29,7 @@ type PurchaseOrderServiceI interface {
 type PurchaseOrderService struct {
 	PurchaseOrderRepository repositories.PurchaseOrderRepositoryI
 	BuyerRepository         repositories.BuyerRepositoryI
+	ProductRecordRepository repositories.IProductRecordRepository
 }
 
 // GetAll retrieves all purchase orders from the repository
@@ -54,7 +55,7 @@ func (s *PurchaseOrderService) GetPurchaseOrdersReport(ctx context.Context, id *
 // Create creates a new purchase order with validation
 // Validates that the order number doesn't already exist and that the buyer exists
 func (s *PurchaseOrderService) Create(ctx context.Context, order models.PurchaseOrder) (models.PurchaseOrder, error) {
-	//Valido que el order number no exista.
+	//validate that order number doesn't exists.
 
 	exists, err := s.PurchaseOrderRepository.ExistPurchaseOrderByOrderNumber(ctx, order.OrderNumber)
 	if err != nil {
@@ -64,7 +65,7 @@ func (s *PurchaseOrderService) Create(ctx context.Context, order models.Purchase
 		return models.PurchaseOrder{}, fmt.Errorf("%w. %s %s %s", error_message.ErrAlreadyExists, "Order number ", order.OrderNumber, "already exists.")
 	}
 
-	//Valido que el buyer exista:
+	//validate that buyer id exists.
 	exists, err = s.BuyerRepository.ExistBuyerById(ctx, order.BuyerId)
 	if err != nil {
 		return models.PurchaseOrder{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
@@ -73,18 +74,11 @@ func (s *PurchaseOrderService) Create(ctx context.Context, order models.Purchase
 		return models.PurchaseOrder{}, fmt.Errorf("%w. %s %d %s", error_message.ErrNotFound, "Buyer with Id", order.BuyerId, "doesn't exists.")
 	}
 
-	/*
-		Valido que el product record exista:
-		Pendiente de implementar porque necesitaría productRecordRepository
-		exists, err = s.ProductRecordRepository.ExistsProductRecordById(order.ProductRecordId)
-		if err != nil {
-			return models.PurchaseOrder{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
-		}
-		if !exists {
-			return models.PurchaseOrder{}, fmt.Errorf("%w. %s %d %s", error_message.ErrNotFound, "Product record with Id", order.ProductRecordId, "doesn't exists.")
-		}
-
-	*/
+	//validate that product record id exists.
+	exists = s.ProductRecordRepository.ExistProductRecordByID(ctx, int64(order.ProductRecordId))
+	if !exists {
+		return models.PurchaseOrder{}, fmt.Errorf("%w. %s %d %s", error_message.ErrNotFound, "Product record with Id", order.ProductRecordId, "doesn't exists.")
+	}
 
 	return s.PurchaseOrderRepository.Create(ctx, order)
 }
