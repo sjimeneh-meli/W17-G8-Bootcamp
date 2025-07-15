@@ -48,6 +48,10 @@ func (h *ProductBatchHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !h.sectionService.ExistWithID(request.SectionID) {
+		response.Error(w, http.StatusNotFound, "section not found")
+	}
+
 	productBatch, mapErr := mappers.GetProductBatchModelFromRequest(request)
 	if mapErr != nil {
 		response.Error(w, http.StatusExpectationFailed, mapErr.Error())

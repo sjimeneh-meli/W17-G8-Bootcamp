@@ -28,6 +28,7 @@ type SectionRepositoryI interface {
 	GetByID(id int) (*models.Section, error)
 	Create(model *models.Section) error
 	Update(model *models.Section) error
+	ExistWithID(id int) bool
 	ExistsWithSectionNumber(id int, sectionNumber string) bool
 	DeleteByID(id int) error
 }
@@ -139,6 +140,16 @@ func (r *sectionRepository) Update(model *models.Section) error {
 		return err
 	}
 	return nil
+}
+
+func (r *sectionRepository) ExistWithID(id int) bool {
+	row := database.SelectOne(r.database, r.tablename, []string{"COUNT(Id)"}, "Id = ?", id)
+	var count int
+	if err := row.Scan(&count); err != nil {
+		return true
+	}
+
+	return count != 0
 }
 
 func (r *sectionRepository) ExistsWithSectionNumber(id int, sectionNumber string) bool {
