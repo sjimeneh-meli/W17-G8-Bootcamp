@@ -8,11 +8,19 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/pkg/database"
 )
 
-func GetSectionRepository(db *sql.DB) (SectionRepositoryI, error) {
-	return &sectionRepository{
+var sectionRepositoryInstance SectionRepositoryI
+
+func GetSectionRepository(db *sql.DB) SectionRepositoryI {
+	if sectionRepositoryInstance != nil {
+		return sectionRepositoryInstance
+	}
+
+	sectionRepositoryInstance = &sectionRepository{
 		database:  db,
 		tablename: "sections",
-	}, nil
+	}
+
+	return sectionRepositoryInstance
 }
 
 type SectionRepositoryI interface {

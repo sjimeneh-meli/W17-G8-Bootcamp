@@ -6,10 +6,17 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/repositories"
 )
 
+var sectionServiceInstance SectionServiceI
+
 func GetSectionService(repository repositories.SectionRepositoryI) SectionServiceI {
-	return &sectionService{
+	if sectionServiceInstance != nil {
+		return sectionServiceInstance
+	}
+
+	sectionServiceInstance = &sectionService{
 		repository: repository,
 	}
+	return sectionServiceInstance
 }
 
 type SectionServiceI interface {

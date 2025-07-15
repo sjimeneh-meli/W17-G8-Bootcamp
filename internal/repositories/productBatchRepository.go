@@ -7,11 +7,18 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/pkg/database"
 )
 
-func GetProductBatchRepository(db *sql.DB) (ProductBatchRepositoryI, error) {
-	return &productBatchRepository{
+var productBatchRepositoryInstance ProductBatchRepositoryI
+
+func GetProductBatchRepository(db *sql.DB) ProductBatchRepositoryI {
+	if productBatchRepositoryInstance != nil {
+		return productBatchRepositoryInstance
+	}
+
+	productBatchRepositoryInstance = &productBatchRepository{
 		database:  db,
 		tablename: "product_batches",
-	}, nil
+	}
+	return productBatchRepositoryInstance
 }
 
 type ProductBatchRepositoryI interface {

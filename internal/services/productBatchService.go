@@ -5,10 +5,17 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/repositories"
 )
 
+var productBatchServiceInstance ProductBatchServiceI
+
 func GetProductBatchService(repository repositories.ProductBatchRepositoryI) ProductBatchServiceI {
-	return &productBatchService{
+	if productBatchServiceInstance != nil {
+		return productBatchServiceInstance
+	}
+
+	productBatchServiceInstance = &productBatchService{
 		repository: repository,
 	}
+	return productBatchServiceInstance
 }
 
 type ProductBatchServiceI interface {
