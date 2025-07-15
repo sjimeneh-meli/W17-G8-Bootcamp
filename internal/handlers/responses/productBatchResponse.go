@@ -8,7 +8,7 @@ type ProductBatchResponse struct {
 	DueDate            string  `json:"due_date"`
 	InitialQuantity    int     `json:"initial_quantity"`
 	ManufacturingDate  string  `json:"manufacturing_date"`
-	ManufacturingHour  string  `json:"manufacturing_hour"`
+	ManufacturingHour  float64 `json:"manufacturing_hour"`
 	MinimumTemperature float64 `json:"minimum_temperature"`
 	ProductID          int     `json:"product_id"`
 	SectionID          int     `json:"section_id"`

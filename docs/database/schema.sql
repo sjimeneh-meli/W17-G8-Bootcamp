@@ -4,9 +4,9 @@
 
 DROP DATABASE IF EXISTS productos_frescos;
 
-CREATE DATABASE productos_fescos;
+CREATE DATABASE productos_frescos;
 
-USE productos_fescos;
+USE productos_frescos;
 
 -- Eliminación de tablas en orden inverso para evitar conflictos de claves foráneas
 DROP TABLE IF EXISTS `user_rol`;
@@ -37,24 +37,27 @@ CREATE TABLE `countries` (
 );
 
 -- Creación de la tabla 'provinces'
+-- Si se elimina un país, se eliminarán todas sus provincias.
 CREATE TABLE `provinces` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `province_name` VARCHAR(255) NOT NULL,
   `id_country_fk` INT NOT NULL,
   PRIMARY KEY (`id`),
-  FOREIGN KEY (`id_country_fk`) REFERENCES `countries`(`id`)
+  FOREIGN KEY (`id_country_fk`) REFERENCES `countries`(`id`) ON DELETE CASCADE
 );
 
 -- Creación de la tabla 'localities'
+-- Si se elimina una provincia, se eliminarán todas sus localidades.
 CREATE TABLE `localities` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `locality_name` VARCHAR(255) NOT NULL,
   `province_id` INT NOT NULL,
   PRIMARY KEY (`id`),
-  FOREIGN KEY (`province_id`) REFERENCES `provinces`(`id`)
+  FOREIGN KEY (`province_id`) REFERENCES `provinces`(`id`) ON DELETE CASCADE
 );
 
 -- Creación de la tabla 'sellers'
+-- Si se elimina una localidad, se eliminarán los vendedores asociados.
 CREATE TABLE `sellers` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `cid` VARCHAR(255) NOT NULL,
@@ -63,7 +66,7 @@ CREATE TABLE `sellers` (
   `telephone` VARCHAR(255) NOT NULL,
   `locality_id` INT NOT NULL,
   PRIMARY KEY (`id`),
-  FOREIGN KEY (`locality_id`) REFERENCES `localities`(`id`)
+  FOREIGN KEY (`locality_id`) REFERENCES `localities`(`id`) ON DELETE CASCADE
 );
 
 -- Creación de la tabla 'buyers'
@@ -76,17 +79,21 @@ CREATE TABLE `buyers` (
 );
 
 -- Creación de la tabla 'warehouse'
+-- Si se elimina una localidad, se eliminarán los almacenes asociados.
 CREATE TABLE `warehouse` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `address` VARCHAR(255) NOT NULL,
   `telephone` VARCHAR(255) NOT NULL,
+  `minimum_temperature` INT,
+  `minimum_capacity` INT,
   `warehouse_code` VARCHAR(255) NOT NULL,
   `locality_id` INT NOT NULL,
   PRIMARY KEY (`id`),
-  FOREIGN KEY (`locality_id`) REFERENCES `localities`(`id`)
+  FOREIGN KEY (`locality_id`) REFERENCES `localities`(`id`) ON DELETE CASCADE
 );
 
 -- Creación de la tabla 'employees'
+-- Si se elimina un almacén, se eliminarán los empleados asociados.
 CREATE TABLE `employees` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `id_card_number` VARCHAR(255) NOT NULL,
@@ -94,7 +101,7 @@ CREATE TABLE `employees` (
   `last_name` VARCHAR(255) NOT NULL,
   `warehouse_id` INT NOT NULL,
   PRIMARY KEY (`id`),
-  FOREIGN KEY (`warehouse_id`) REFERENCES `warehouse`(`id`)
+  FOREIGN KEY (`warehouse_id`) REFERENCES `warehouse`(`id`) ON DELETE CASCADE
 );
 
 -- Creación de la tabla 'products_types'
@@ -105,6 +112,7 @@ CREATE TABLE `products_types` (
 );
 
 -- Creación de la tabla 'sections'
+-- Si se elimina un almacén o un tipo de producto, se eliminarán las secciones relacionadas.
 CREATE TABLE `sections` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `section_number` VARCHAR(255) NOT NULL,
@@ -116,11 +124,12 @@ CREATE TABLE `sections` (
   `warehouse_id` INT NOT NULL,
   `product_type_id` INT NOT NULL,
   PRIMARY KEY (`id`),
-  FOREIGN KEY (`warehouse_id`) REFERENCES `warehouse`(`id`),
-  FOREIGN KEY (`product_type_id`) REFERENCES `products_types`(`id`)
+  FOREIGN KEY (`warehouse_id`) REFERENCES `warehouse`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`product_type_id`) REFERENCES `products_types`(`id`) ON DELETE CASCADE
 );
 
 -- Creación de la tabla 'products'
+-- Si se elimina un tipo de producto o un vendedor, se eliminarán los productos asociados.
 CREATE TABLE `products` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `description` VARCHAR(255),
@@ -135,11 +144,12 @@ CREATE TABLE `products` (
   `product_type_id` INT,
   `seller_id` INT,
   PRIMARY KEY (`id`),
-  FOREIGN KEY (`product_type_id`) REFERENCES `products_types`(`id`),
-  FOREIGN KEY (`seller_id`) REFERENCES `sellers`(`id`)
+  FOREIGN KEY (`product_type_id`) REFERENCES `products_types`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`seller_id`) REFERENCES `sellers`(`id`) ON DELETE CASCADE
 );
 
 -- Creación de la tabla 'product_records'
+-- Si se elimina un producto, se eliminarán sus registros.
 CREATE TABLE `product_records` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `last_update_date` DATETIME(6),
@@ -147,10 +157,11 @@ CREATE TABLE `product_records` (
   `sale_price` DECIMAL(19,2),
   `product_id` INT NOT NULL,
   PRIMARY KEY (`id`),
-  FOREIGN KEY (`product_id`) REFERENCES `products`(`id`)
+  FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE CASCADE
 );
 
 -- Creación de la tabla 'product_batches'
+-- Si se elimina un producto o una sección, se eliminarán los lotes de productos asociados.
 CREATE TABLE `product_batches` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `batch_number` VARCHAR(255) NOT NULL,
@@ -164,11 +175,12 @@ CREATE TABLE `product_batches` (
   `product_id` INT NOT NULL,
   `section_id` INT NOT NULL,
   PRIMARY KEY (`id`),
-  FOREIGN KEY (`product_id`) REFERENCES `products`(`id`),
-  FOREIGN KEY (`section_id`) REFERENCES `sections`(`id`)
+  FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`section_id`) REFERENCES `sections`(`id`) ON DELETE CASCADE
 );
 
 -- Creación de la tabla 'inbound_orders'
+-- Si se elimina un empleado, lote de producto o almacén, se eliminarán las órdenes de entrada relacionadas.
 CREATE TABLE `inbound_orders` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `order_date` DATETIME(6),
@@ -177,12 +189,13 @@ CREATE TABLE `inbound_orders` (
   `product_batch_id` INT NOT NULL,
   `warehouse_id` INT NOT NULL,
   PRIMARY KEY (`id`),
-  FOREIGN KEY (`employee_id`) REFERENCES `employees`(`id`),
-  FOREIGN KEY (`product_batch_id`) REFERENCES `product_batches`(`id`),
-  FOREIGN KEY (`warehouse_id`) REFERENCES `warehouse`(`id`)
+  FOREIGN KEY (`employee_id`) REFERENCES `employees`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`product_batch_id`) REFERENCES `product_batches`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`warehouse_id`) REFERENCES `warehouse`(`id`) ON DELETE CASCADE
 );
 
 -- Creación de la tabla 'carriers'
+-- Si se elimina una localidad, se eliminarán los transportistas asociados.
 CREATE TABLE `carriers` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `cid` VARCHAR(255) NOT NULL,
@@ -191,7 +204,7 @@ CREATE TABLE `carriers` (
   `telephone` VARCHAR(255) NOT NULL,
   `locality_id` INT NOT NULL,
   PRIMARY KEY (`id`),
-  FOREIGN KEY (`locality_id`) REFERENCES `localities`(`id`)
+  FOREIGN KEY (`locality_id`) REFERENCES `localities`(`id`) ON DELETE CASCADE
 );
 
 -- Creación de la tabla 'order_status'
@@ -201,7 +214,8 @@ CREATE TABLE `order_status` (
   PRIMARY KEY (`id`)
 );
 
--- Creación de la tabla 'purchase_orders' (ESTRUCTURA ACTUALIZADA)
+-- Creación de la tabla 'purchase_orders'
+-- Si se elimina un comprador o un registro de producto, se eliminarán las órdenes de compra asociadas.
 CREATE TABLE `purchase_orders` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `order_number` VARCHAR(255) NOT NULL,
@@ -210,8 +224,8 @@ CREATE TABLE `purchase_orders` (
   `buyer_id` INT NOT NULL,
   `product_record_id` INT NOT NULL,
   PRIMARY KEY (`id`),
-  FOREIGN KEY (`buyer_id`) REFERENCES `buyers`(`id`),
-  FOREIGN KEY (`product_record_id`) REFERENCES `product_records`(`id`)
+  FOREIGN KEY (`buyer_id`) REFERENCES `buyers`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`product_record_id`) REFERENCES `product_records`(`id`) ON DELETE CASCADE
 );
 
 -- Creación de la tabla 'users'
@@ -231,13 +245,14 @@ CREATE TABLE `rol` (
 );
 
 -- Creación de la tabla 'user_rol'
+-- Si se elimina un usuario o un rol, se eliminará la relación en esta tabla.
 CREATE TABLE `user_rol` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `usuario_id` INT NOT NULL,
   `rol_id` INT NOT NULL,
   PRIMARY KEY (`id`),
-  FOREIGN KEY (`usuario_id`) REFERENCES `users`(`id`),
-  FOREIGN KEY (`rol_id`) REFERENCES `rol`(`id`)
+  FOREIGN KEY (`usuario_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`rol_id`) REFERENCES `rol`(`id`) ON DELETE CASCADE
 );
 
 
@@ -381,28 +396,230 @@ INSERT INTO `products` (`id`, `description`, `expiration_rate`, `freezing_rate`,
 (19, 'Salsa de Tomate Casera 500g', 60, 0, 0.12, 0.08, 0.5, 'PROD-ST-01', 15.0, 0.08, 19, 4), -- Tipo: 19 (Pastas), Vendedor: 4
 (20, 'Zanahorias 1kg', 20, 0, 0.1, 0.3, 1.0, 'PROD-ZA-01', 10.0, 0.15, 20, 5); -- Tipo: 20 (Salsas), Vendedor: 5
 
+
 -- Insertando datos en 'product_records'
-INSERT INTO `product_records` (`id`, `last_update_date`, `purchase_price`, `sale_price`, `product_id`) VALUES
-(1, NOW(), 1.00, 1.50, 1), -- Registro de precio para product 1
-(2, NOW(), 8.00, 12.00, 2), -- Registro de precio para product 2
-(3, NOW(), 1.20, 2.00, 3), -- Registro de precio para product 3
-(4, NOW(), 10.00, 15.00, 4), -- Registro de precio para product 4
-(5, NOW(), 3.50, 5.00, 5), -- Registro de precio para product 5
-(6, NOW(), 5.00, 7.50, 6), -- Registro de precio para product 6
-(7, NOW(), 0.80, 1.20, 7), -- Registro de precio para product 7
-(8, NOW(), 1.50, 2.20, 8), -- Registro de precio para product 8
-(9, NOW(), 12.00, 20.00, 9), -- Registro de precio para product 9
-(10, NOW(), 2.50, 4.00, 10), -- Registro de precio para product 10
-(11, NOW(), 4.00, 6.00, 11), -- Registro de precio para product 11
-(12, NOW(), 1.80, 2.50, 12), -- Registro de precio para product 12
-(13, NOW(), 6.00, 10.00, 13), -- Registro de precio para product 13
-(14, NOW(), 2.00, 3.50, 14), -- Registro de precio para product 14
-(15, NOW(), 5.00, 8.00, 15), -- Registro de precio para product 15
-(16, NOW(), 0.90, 1.40, 16), -- Registro de precio para product 16
-(17, NOW(), 1.00, 1.60, 17), -- Registro de precio para product 17
-(18, NOW(), 2.20, 3.80, 18), -- Registro de precio para product 18
-(19, NOW(), 1.50, 2.50, 19), -- Registro de precio para product 19
-(20, NOW(), 1.10, 1.90, 20); -- Registro de precio para product 20
+
+-- =================================================================
+-- SCRIPT DE INSERCIÓN DE DATOS PARA 'product_records'
+-- Se generan entre 10 y 20 registros por cada producto para simular un historial de precios.
+-- =================================================================
+
+-- --- Producto 1: Leche Entera 1L (15 registros) ---
+INSERT INTO `product_records` (`last_update_date`, `purchase_price`, `sale_price`, `product_id`) VALUES
+('2024-05-10 10:00:00', 1.00, 1.50, 1), ('2024-06-10 10:00:00', 1.02, 1.55, 1),
+('2024-07-10 10:00:00', 1.03, 1.55, 1), ('2024-08-10 10:00:00', 1.02, 1.53, 1),
+('2024-09-10 10:00:00', 1.04, 1.56, 1), ('2024-10-10 10:00:00', 1.05, 1.58, 1),
+('2024-11-10 10:00:00', 1.05, 1.60, 1), ('2024-12-10 10:00:00', 1.06, 1.60, 1),
+('2025-01-10 10:00:00', 1.07, 1.62, 1), ('2025-02-10 10:00:00', 1.08, 1.65, 1),
+('2025-03-10 10:00:00', 1.07, 1.64, 1), ('2025-04-10 10:00:00', 1.08, 1.65, 1),
+('2025-05-10 10:00:00', 1.09, 1.68, 1), ('2025-06-10 10:00:00', 1.10, 1.70, 1),
+(NOW(), 1.12, 1.72, 1);
+
+-- --- Producto 2: Carne de Res 1kg (12 registros) ---
+INSERT INTO `product_records` (`last_update_date`, `purchase_price`, `sale_price`, `product_id`) VALUES
+('2024-08-15 11:00:00', 8.15, 12.25, 2), ('2024-09-15 11:00:00', 8.25, 12.40, 2),
+('2024-10-15 11:00:00', 8.30, 12.50, 2), ('2024-11-15 11:00:00', 8.35, 12.60, 2),
+('2024-12-15 11:00:00', 8.40, 12.70, 2), ('2025-01-15 11:00:00', 8.45, 12.80, 2),
+('2025-02-15 11:00:00', 8.50, 12.90, 2), ('2025-03-15 11:00:00', 8.45, 12.85, 2),
+('2025-04-15 11:00:00', 8.55, 13.00, 2), ('2025-05-15 11:00:00', 8.60, 13.10, 2),
+('2025-06-15 11:00:00', 8.65, 13.20, 2), (NOW(), 8.75, 13.40, 2);
+
+-- --- Producto 3: Manzanas Royal Gala 1kg (18 registros) ---
+INSERT INTO `product_records` (`last_update_date`, `purchase_price`, `sale_price`, `product_id`) VALUES
+('2024-02-20 09:30:00', 1.19, 1.98, 3), ('2024-03-20 09:30:00', 1.20, 2.00, 3),
+('2024-04-20 09:30:00', 1.21, 2.02, 3), ('2024-05-20 09:30:00', 1.20, 2.00, 3),
+('2024-06-20 09:30:00', 1.22, 2.05, 3), ('2024-07-20 09:30:00', 1.23, 2.05, 3),
+('2024-08-20 09:30:00', 1.22, 2.03, 3), ('2024-09-20 09:30:00', 1.24, 2.06, 3),
+('2024-10-20 09:30:00', 1.25, 2.08, 3), ('2024-11-20 09:30:00', 1.25, 2.10, 3),
+('2024-12-20 09:30:00', 1.26, 2.10, 3), ('2025-01-20 09:30:00', 1.27, 2.12, 3),
+('2025-02-20 09:30:00', 1.28, 2.15, 3), ('2025-03-20 09:30:00', 1.27, 2.14, 3),
+('2025-04-20 09:30:00', 1.28, 2.15, 3), ('2025-05-20 09:30:00', 1.29, 2.18, 3),
+('2025-06-20 09:30:00', 1.30, 2.20, 3), (NOW(), 1.32, 2.22, 3);
+
+-- --- Producto 4: Filete de Salmón 500g (11 registros) ---
+INSERT INTO `product_records` (`last_update_date`, `purchase_price`, `sale_price`, `product_id`) VALUES
+('2024-09-25 14:00:00', 10.25, 15.40, 4), ('2024-10-25 14:00:00', 10.30, 15.50, 4),
+('2024-11-25 14:00:00', 10.35, 15.60, 4), ('2024-12-25 14:00:00', 10.40, 15.70, 4),
+('2025-01-25 14:00:00', 10.45, 15.80, 4), ('2025-02-25 14:00:00', 10.50, 15.90, 4),
+('2025-03-25 14:00:00', 10.45, 15.85, 4), ('2025-04-25 14:00:00', 10.55, 16.00, 4),
+('2025-05-25 14:00:00', 10.60, 16.10, 4), ('2025-06-25 14:00:00', 10.65, 16.20, 4),
+(NOW(), 10.75, 16.40, 4);
+
+-- --- Producto 5: Pizza Congelada Pepperoni (20 registros) ---
+INSERT INTO `product_records` (`last_update_date`, `purchase_price`, `sale_price`, `product_id`) VALUES
+('2024-01-01 12:00:00', 3.45, 4.90, 5), ('2024-02-01 12:00:00', 3.48, 4.95, 5),
+('2024-03-01 12:00:00', 3.50, 5.00, 5), ('2024-04-01 12:00:00', 3.52, 5.05, 5),
+('2024-05-01 12:00:00', 3.50, 5.00, 5), ('2024-06-01 12:00:00', 3.55, 5.10, 5),
+('2024-07-01 12:00:00', 3.58, 5.15, 5), ('2024-08-01 12:00:00', 3.56, 5.12, 5),
+('2024-09-01 12:00:00', 3.60, 5.20, 5), ('2024-10-01 12:00:00', 3.62, 5.25, 5),
+('2024-11-01 12:00:00', 3.65, 5.30, 5), ('2024-12-01 12:00:00', 3.68, 5.35, 5),
+('2025-01-01 12:00:00', 3.70, 5.40, 5), ('2025-02-01 12:00:00', 3.72, 5.45, 5),
+('2025-03-01 12:00:00', 3.70, 5.42, 5), ('2025-04-01 12:00:00', 3.75, 5.50, 5),
+('2025-05-01 12:00:00', 3.78, 5.55, 5), ('2025-06-01 12:00:00', 3.80, 5.60, 5),
+('2025-07-01 12:00:00', 3.82, 5.65, 5), (NOW(), 3.85, 5.70, 5);
+
+-- --- Producto 6: Pechuga de Pollo 1kg (14 registros) ---
+INSERT INTO `product_records` (`last_update_date`, `purchase_price`, `sale_price`, `product_id`) VALUES
+('2024-06-05 15:00:00', 5.10, 7.60, 6), ('2024-07-05 15:00:00', 5.15, 7.65, 6),
+('2024-08-05 15:00:00', 5.10, 7.60, 6), ('2024-09-05 15:00:00', 5.20, 7.70, 6),
+('2024-10-05 15:00:00', 5.25, 7.75, 6), ('2024-11-05 15:00:00', 5.30, 7.80, 6),
+('2024-12-05 15:00:00', 5.35, 7.85, 6), ('2025-01-05 15:00:00', 5.40, 7.90, 6),
+('2025-02-05 15:00:00', 5.45, 7.95, 6), ('2025-03-05 15:00:00', 5.40, 7.90, 6),
+('2025-04-05 15:00:00', 5.50, 8.00, 6), ('2025-05-05 15:00:00', 5.55, 8.05, 6),
+('2025-06-05 15:00:00', 5.60, 8.10, 6), (NOW(), 5.70, 8.20, 6);
+
+-- --- Producto 7: Baguette Rústica (17 registros) ---
+INSERT INTO `product_records` (`last_update_date`, `purchase_price`, `sale_price`, `product_id`) VALUES
+('2024-03-08 07:00:00', 0.80, 1.20, 7), ('2024-04-08 07:00:00', 0.81, 1.21, 7),
+('2024-05-08 07:00:00', 0.80, 1.20, 7), ('2024-06-08 07:00:00', 0.82, 1.22, 7),
+('2024-07-08 07:00:00', 0.83, 1.23, 7), ('2024-08-08 07:00:00', 0.82, 1.22, 7),
+('2024-09-08 07:00:00', 0.84, 1.24, 7), ('2024-10-08 07:00:00', 0.85, 1.25, 7),
+('2024-11-08 07:00:00', 0.85, 1.25, 7), ('2024-12-08 07:00:00', 0.86, 1.26, 7),
+('2025-01-08 07:00:00', 0.87, 1.27, 7), ('2025-02-08 07:00:00', 0.88, 1.28, 7),
+('2025-03-08 07:00:00', 0.87, 1.27, 7), ('2025-04-08 07:00:00', 0.88, 1.28, 7),
+('2025-05-08 07:00:00', 0.89, 1.29, 7), ('2025-06-08 07:00:00', 0.90, 1.30, 7),
+(NOW(), 0.92, 1.32, 7);
+
+-- --- Producto 8: Refresco de Cola 2L (10 registros) ---
+INSERT INTO `product_records` (`last_update_date`, `purchase_price`, `sale_price`, `product_id`) VALUES
+('2024-10-12 16:00:00', 1.55, 2.25, 8), ('2024-11-12 16:00:00', 1.55, 2.25, 8),
+('2024-12-12 16:00:00', 1.56, 2.26, 8), ('2025-01-12 16:00:00', 1.57, 2.27, 8),
+('2025-02-12 16:00:00', 1.58, 2.28, 8), ('2025-03-12 16:00:00', 1.57, 2.27, 8),
+('2025-04-12 16:00:00', 1.58, 2.28, 8), ('2025-05-12 16:00:00', 1.59, 2.29, 8),
+('2025-06-12 16:00:00', 1.60, 2.30, 8), (NOW(), 1.62, 2.32, 8);
+
+-- --- Producto 9: Vino Tinto Malbec (19 registros) ---
+INSERT INTO `product_records` (`last_update_date`, `purchase_price`, `sale_price`, `product_id`) VALUES
+('2024-02-19 18:00:00', 11.90, 19.90, 9), ('2024-03-19 18:00:00', 12.00, 20.00, 9),
+('2024-04-19 18:00:00', 12.10, 20.10, 9), ('2024-05-19 18:00:00', 12.05, 20.05, 9),
+('2024-06-19 18:00:00', 12.15, 20.20, 9), ('2024-07-19 18:00:00', 12.20, 20.30, 9),
+('2024-08-19 18:00:00', 12.15, 20.25, 9), ('2024-09-19 18:00:00', 12.25, 20.40, 9),
+('2024-10-19 18:00:00', 12.30, 20.50, 9), ('2024-11-19 18:00:00', 12.35, 20.60, 9),
+('2024-12-19 18:00:00', 12.40, 20.70, 9), ('2025-01-19 18:00:00', 12.45, 20.80, 9),
+('2025-02-19 18:00:00', 12.50, 20.90, 9), ('2025-03-19 18:00:00', 12.45, 20.85, 9),
+('2025-04-19 18:00:00', 12.55, 21.00, 9), ('2025-05-19 18:00:00', 12.60, 21.10, 9),
+('2025-06-19 18:00:00', 12.65, 21.20, 9), ('2025-07-19 18:00:00', 12.70, 21.30, 9),
+(NOW(), 12.75, 21.40, 9);
+
+-- --- Producto 10: Helado de Vainilla 1L (13 registros) ---
+INSERT INTO `product_records` (`last_update_date`, `purchase_price`, `sale_price`, `product_id`) VALUES
+('2024-07-22 13:00:00', 2.58, 4.15, 10), ('2024-08-22 13:00:00', 2.56, 4.12, 10),
+('2024-09-22 13:00:00', 2.60, 4.20, 10), ('2024-10-22 13:00:00', 2.62, 4.25, 10),
+('2024-11-22 13:00:00', 2.65, 4.30, 10), ('2024-12-22 13:00:00', 2.68, 4.35, 10),
+('2025-01-22 13:00:00', 2.70, 4.40, 10), ('2025-02-22 13:00:00', 2.72, 4.45, 10),
+('2025-03-22 13:00:00', 2.70, 4.42, 10), ('2025-04-22 13:00:00', 2.75, 4.50, 10),
+('2025-05-22 13:00:00', 2.78, 4.55, 10), ('2025-06-22 13:00:00', 2.80, 4.60, 10),
+(NOW(), 2.85, 4.70, 10);
+
+-- --- Producto 11: Lasaña Boloñesa Preparada (16 registros) ---
+INSERT INTO `product_records` (`last_update_date`, `purchase_price`, `sale_price`, `product_id`) VALUES
+('2024-04-28 17:00:00', 4.05, 6.05, 11), ('2024-05-28 17:00:00', 4.00, 6.00, 11),
+('2024-06-28 17:00:00', 4.10, 6.10, 11), ('2024-07-28 17:00:00', 4.15, 6.15, 11),
+('2024-08-28 17:00:00', 4.10, 6.10, 11), ('2024-09-28 17:00:00', 4.20, 6.20, 11),
+('2024-10-28 17:00:00', 4.25, 6.25, 11), ('2024-11-28 17:00:00', 4.30, 6.30, 11),
+('2024-12-28 17:00:00', 4.35, 6.35, 11), ('2025-01-28 17:00:00', 4.40, 6.40, 11),
+('2025-02-28 17:00:00', 4.45, 6.45, 11), ('2025-03-28 17:00:00', 4.40, 6.40, 11),
+('2025-04-28 17:00:00', 4.50, 6.50, 11), ('2025-05-28 17:00:00', 4.55, 6.55, 11),
+('2025-06-28 17:00:00', 4.60, 6.60, 11), (NOW(), 4.70, 6.70, 11);
+
+-- --- Producto 12: Tableta de Chocolate Negro (15 registros) ---
+INSERT INTO `product_records` (`last_update_date`, `purchase_price`, `sale_price`, `product_id`) VALUES
+('2024-05-14 19:00:00', 1.80, 2.50, 12), ('2024-06-14 19:00:00', 1.85, 2.55, 12),
+('2024-07-14 19:00:00', 1.88, 2.58, 12), ('2024-08-14 19:00:00', 1.86, 2.56, 12),
+('2024-09-14 19:00:00', 1.90, 2.60, 12), ('2024-10-14 19:00:00', 1.92, 2.62, 12),
+('2024-11-14 19:00:00', 1.95, 2.65, 12), ('2024-12-14 19:00:00', 1.98, 2.68, 12),
+('2025-01-14 19:00:00', 2.00, 2.70, 12), ('2025-02-14 19:00:00', 2.02, 2.72, 12),
+('2025-03-14 19:00:00', 2.00, 2.70, 12), ('2025-04-14 19:00:00', 2.05, 2.75, 12),
+('2025-05-14 19:00:00', 2.08, 2.78, 12), ('2025-06-14 19:00:00', 2.10, 2.80, 12),
+(NOW(), 2.15, 2.85, 12);
+
+-- --- Producto 13: Café en Grano de Colombia 500g (12 registros) ---
+INSERT INTO `product_records` (`last_update_date`, `purchase_price`, `sale_price`, `product_id`) VALUES
+('2024-08-16 06:00:00', 6.10, 10.10, 13), ('2024-09-16 06:00:00', 6.20, 10.20, 13),
+('2024-10-16 06:00:00', 6.25, 10.25, 13), ('2024-11-16 06:00:00', 6.30, 10.30, 13),
+('2024-12-16 06:00:00', 6.35, 10.35, 13), ('2025-01-16 06:00:00', 6.40, 10.40, 13),
+('2025-02-16 06:00:00', 6.45, 10.45, 13), ('2025-03-16 06:00:00', 6.40, 10.40, 13),
+('2025-04-16 06:00:00', 6.50, 10.50, 13), ('2025-05-16 06:00:00', 6.55, 10.55, 13),
+('2025-06-16 06:00:00', 6.60, 10.60, 13), (NOW(), 6.70, 10.70, 13);
+
+-- --- Producto 14: Tomates Orgánicos 1kg (18 registros) ---
+INSERT INTO `product_records` (`last_update_date`, `purchase_price`, `sale_price`, `product_id`) VALUES
+('2024-02-21 08:30:00', 1.98, 3.48, 14), ('2024-03-21 08:30:00', 2.00, 3.50, 14),
+('2024-04-21 08:30:00', 2.02, 3.52, 14), ('2024-05-21 08:30:00', 2.00, 3.50, 14),
+('2024-06-21 08:30:00', 2.05, 3.55, 14), ('2024-07-21 08:30:00', 2.08, 3.58, 14),
+('2024-08-21 08:30:00', 2.06, 3.56, 14), ('2024-09-21 08:30:00', 2.10, 3.60, 14),
+('2024-10-21 08:30:00', 2.12, 3.62, 14), ('2024-11-21 08:30:00', 2.15, 3.65, 14),
+('2024-12-21 08:30:00', 2.18, 3.68, 14), ('2025-01-21 08:30:00', 2.20, 3.70, 14),
+('2025-02-21 08:30:00', 2.22, 3.72, 14), ('2025-03-21 08:30:00', 2.20, 3.70, 14),
+('2025-04-21 08:30:00', 2.25, 3.75, 14), ('2025-05-21 08:30:00', 2.28, 3.78, 14),
+('2025-06-21 08:30:00', 2.30, 3.80, 14), (NOW(), 2.35, 3.85, 14);
+
+-- --- Producto 15: Queso Provolone 250g (11 registros) ---
+INSERT INTO `product_records` (`last_update_date`, `purchase_price`, `sale_price`, `product_id`) VALUES
+('2024-09-26 11:30:00', 5.20, 8.20, 15), ('2024-10-26 11:30:00', 5.25, 8.25, 15),
+('2024-11-26 11:30:00', 5.30, 8.30, 15), ('2024-12-26 11:30:00', 5.35, 8.35, 15),
+('2025-01-26 11:30:00', 5.40, 8.40, 15), ('2025-02-26 11:30:00', 5.45, 8.45, 15),
+('2025-03-26 11:30:00', 5.40, 8.40, 15), ('2025-04-26 11:30:00', 5.50, 8.50, 15),
+('2025-05-26 11:30:00', 5.55, 8.55, 15), ('2025-06-26 11:30:00', 5.60, 8.60, 15),
+(NOW(), 5.70, 8.70, 15);
+
+-- --- Producto 16: Lata de Atún en Aceite (20 registros) ---
+INSERT INTO `product_records` (`last_update_date`, `purchase_price`, `sale_price`, `product_id`) VALUES
+('2024-01-30 10:30:00', 0.88, 1.38, 16), ('2024-02-28 10:30:00', 0.89, 1.39, 16),
+('2024-03-30 10:30:00', 0.90, 1.40, 16), ('2024-04-30 10:30:00', 0.91, 1.41, 16),
+('2024-05-30 10:30:00', 0.90, 1.40, 16), ('2024-06-30 10:30:00', 0.92, 1.42, 16),
+('2024-07-30 10:30:00', 0.93, 1.43, 16), ('2024-08-30 10:30:00', 0.92, 1.42, 16),
+('2024-09-30 10:30:00', 0.94, 1.44, 16), ('2024-10-30 10:30:00', 0.95, 1.45, 16),
+('2024-11-30 10:30:00', 0.95, 1.45, 16), ('2024-12-30 10:30:00', 0.96, 1.46, 16),
+('2025-01-30 10:30:00', 0.97, 1.47, 16), ('2025-02-28 10:30:00', 0.98, 1.48, 16),
+('2025-03-30 10:30:00', 0.97, 1.47, 16), ('2025-04-30 10:30:00', 0.98, 1.48, 16),
+('2025-05-30 10:30:00', 0.99, 1.49, 16), ('2025-06-30 10:30:00', 1.00, 1.50, 16),
+('2025-07-30 10:30:00', 1.00, 1.50, 16), (NOW(), 1.02, 1.52, 16);
+
+-- --- Producto 17: Patatas Fritas sabor Queso (14 registros) ---
+INSERT INTO `product_records` (`last_update_date`, `purchase_price`, `sale_price`, `product_id`) VALUES
+('2024-06-04 20:00:00', 1.02, 1.62, 17), ('2024-07-04 20:00:00', 1.03, 1.63, 17),
+('2024-08-04 20:00:00', 1.02, 1.62, 17), ('2024-09-04 20:00:00', 1.04, 1.64, 17),
+('2024-10-04 20:00:00', 1.05, 1.65, 17), ('2024-11-04 20:00:00', 1.05, 1.65, 17),
+('2024-12-04 20:00:00', 1.06, 1.66, 17), ('2025-01-04 20:00:00', 1.07, 1.67, 17),
+('2025-02-04 20:00:00', 1.08, 1.68, 17), ('2025-03-04 20:00:00', 1.07, 1.67, 17),
+('2025-04-04 20:00:00', 1.08, 1.68, 17), ('2025-05-04 20:00:00', 1.09, 1.69, 17),
+('2025-06-04 20:00:00', 1.10, 1.70, 17), (NOW(), 1.12, 1.72, 17);
+
+-- --- Producto 18: Pasta Fresca Tagliatelle 500g (17 registros) ---
+INSERT INTO `product_records` (`last_update_date`, `purchase_price`, `sale_price`, `product_id`) VALUES
+('2024-03-07 12:30:00', 2.20, 3.80, 18), ('2024-04-07 12:30:00', 2.22, 3.82, 18),
+('2024-05-07 12:30:00', 2.20, 3.80, 18), ('2024-06-07 12:30:00', 2.25, 3.85, 18),
+('2024-07-07 12:30:00', 2.28, 3.88, 18), ('2024-08-07 12:30:00', 2.26, 3.86, 18),
+('2024-09-07 12:30:00', 2.30, 3.90, 18), ('2024-10-07 12:30:00', 2.32, 3.92, 18),
+('2024-11-07 12:30:00', 2.35, 3.95, 18), ('2024-12-07 12:30:00', 2.38, 3.98, 18),
+('2025-01-07 12:30:00', 2.40, 4.00, 18), ('2025-02-07 12:30:00', 2.42, 4.02, 18),
+('2025-03-07 12:30:00', 2.40, 4.00, 18), ('2025-04-07 12:30:00', 2.45, 4.05, 18),
+('2025-05-07 12:30:00', 2.48, 4.08, 18), ('2025-06-07 12:30:00', 2.50, 4.10, 18),
+(NOW(), 2.55, 4.15, 18);
+
+-- --- Producto 19: Salsa de Tomate Casera 500g (10 registros) ---
+INSERT INTO `product_records` (`last_update_date`, `purchase_price`, `sale_price`, `product_id`) VALUES
+('2024-10-11 10:00:00', 1.62, 2.62, 19), ('2024-11-11 10:00:00', 1.65, 2.65, 19),
+('2024-12-11 10:00:00', 1.68, 2.68, 19), ('2025-01-11 10:00:00', 1.70, 2.70, 19),
+('2025-02-11 10:00:00', 1.72, 2.72, 19), ('2025-03-11 10:00:00', 1.70, 2.70, 19),
+('2025-04-11 10:00:00', 1.75, 2.75, 19), ('2025-05-11 10:00:00', 1.78, 2.78, 19),
+('2025-06-11 10:00:00', 1.80, 2.80, 19), (NOW(), 1.85, 2.85, 19);
+
+-- --- Producto 20: Zanahorias 1kg (19 registros) ---
+INSERT INTO `product_records` (`last_update_date`, `purchase_price`, `sale_price`, `product_id`) VALUES
+('2024-02-18 08:00:00', 1.06, 1.86, 20), ('2024-03-18 08:00:00', 1.07, 1.87, 20),
+('2024-04-18 08:00:00', 1.08, 1.88, 20), ('2024-05-18 08:00:00', 1.09, 1.89, 20),
+('2024-06-18 08:00:00', 1.10, 1.90, 20), ('2024-07-18 08:00:00', 1.11, 1.91, 20),
+('2024-08-18 08:00:00', 1.12, 1.92, 20), ('2024-09-18 08:00:00', 1.13, 1.93, 20),
+('2024-10-18 08:00:00', 1.14, 1.94, 20), ('2024-11-18 08:00:00', 1.15, 1.95, 20),
+('2024-12-18 08:00:00', 1.16, 1.96, 20), ('2025-01-18 08:00:00', 1.17, 1.97, 20),
+('2025-02-18 08:00:00', 1.18, 1.98, 20), ('2025-03-18 08:00:00', 1.19, 1.99, 20),
+('2025-04-18 08:00:00', 1.20, 2.00, 20), ('2025-05-18 08:00:00', 1.21, 2.01, 20),
+('2025-06-18 08:00:00', 1.22, 2.02, 20), ('2025-07-18 08:00:00', 1.23, 2.03, 20),
+(NOW(), 1.25, 2.05, 20);
+
+
 
 -- Insertando datos en 'product_batches'
 INSERT INTO `product_batches` (`id`, `batch_number`, `current_quantity`, `current_temperature`, `due_date`, `initial_quantity`, `manufacturing_date`, `manufacturing_hour`, `minimum_temperature`, `product_id`, `section_id`) VALUES
@@ -481,28 +698,59 @@ INSERT INTO `order_status` (`id`, `description`) VALUES
 (13, 'Error en pedido'), (14, 'Revisión manual'), (15, 'Listo para recoger'), (16, 'Recogido por transportista'),
 (17, 'En aduanas'), (18, 'Retrasado'), (19, 'Completado'), (20, 'Cerrado');
 
--- Insertando datos en 'purchase_orders'
+
+-- Se insertan 50 pedidos de ejemplo, apuntando a varios de los nuevos registros de precios.
 INSERT INTO `purchase_orders` (`id`, `order_number`, `order_date`, `tracking_code`, `buyer_id`, `product_record_id`) VALUES
-(1, 'PO-2025-00001', NOW(), 'TRK123456789', 1, 1), -- Comprador 1 (Ignacio) compra product_record 1
-(2, 'PO-2025-00002', NOW(), 'TRK123456790', 2, 2), -- Comprador 2 (Julian) compra product_record 2
-(3, 'PO-2025-00003', NOW(), 'TRK123456791', 3, 3), -- Comprador 3 (Karen) compra product_record 3
-(4, 'PO-2025-00004', NOW(), 'TRK123456792', 4, 4), -- Comprador 4 (Samuel) compra product_record 4
-(5, 'PO-2025-00005', NOW(), 'TRK123456793', 5, 5), -- Comprador 5 (Gabriel) compra product_record 5
-(6, 'PO-2025-00006', NOW(), 'TRK123456794', 6, 6), -- Comprador 6 (Juan) compra product_record 6
-(7, 'PO-2025-00007', NOW(), 'TRK123456795', 1, 7), -- Comprador 1 (Ignacio) compra product_record 7
-(8, 'PO-2025-00008', NOW(), 'TRK123456796', 2, 8), -- Comprador 2 (Julian) compra product_record 8
-(9, 'PO-2025-00009', NOW(), 'TRK123456797', 3, 9), -- Comprador 3 (Karen) compra product_record 9
-(10, 'PO-2025-00010', NOW(), 'TRK123456798', 4, 10), -- Comprador 4 (Samuel) compra product_record 10
-(11, 'PO-2025-00011', NOW(), 'TRK123456799', 5, 11), -- Comprador 5 (Gabriel) compra product_record 11
-(12, 'PO-2025-00012', NOW(), 'TRK123456800', 6, 12), -- Comprador 6 (Juan) compra product_record 12
-(13, 'PO-2025-00013', NOW(), 'TRK123456801', 1, 13), -- Comprador 1 (Ignacio) compra product_record 13
-(14, 'PO-2025-00014', NOW(), 'TRK123456802', 2, 14), -- Comprador 2 (Julian) compra product_record 14
-(15, 'PO-2025-00015', NOW(), 'TRK123456803', 3, 15), -- Comprador 3 (Karen) compra product_record 15
-(16, 'PO-2025-00016', NOW(), 'TRK123456804', 4, 16), -- Comprador 4 (Samuel) compra product_record 16
-(17, 'PO-2025-00017', NOW(), 'TRK123456805', 5, 17), -- Comprador 5 (Gabriel) compra product_record 17
-(18, 'PO-2025-00018', NOW(), 'TRK123456806', 6, 18), -- Comprador 6 (Juan) compra product_record 18
-(19, 'PO-2025-00019', NOW(), 'TRK123456807', 1, 19), -- Comprador 1 (Ignacio) compra product_record 19
-(20, 'PO-2025-00020', NOW(), 'TRK123456808', 2, 20); -- Comprador 2 (Julian) compra product_record 20
+(1, 'PO-2025-00001', NOW(), 'TRK123456789', 1, 15),   -- Comprador 1 compra Leche (último precio)
+(2, 'PO-2025-00002', NOW(), 'TRK123456790', 2, 27),   -- Comprador 2 compra Carne (último precio)
+(3, 'PO-2025-00003', NOW(), 'TRK123456791', 3, 45),   -- Comprador 3 compra Manzanas (último precio)
+(4, 'PO-2025-00004', NOW(), 'TRK123456792', 4, 56),   -- Comprador 4 compra Salmón (último precio)
+(5, 'PO-2025-00005', NOW(), 'TRK123456793', 5, 76),   -- Comprador 5 compra Pizza (último precio)
+(6, 'PO-2025-00006', NOW(), 'TRK123456794', 6, 90),   -- Comprador 6 compra Pollo (último precio)
+(7, 'PO-2025-00007', NOW(), 'TRK123456795', 1, 107),  -- Comprador 1 compra Baguette (último precio)
+(8, 'PO-2025-00008', NOW(), 'TRK123456796', 2, 117),  -- Comprador 2 compra Refresco (último precio)
+(9, 'PO-2025-00009', NOW(), 'TRK123456797', 3, 136),  -- Comprador 3 compra Vino (último precio)
+(10, 'PO-2025-00010', NOW(), 'TRK123456798', 4, 149), -- Comprador 4 compra Helado (último precio)
+(11, 'PO-2025-00011', NOW(), 'TRK123456799', 5, 165), -- Comprador 5 compra Lasaña (último precio)
+(12, 'PO-2025-00012', NOW(), 'TRK123456800', 6, 180), -- Comprador 6 compra Chocolate (último precio)
+(13, 'PO-2025-00013', NOW(), 'TRK123456801', 1, 192), -- Comprador 1 compra Café (último precio)
+(14, 'PO-2025-00014', NOW(), 'TRK123456802', 2, 210), -- Comprador 2 compra Tomates (último precio)
+(15, 'PO-2025-00015', NOW(), 'TRK123456803', 3, 221), -- Comprador 3 compra Queso (último precio)
+(16, 'PO-2025-00016', NOW(), 'TRK123456804', 4, 241), -- Comprador 4 compra Atún (último precio)
+(17, 'PO-2025-00017', NOW(), 'TRK123456805', 5, 255), -- Comprador 5 compra Patatas (último precio)
+(18, 'PO-2025-00018', NOW(), 'TRK123456806', 6, 272), -- Comprador 6 compra Pasta (último precio)
+(19, 'PO-2025-00019', NOW(), 'TRK123456807', 1, 282), -- Comprador 1 compra Salsa (último precio)
+(20, 'PO-2025-00020', NOW(), 'TRK123456808', 2, 301), -- Comprador 2 compra Zanahorias (último precio)
+(21, 'PO-2025-00021', NOW(), 'TRK123456809', 3, 1),    -- Comprador 3 compra Leche (precio antiguo)
+(22, 'PO-2025-00022', NOW(), 'TRK123456810', 4, 16),   -- Comprador 4 compra Carne (precio antiguo)
+(23, 'PO-2025-00023', NOW(), 'TRK123456811', 5, 28),   -- Comprador 5 compra Manzanas (precio antiguo)
+(24, 'PO-2025-00024', NOW(), 'TRK123456812', 6, 46),   -- Comprador 6 compra Salmón (precio antiguo)
+(25, 'PO-2025-00025', NOW(), 'TRK123456813', 1, 57),   -- Comprador 1 compra Pizza (precio antiguo)
+(26, 'PO-2025-00026', NOW(), 'TRK123456814', 2, 77),   -- Comprador 2 compra Pollo (precio antiguo)
+(27, 'PO-2025-00027', NOW(), 'TRK123456815', 3, 91),   -- Comprador 3 compra Baguette (precio antiguo)
+(28, 'PO-2025-00028', NOW(), 'TRK123456816', 4, 108),  -- Comprador 4 compra Refresco (precio antiguo)
+(29, 'PO-2025-00029', NOW(), 'TRK123456817', 5, 118),  -- Comprador 5 compra Vino (precio antiguo)
+(30, 'PO-2025-00030', NOW(), 'TRK123456818', 6, 137),  -- Comprador 6 compra Helado (precio antiguo)
+(31, 'PO-2025-00031', NOW(), 'TRK123456819', 1, 150),  -- Comprador 1 compra Lasaña (precio antiguo)
+(32, 'PO-2025-00032', NOW(), 'TRK123456820', 2, 166),  -- Comprador 2 compra Chocolate (precio antiguo)
+(33, 'PO-2025-00033', NOW(), 'TRK123456821', 3, 181),  -- Comprador 3 compra Café (precio antiguo)
+(34, 'PO-2025-00034', NOW(), 'TRK123456822', 4, 193),  -- Comprador 4 compra Tomates (precio antiguo)
+(35, 'PO-2025-00035', NOW(), 'TRK123456823', 5, 211),  -- Comprador 5 compra Queso (precio antiguo)
+(36, 'PO-2025-00036', NOW(), 'TRK123456824', 6, 222),  -- Comprador 6 compra Atún (precio antiguo)
+(37, 'PO-2025-00037', NOW(), 'TRK123456825', 1, 242),  -- Comprador 1 compra Patatas (precio antiguo)
+(38, 'PO-2025-00038', NOW(), 'TRK123456826', 2, 256),  -- Comprador 2 compra Pasta (precio antiguo)
+(39, 'PO-2025-00039', NOW(), 'TRK123456827', 3, 273),  -- Comprador 3 compra Salsa (precio antiguo)
+(40, 'PO-2025-00040', NOW(), 'TRK123456828', 4, 283),  -- Comprador 4 compra Zanahorias (precio antiguo)
+(41, 'PO-2025-00041', NOW(), 'TRK123456829', 5, 10),   -- Comprador 5 compra Leche (precio intermedio)
+(42, 'PO-2025-00042', NOW(), 'TRK123456830', 6, 20),   -- Comprador 6 compra Carne (precio intermedio)
+(43, 'PO-2025-00043', NOW(), 'TRK123456831', 1, 40),   -- Comprador 1 compra Manzanas (precio intermedio)
+(44, 'PO-2025-00044', NOW(), 'TRK123456832', 2, 50),   -- Comprador 2 compra Salmón (precio intermedio)
+(45, 'PO-2025-00045', NOW(), 'TRK123456833', 3, 70),   -- Comprador 3 compra Pizza (precio intermedio)
+(46, 'PO-2025-00046', NOW(), 'TRK123456834', 4, 85),   -- Comprador 4 compra Pollo (precio intermedio)
+(47, 'PO-2025-00047', NOW(), 'TRK123456835', 5, 105),  -- Comprador 5 compra Baguette (precio intermedio)
+(48, 'PO-2025-00048', NOW(), 'TRK123456836', 6, 115),  -- Comprador 6 compra Refresco (precio intermedio)
+(49, 'PO-2025-00049', NOW(), 'TRK123456837', 1, 130),  -- Comprador 1 compra Vino (precio intermedio)
+(50, 'PO-2025-00050', NOW(), 'TRK123456838', 2, 145);  -- Comprador 2 compra Helado (precio intermedio)
 
 -- Insertando datos en 'users'
 INSERT INTO `users` (`id`, `username`, `password`) VALUES
