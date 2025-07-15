@@ -5,7 +5,3 @@ type LocalitySellerReport struct {
 	LocalityName string `json:"locality_name"`
 	SellerCount  int    `json:"sellers_count"`
 }
-
-type LocalitySellerReportResponse struct {
-	Data []LocalitySellerReport `json:"data"`
-}

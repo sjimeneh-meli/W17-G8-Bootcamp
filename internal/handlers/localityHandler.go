@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -12,6 +13,7 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/validations"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 type LocalityHandler struct {
@@ -35,10 +37,21 @@ func (h *LocalityHandler) Save(w http.ResponseWriter, r *http.Request) {
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
+	parentCtx := context.Background()
+	ctx, cancel := context.WithTimeout(parentCtx, 2*time.Second)
+	defer cancel()
 
-	localityCreated, err := h.service.Save(data)
+	localityCreated, err := h.service.Save(ctx, data)
 	if err != nil {
-		response.Error(w, http.StatusConflict, err.Error())
+		if errors.Is(err, error_message.ErrQuery) {
+			response.Error(w, http.StatusInternalServerError, err.Error())
+		}
+		if errors.Is(err, error_message.ErrAlreadyExists) {
+			response.Error(w, http.StatusConflict, err.Error())
+		}
+		if errors.Is(err, context.DeadlineExceeded) {
+			response.Error(w, http.StatusGatewayTimeout, err.Error())
+		}
 		return
 	}
 	response.JSON(w, http.StatusOK, responses.DataResponse{Data: localityCreated})
@@ -46,8 +59,17 @@ func (h *LocalityHandler) Save(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *LocalityHandler) GetSellerReportByLocality(w http.ResponseWriter, r *http.Request) {
+	parentCtx := context.Background()
+	ctx, cancel := context.WithTimeout(parentCtx, 2*time.Second)
+	defer cancel()
+
 	localityIdStr := r.URL.Query().Get("id")
 	var localityId int
+
+	if r.URL.RawQuery != "" && localityIdStr == "" {
+		response.Error(w, http.StatusInternalServerError, "Invalid query parameter")
+		return
+	}
 
 	if localityIdStr == "" {
 		// Si no viene el parámetro, usar 0 por defecto
@@ -57,24 +79,24 @@ func (h *LocalityHandler) GetSellerReportByLocality(w http.ResponseWriter, r *ht
 		var err error
 		localityId, err = strconv.Atoi(localityIdStr)
 		if err != nil {
-			http.Error(w, "Invalid 'id' parameter: must be an integer", http.StatusUnprocessableEntity)
+			response.Error(w, http.StatusBadRequest, err.Error())
 			return
 		}
 	}
-	result, err := h.service.GetSellerReports(localityId)
+	result, err := h.service.GetSellerReports(ctx, localityId)
 
 	if errors.Is(err, error_message.ErrFailedCheckingExistence) || errors.Is(err, error_message.ErrQueryingReport) || errors.Is(err, error_message.ErrFailedToScan) {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		response.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 	if errors.Is(err, error_message.ErrNotFound) {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		response.Error(w, http.StatusNotFound, err.Error())
 		return
 	}
-
-	/*resultFormated := responses.LocalitySellerReportResponse{
-		Data: result,
-	}*/
+	if errors.Is(err, context.DeadlineExceeded) {
+		response.Error(w, http.StatusGatewayTimeout, err.Error())
+		return
+	}
 
 	response.JSON(w, http.StatusOK, responses.DataResponse{result})
 }
