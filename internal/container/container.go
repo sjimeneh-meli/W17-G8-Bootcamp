@@ -135,6 +135,12 @@ func (c *Container) initializeProductHandler() error {
 }
 
 func (c *Container) initializeProductBatchHandler() error {
+	sectionRepository, err := repositories.GetSectionRepository(c.StorageDB)
+	if err != nil {
+		return err
+	}
+	sectionService := services.GetSectionService(sectionRepository)
+
 	productBatchRepository, err := repositories.GetProductBatchRepository(c.StorageDB)
 	if err != nil {
 		return err
@@ -142,6 +148,6 @@ func (c *Container) initializeProductBatchHandler() error {
 
 	productBatchService := services.GetProductBatchService(productBatchRepository)
 	productBatchValidation := validations.GetProductBatchValidation()
-	c.ProductBatchHandler = handlers.GetProductBatchHandler(productBatchService, *productBatchValidation)
+	c.ProductBatchHandler = handlers.GetProductBatchHandler(productBatchService, sectionService, *productBatchValidation)
 	return nil
 }
