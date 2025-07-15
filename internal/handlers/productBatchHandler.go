@@ -1,9 +1,11 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/bootcamp-go/web/response"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/requests"
@@ -13,10 +15,15 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/validations"
 )
 
-func GetProductBatchHandler(service services.ProductBatchServiceI, sectionService services.SectionServiceI, validation validations.ProductBatchValidation) ProductBatchHandlerI {
+func GetProductBatchHandler(service services.ProductBatchServiceI,
+	sectionService services.SectionServiceI,
+	productService services.ProductService,
+	validation validations.ProductBatchValidation) ProductBatchHandlerI {
+
 	return &ProductBatchHandler{
 		service:        service,
 		sectionService: sectionService,
+		productService: productService,
 		validation:     &validation,
 	}
 }
@@ -29,6 +36,7 @@ type ProductBatchHandlerI interface {
 type ProductBatchHandler struct {
 	service        services.ProductBatchServiceI
 	sectionService services.SectionServiceI
+	productService services.ProductService
 	validation     *validations.ProductBatchValidation
 }
 
@@ -37,6 +45,9 @@ func (h *ProductBatchHandler) Create(w http.ResponseWriter, r *http.Request) {
 		request      *requests.ProductBatchRequest = &requests.ProductBatchRequest{}
 		responseJson *responses.DataResponse       = &responses.DataResponse{}
 	)
+
+	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+	defer cancel()
 
 	if reqErr := json.NewDecoder(r.Body).Decode(request); reqErr != nil {
 		response.Error(w, http.StatusExpectationFailed, reqErr.Error())
@@ -50,6 +61,11 @@ func (h *ProductBatchHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	if !h.sectionService.ExistWithID(request.SectionID) {
 		response.Error(w, http.StatusNotFound, "section not found")
+	}
+
+	exists, _ := h.productService.ExistById(ctx, int64(request.ProductID))
+	if !exists {
+		response.Error(w, http.StatusNotFound, "product not found")
 	}
 
 	productBatch, mapErr := mappers.GetProductBatchModelFromRequest(request)

@@ -144,10 +144,13 @@ func (c *Container) initializeProductBatchHandler() error {
 	sectionRepository := repositories.GetSectionRepository(c.StorageDB)
 	sectionService := services.GetSectionService(sectionRepository)
 
+	productRepository := repositories.NewProductRepository(c.StorageDB)
+	productService := services.NewProductService(productRepository)
+
 	productBatchRepository := repositories.GetProductBatchRepository(c.StorageDB)
 	productBatchService := services.GetProductBatchService(productBatchRepository)
 	productBatchValidation := validations.GetProductBatchValidation()
-	c.ProductBatchHandler = handlers.GetProductBatchHandler(productBatchService, sectionService, *productBatchValidation)
+	c.ProductBatchHandler = handlers.GetProductBatchHandler(productBatchService, sectionService, productService, *productBatchValidation)
 	return nil
 }
 
