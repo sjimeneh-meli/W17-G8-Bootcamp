@@ -4,6 +4,8 @@ package container
 import (
 	"database/sql"
 	"fmt"
+	"os"
+
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/repositories"
@@ -11,17 +13,17 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/services"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/validations"
 	"github.com/sajimenezher_meli/meli-frescos-8/pkg/loader"
-	"os"
 )
 
 type Container struct {
-	EmployeeHandler  handlers.EmployeeHandlerI
-	BuyerHandler     handlers.BuyerHandlerI
-	WarehouseHandler *handlers.WarehouseHandler
-	SellerHandler    *handlers.SellerHandler
-	SectionHandler   handlers.SectionHandlerI
-	ProductHandler   *handlers.ProductHandler
-	StorageDB        *sql.DB
+	EmployeeHandler     handlers.EmployeeHandlerI
+	BuyerHandler        handlers.BuyerHandlerI
+	WarehouseHandler    *handlers.WarehouseHandler
+	SellerHandler       *handlers.SellerHandler
+	SectionHandler      handlers.SectionHandlerI
+	ProductBatchHandler handlers.ProductBatchHandlerI
+	ProductHandler      *handlers.ProductHandler
+	StorageDB           *sql.DB
 }
 
 // Strategy para manejo de errores
@@ -59,6 +61,7 @@ func NewContainer(storeDB *sql.DB) (*Container, error) {
 		{"seller handler", container.initializeSellerHandler},
 		{"section handler", container.initializeSectionHandler},
 		{"product handler", container.initializeProductHandler},
+		{"productBatch handler", container.initializeProductBatchHandler},
 	}
 
 	if err := errorHandler.Execute(tasks); err != nil {
@@ -108,8 +111,7 @@ func (c *Container) initializeSellerHandler() error {
 }
 
 func (c *Container) initializeSectionHandler() error {
-	sectionLoader := loader.NewJSONStorage[models.Section](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "sections.json"))
-	sectionRepository, err := repositories.GetSectionRepository(sectionLoader)
+	sectionRepository, err := repositories.GetSectionRepository(c.StorageDB)
 	if err != nil {
 		return err
 	}
@@ -129,5 +131,17 @@ func (c *Container) initializeProductHandler() error {
 	ps := seeders.NewSeeder(service)
 	ps.LoadAllData()
 
+	return nil
+}
+
+func (c *Container) initializeProductBatchHandler() error {
+	productBatchRepository, err := repositories.GetProductBatchRepository(c.StorageDB)
+	if err != nil {
+		return err
+	}
+
+	productBatchService := services.GetProductBatchService(productBatchRepository)
+	productBatchValidation := validations.GetProductBatchValidation()
+	c.ProductBatchHandler = handlers.GetProductBatchHandler(productBatchService, *productBatchValidation)
 	return nil
 }
