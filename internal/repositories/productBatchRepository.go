@@ -16,7 +16,7 @@ func GetProductBatchRepository(db *sql.DB) (ProductBatchRepositoryI, error) {
 
 type ProductBatchRepositoryI interface {
 	Create(model *models.ProductBatch) error
-
+	GetProductQuantityBySectionId(id int) int
 	ExistsWithBatchNumber(id int, batchNumber string) bool
 }
 
@@ -61,4 +61,14 @@ func (r *productBatchRepository) ExistsWithBatchNumber(id int, batchNumber strin
 	}
 
 	return count != "0"
+}
+
+func (r *productBatchRepository) GetProductQuantityBySectionId(id int) int {
+	row := database.SelectOne(r.database, r.tablename, []string{"SUM(current_quantity)"}, "section_id = ?", id)
+	var quantity int
+	if err := row.Scan(&quantity); err != nil {
+		return quantity
+	}
+
+	return quantity
 }
