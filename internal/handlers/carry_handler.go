@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/bootcamp-go/web/response"
@@ -51,8 +52,12 @@ func (h *CarryHandler) Create(w http.ResponseWriter, r *http.Request) {
 			response.Error(w, http.StatusRequestTimeout, "Request timeout cancelled")
 			return
 		}
-		// Manejar error de CID duplicado
+		// Manejar error de CID duplicado o locality no encontrada
 		if errors.Is(err, error_message.ErrAlreadyExists) {
+			response.Error(w, http.StatusConflict, err.Error())
+			return
+		}
+		if errors.Is(err, error_message.ErrNotFound) {
 			response.Error(w, http.StatusConflict, err.Error())
 			return
 		}
@@ -65,5 +70,48 @@ func (h *CarryHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	response.JSON(w, http.StatusCreated, responses.DataResponse{
 		Data: carryResponse,
+	})
+}
+
+func (h *CarryHandler) GetCarryReportByLocality(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+	defer cancel()
+
+	// Obtener el parámetro id de la query string
+	localityIDStr := r.URL.Query().Get("id")
+	var localityID int
+
+	if localityIDStr != "" {
+		// Si se proporciona un ID, validarlo
+		var err error
+		localityID, err = strconv.Atoi(localityIDStr)
+		if err != nil {
+			response.Error(w, http.StatusBadRequest, "Invalid locality ID format")
+			return
+		}
+		if localityID <= 0 {
+			response.Error(w, http.StatusBadRequest, "Locality ID must be a positive number")
+			return
+		}
+	}
+	// Si localityIDStr está vacío, localityID será 0 (reporte de todas las localidades)
+
+	reports, err := h.carryService.GetCarryReportByLocality(ctx, localityID)
+
+	if err != nil {
+		if ctx.Err() != nil {
+			response.Error(w, http.StatusRequestTimeout, "Request timeout cancelled")
+			return
+		}
+		if errors.Is(err, error_message.ErrNotFound) {
+			response.Error(w, http.StatusNotFound, "Locality not found")
+			return
+		}
+		response.Error(w, http.StatusInternalServerError, "Error getting carry report by locality")
+		return
+	}
+
+	response.JSON(w, http.StatusOK, responses.DataResponse{
+		Data: reports,
 	})
 }
