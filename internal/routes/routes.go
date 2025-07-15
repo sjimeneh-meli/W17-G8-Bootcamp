@@ -86,10 +86,14 @@ func SetupRoutes(c *container.Container) *chi.Mux {
 		})
 		r.Post("/productRecords", c.ProductRecordHandler.Create)
 
-
 		r.Route("/localities", func(r chi.Router) {
 			r.Post("/", c.LocalityHandler.Save)
 			r.Get("/reportSellers", c.LocalityHandler.GetSellerReportByLocality)
+			r.Get("/reportCarriers", c.CarryHandler.GetCarryReportByLocality)
+		})
+
+		r.Route("/carriers", func(r chi.Router) {
+			r.Post("/", c.CarryHandler.Create)
 		})
 	})
 

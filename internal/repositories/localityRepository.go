@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"database/sql"
+
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/error_message"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/responses"
 
@@ -12,6 +13,7 @@ import (
 type LocalityRepository interface {
 	Save(ctx context.Context, locality models.Locality) (models.Locality, error)
 	GetSellerReports(ctx context.Context, localityID int) ([]responses.LocalitySellerReport, error)
+	ExistById(ctx context.Context, localityID int) (bool, error)
 }
 type SQLLocalityRepository struct {
 	db *sql.DB
@@ -135,4 +137,14 @@ func (r *SQLLocalityRepository) GetSellerReports(ctx context.Context, localityID
 	}
 
 	return reports, nil
+}
+
+func (r *SQLLocalityRepository) ExistById(ctx context.Context, localityID int) (bool, error) {
+	row := r.db.QueryRowContext(ctx, "SELECT EXISTS(SELECT 1 FROM localities WHERE id = ?)", localityID)
+	var exists bool
+	err := row.Scan(&exists)
+	if err != nil {
+		return false, error_message.ErrQuery
+	}
+	return exists, nil
 }

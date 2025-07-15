@@ -12,6 +12,7 @@ func ValidateWarehouseRequestStruct(r requests.WarehouseRequest) error {
 		validation.Field(&r.WareHouseCode, validation.Required),
 		validation.Field(&r.MinimumCapacity, validation.Required, validation.Min(1)),
 		validation.Field(&r.MinimumTemperature, validation.Required),
+		validation.Field(&r.LocalityId, validation.Required),
 	)
 }
 
