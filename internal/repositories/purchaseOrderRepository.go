@@ -87,7 +87,7 @@ func (r *MySqlPurchaseOrderRepository) GetPurchaseOrdersReportByBuyerId(ctx cont
 from productos_frescos.buyers b
 inner join productos_frescos.purchase_orders po on po.buyer_id = b.id
 where b.id = ?
-group by b.id;`
+group by b.id`
 	row := r.db.QueryRowContext(ctx, query, buyerId)
 
 	err := row.Scan(&report.Id, &report.IdCardNumber, &report.FirstName, &report.LastName, &report.PurchaseOrderCount)
@@ -110,7 +110,7 @@ func (r *MySqlPurchaseOrderRepository) GetAllPurchaseOrdersReports(ctx context.C
 from productos_frescos.buyers b
 inner join productos_frescos.purchase_orders po on po.buyer_id = b.id
 group by b.id
-order by b.id;`
+order by b.id`
 
 	rows, err := r.db.QueryContext(ctx, query)
 	if err != nil {
@@ -133,7 +133,7 @@ order by b.id;`
 // ExistPurchaseOrderByOrderNumber checks if a purchase order with the given order number already exists in the database
 // Returns true if the order number exists, false otherwise
 func (r *MySqlPurchaseOrderRepository) ExistPurchaseOrderByOrderNumber(ctx context.Context, orderNumber string) (bool, error) {
-	query := "SELECT 1 FROM purchase_orders WHERE order_number = ? LIMIT 1;"
+	query := "SELECT 1 FROM purchase_orders WHERE order_number = ? LIMIT 1 "
 
 	var exists int64
 	err := r.db.QueryRowContext(ctx, query, orderNumber).Scan(&exists)

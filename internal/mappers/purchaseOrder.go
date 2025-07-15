@@ -11,11 +11,11 @@ import (
 func GetModelPurchaseOrderFromRequest(por requests.PurchaseOrderRequest) *models.PurchaseOrder {
 	return &models.PurchaseOrder{
 		Id:              0,
-		OrderNumber:     por.OrderNumber,
-		OrderDate:       por.OrderDate,
-		TrackingCode:    por.TrackingCode,
-		BuyerId:         por.BuyerId,
-		ProductRecordId: por.ProductRecordId,
+		OrderNumber:     por.Data.OrderNumber,
+		OrderDate:       por.Data.OrderDate,
+		TrackingCode:    por.Data.TrackingCode,
+		BuyerId:         por.Data.BuyerId,
+		ProductRecordId: por.Data.ProductRecordId,
 	}
 }
 

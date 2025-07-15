@@ -3,6 +3,10 @@ package requests
 import "time"
 
 type PurchaseOrderRequest struct {
+	Data PurchaseOrderAttributes `json:"data"`
+}
+
+type PurchaseOrderAttributes struct {
 	OrderNumber     string    `json:"order_number"`
 	OrderDate       time.Time `json:"order_date"`
 	TrackingCode    string    `json:"tracking_code"`

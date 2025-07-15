@@ -185,7 +185,7 @@ func (r *MySqlBuyerRepository) GetCardNumberIds() ([]string, error) {
 // ExistBuyerById checks if a buyer with the given ID exists in the MySQL database
 // Returns true if the buyer exists, false otherwise
 func (r *MySqlBuyerRepository) ExistBuyerById(ctx context.Context, buyerId int) (bool, error) {
-	query := "SELECT 1 FROM buyers WHERE id = ? LIMIT 1;"
+	query := "SELECT 1 FROM buyers WHERE id = ? LIMIT 1"
 
 	var exists int64
 	err := r.db.QueryRowContext(ctx, query, buyerId).Scan(&exists)
