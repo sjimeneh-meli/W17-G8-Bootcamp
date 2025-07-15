@@ -4,25 +4,27 @@ package container
 import (
 	"database/sql"
 	"fmt"
+	"os"
+
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/repositories"
-	"github.com/sajimenezher_meli/meli-frescos-8/internal/seeders"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/services"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/validations"
 	"github.com/sajimenezher_meli/meli-frescos-8/pkg/loader"
-	"os"
 )
 
 type Container struct {
-	EmployeeHandler  handlers.EmployeeHandlerI
-	BuyerHandler     handlers.BuyerHandlerI
-	WarehouseHandler *handlers.WarehouseHandler
-	SellerHandler    *handlers.SellerHandler
-	SectionHandler   handlers.SectionHandlerI
-	ProductHandler   *handlers.ProductHandler
-	StorageDB        *sql.DB
-	LocalityHandler  *handlers.LocalityHandler
+	EmployeeHandler      handlers.EmployeeHandlerI
+	BuyerHandler         handlers.BuyerHandlerI
+	WarehouseHandler     *handlers.WarehouseHandler
+	SellerHandler        *handlers.SellerHandler
+	SectionHandler       handlers.SectionHandlerI
+	ProductHandler       *handlers.ProductHandler
+	PurchaseOrderHandler handlers.PurchaseOrderHandlerI
+	ProductRecordHandler handlers.ProductRecordHandlerI
+	LocalityHandler      *handlers.LocalityHandler
+	StorageDB            *sql.DB
 }
 
 // Strategy para manejo de errores
@@ -60,6 +62,8 @@ func NewContainer(storeDB *sql.DB) (*Container, error) {
 		{"seller handler", container.initializeSellerHandler},
 		{"section handler", container.initializeSectionHandler},
 		{"product handler", container.initializeProductHandler},
+		{"purchase order handler", container.initializePurchaseOrderHandler},
+		{"product record handler", container.initializeProductRecordHandler},
 		{"locality handler", container.initializeLocalityHandler},
 	}
 
@@ -83,11 +87,7 @@ func (c *Container) initializeEmployeeHandler() error {
 }
 
 func (c *Container) initializeBuyerHandler() error {
-	buyerLoader := loader.NewJSONStorage[models.Buyer](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "buyers.json"))
-	buyerRepository, err := repositories.GetNewBuyerRepository(buyerLoader)
-	if err != nil {
-		return err
-	}
+	buyerRepository := repositories.GetNewBuyerMySQLRepository(c.StorageDB)
 	buyerService := services.GetBuyerService(buyerRepository)
 	c.BuyerHandler = handlers.GetBuyerHandler(buyerService)
 	return nil
@@ -102,14 +102,12 @@ func (c *Container) initializeWarehouseHandler() error {
 }
 
 func (c *Container) initializeSellerHandler() error {
-	//sellerStorage := loader.NewJSONStorage[models.Seller](fmt.Sprintf("%s/%s", "docs/database", "sellers.json"))
 	sellerRepo := repositories.NewSQLSellerRepository(c.StorageDB)
 	sellerService := services.NewJSONSellerService(sellerRepo)
 	c.SellerHandler = handlers.NewSellerHandler(sellerService)
 	return nil
 }
 func (c *Container) initializeLocalityHandler() error {
-	//sellerStorage := loader.NewJSONStorage[models.Seller](fmt.Sprintf("%s/%s", "docs/database", "sellers.json"))
 	localityRepo := repositories.NewSQLLocalityRepository(c.StorageDB)
 	localityService := services.NewSQLLocalityService(localityRepo)
 	c.LocalityHandler = handlers.NewLocalityHandler(localityService)
@@ -129,14 +127,34 @@ func (c *Container) initializeSectionHandler() error {
 }
 
 func (c *Container) initializeProductHandler() error {
-	storage := loader.NewJSONStorage[models.Product](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "products.json"))
-	repository := repositories.NewProductRepository(*storage)
-	service := services.NewProductService(repository)
-	c.ProductHandler = handlers.NewProductHandler(service)
+	productDB := c.StorageDB
+	productRepository := repositories.NewProductRepository(productDB)
+	productService := services.NewProductService(productRepository)
+	c.ProductHandler = handlers.NewProductHandler(productService)
+	return nil
+}
 
-	// Ejecutar seeder
-	ps := seeders.NewSeeder(service)
-	ps.LoadAllData()
+func (c *Container) initializeProductRecordHandler() error {
+	productRecordDb := c.StorageDB
+	productRecordRepository := repositories.NewProductRecordRepository(productRecordDb)
 
+	productRepository := repositories.NewProductRepository(productRecordDb)
+	productService := services.NewProductService(productRepository)
+
+	productRecordService := services.NewProductRecordService(productRecordRepository, productService)
+	productRecordHandler := handlers.NewProductRecordHandler(productRecordService)
+
+	c.ProductRecordHandler = productRecordHandler
+
+	return nil
+}
+
+func (c *Container) initializePurchaseOrderHandler() error {
+	purchaseOrderRepository := repositories.GetNewPurchaseOrderMySQLRepository(c.StorageDB)
+	buyerRepository := repositories.GetNewBuyerMySQLRepository(c.StorageDB)
+	productRecordsRepository := repositories.NewProductRecordRepository(c.StorageDB)
+
+	purchaseOrderService := services.GetPurchaseOrderService(purchaseOrderRepository, buyerRepository, productRecordsRepository)
+	c.PurchaseOrderHandler = handlers.GetPurchaseOrderHandler(purchaseOrderService)
 	return nil
 }
