@@ -1,7 +1,9 @@
 package validations
 
 import (
-	"errors"
+	"fmt"
+	"reflect"
+	"strings"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/requests"
@@ -11,7 +13,13 @@ import (
 // Uses ozzo-validation to ensure Data, OrderNumber, OrderDate, TrackingCode, BuyerId, and ProductRecordId are not empty
 func ValidatePurchaseOrderRequestStruct(r requests.PurchaseOrderRequest) error {
 	if isPurchaseOrderAttributesEmpty(r.Data) {
-		return errors.New("data: cannot be blank")
+		fields := []string{}
+		val := reflect.ValueOf(r.Data)
+		for i := 0; i < val.Type().NumField(); i++ {
+			fields = append(fields, val.Type().Field(i).Tag.Get("json"))
+		}
+
+		return fmt.Errorf("data: cannot be blank. fields %v are neccesary inside of data", strings.Join(fields, ", "))
 	}
 
 	// validation that internal fields of data are present
