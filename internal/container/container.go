@@ -4,13 +4,14 @@ package container
 import (
 	"database/sql"
 	"fmt"
+	"os"
+
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/repositories"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/services"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/validations"
 	"github.com/sajimenezher_meli/meli-frescos-8/pkg/loader"
-	"os"
 )
 
 type Container struct {
@@ -20,6 +21,7 @@ type Container struct {
 	SellerHandler        *handlers.SellerHandler
 	SectionHandler       handlers.SectionHandlerI
 	ProductHandler       *handlers.ProductHandler
+	PurchaseOrderHandler handlers.PurchaseOrderHandlerI
 	ProductRecordHandler handlers.ProductRecordHandlerI
 	StorageDB            *sql.DB
 }
@@ -59,6 +61,7 @@ func NewContainer(storeDB *sql.DB) (*Container, error) {
 		{"seller handler", container.initializeSellerHandler},
 		{"section handler", container.initializeSectionHandler},
 		{"product handler", container.initializeProductHandler},
+		{"purchase order handler", container.initializePurchaseOrderHandler},
 		{"product record handler", container.initializeProductRecordHandler},
 	}
 
@@ -82,11 +85,7 @@ func (c *Container) initializeEmployeeHandler() error {
 }
 
 func (c *Container) initializeBuyerHandler() error {
-	buyerLoader := loader.NewJSONStorage[models.Buyer](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "buyers.json"))
-	buyerRepository, err := repositories.GetNewBuyerRepository(buyerLoader)
-	if err != nil {
-		return err
-	}
+	buyerRepository := repositories.GetNewBuyerMySQLRepository(c.StorageDB)
 	buyerService := services.GetBuyerService(buyerRepository)
 	c.BuyerHandler = handlers.GetBuyerHandler(buyerService)
 	return nil
@@ -140,5 +139,15 @@ func (c *Container) initializeProductRecordHandler() error {
 
 	c.ProductRecordHandler = productRecordHandler
 
+	return nil
+}
+
+func (c *Container) initializePurchaseOrderHandler() error {
+	purchaseOrderRepository := repositories.GetNewPurchaseOrderMySQLRepository(c.StorageDB)
+	buyerRepository := repositories.GetNewBuyerMySQLRepository(c.StorageDB)
+	productRecordsRepository := repositories.NewProductRecordRepository(c.StorageDB)
+
+	purchaseOrderService := services.GetPurchaseOrderService(purchaseOrderRepository, buyerRepository, productRecordsRepository)
+	c.PurchaseOrderHandler = handlers.GetPurchaseOrderHandler(purchaseOrderService)
 	return nil
 }
