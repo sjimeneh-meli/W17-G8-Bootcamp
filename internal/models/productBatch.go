@@ -11,7 +11,7 @@ type ProductBatch struct {
 	InitialQuantity    int       `json:"initial_quantity"`
 	ManufacturingDate  time.Time `json:"manufacturing_date"`
 	ManufacturingHour  time.Time `json:"manufacturing_hour"`
-	MinimumTeperature  float64   `json:"minimum_temperature"`
+	MinimumTemperature float64   `json:"minimum_temperature"`
 	ProductID          int       `json:"product_id"`
 	SectionID          int       `json:"section_id"`
 }
