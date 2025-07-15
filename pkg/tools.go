@@ -3,6 +3,7 @@ package tools
 import (
 	"fmt"
 	"strings"
+	"time"
 )
 
 func SliceToString[T any](slice []T, delim string) string {
@@ -25,4 +26,8 @@ func GetSlicesOfKeyAndValuesFromMap(m map[any]any) ([]any, []any) {
 		values = append(values, v)
 	}
 	return keys, values
+}
+
+func ConvertStringToDate(date string) (time.Time, error) {
+	return time.Parse("2006-01-02", date)
 }
