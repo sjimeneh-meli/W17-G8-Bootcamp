@@ -28,4 +28,8 @@ var (
 	// ErrDependencyNotFound se devuelve cuando una entidad depende de otra entidad que no existe.
 	// Por ejemplo, intentar crear un pedido con un ID de producto inexistente.
 	ErrDependencyNotFound = errors.New("error: a required dependent entity was not found")
+
+	ErrFailedCheckingExistence = errors.New("error: failed checking locality existence")
+	ErrQueryingReport          = errors.New("error: querying report failed")
+	ErrFailedToScan            = errors.New("error: failed to scan record row")
 )

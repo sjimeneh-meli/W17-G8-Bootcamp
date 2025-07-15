@@ -22,6 +22,7 @@ type Container struct {
 	SectionHandler   handlers.SectionHandlerI
 	ProductHandler   *handlers.ProductHandler
 	StorageDB        *sql.DB
+	LocalityHandler  *handlers.LocalityHandler
 }
 
 // Strategy para manejo de errores
@@ -59,6 +60,7 @@ func NewContainer(storeDB *sql.DB) (*Container, error) {
 		{"seller handler", container.initializeSellerHandler},
 		{"section handler", container.initializeSectionHandler},
 		{"product handler", container.initializeProductHandler},
+		{"locality handler", container.initializeLocalityHandler},
 	}
 
 	if err := errorHandler.Execute(tasks); err != nil {
@@ -104,6 +106,13 @@ func (c *Container) initializeSellerHandler() error {
 	sellerRepo := repositories.NewSQLSellerRepository(c.StorageDB)
 	sellerService := services.NewJSONSellerService(sellerRepo)
 	c.SellerHandler = handlers.NewSellerHandler(sellerService)
+	return nil
+}
+func (c *Container) initializeLocalityHandler() error {
+	//sellerStorage := loader.NewJSONStorage[models.Seller](fmt.Sprintf("%s/%s", "docs/database", "sellers.json"))
+	localityRepo := repositories.NewSQLLocalityRepository(c.StorageDB)
+	localityService := services.NewSQLLocalityService(localityRepo)
+	c.LocalityHandler = handlers.NewLocalityHandler(localityService)
 	return nil
 }
 

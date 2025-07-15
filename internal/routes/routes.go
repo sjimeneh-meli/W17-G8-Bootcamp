@@ -74,6 +74,11 @@ func SetupRoutes(c *container.Container) *chi.Mux {
 			r.Patch("/{id}", c.ProductHandler.Update)
 			r.Delete("/{id}", c.ProductHandler.DeleteById)
 		})
+
+		r.Route("/localities", func(r chi.Router) {
+			r.Post("/", c.LocalityHandler.Save)
+			r.Get("/reportSellers", c.LocalityHandler.GetSellerReportByLocality)
+		})
 	})
 
 	return router
