@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 
@@ -8,13 +9,40 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 )
 
+// Warehouse table and field constants
+const (
+	warehouseTable = "warehouse"
+
+	// Field groups for better maintainability
+	warehouseFields       = "`id`, `address`, `telephone`, `warehouse_code`, `minimum_capacity`, `minimum_temperature`"
+	warehouseInsertFields = "`address`, `telephone`, `warehouse_code`, `minimum_capacity`, `minimum_temperature`, `locality_id`"
+	warehouseUpdateFields = "`address` = ?, `telephone` = ?, `warehouse_code` = ?, `minimum_capacity` = ?, `minimum_temperature` = ?"
+)
+
+// Warehouse query strings - organized by operation type
+var (
+	// SELECT queries
+	queryGetAllWarehouses = fmt.Sprintf("SELECT %s FROM `%s`", warehouseFields, warehouseTable)
+	queryGetWarehouseById = fmt.Sprintf("SELECT %s FROM `%s` WHERE `id` = ?", warehouseFields, warehouseTable)
+	queryExistsByCode     = fmt.Sprintf("SELECT COUNT(*) FROM `%s` WHERE `warehouse_code` = ?", warehouseTable)
+
+	// INSERT queries
+	queryCreateWarehouse = fmt.Sprintf("INSERT INTO `%s`(%s) VALUES (?,?,?,?,?,?)", warehouseTable, warehouseInsertFields)
+
+	// UPDATE queries
+	queryUpdateWarehouse = fmt.Sprintf("UPDATE `%s` SET %s WHERE `id` = ?", warehouseTable, warehouseUpdateFields)
+
+	// DELETE queries
+	queryDeleteWarehouse = fmt.Sprintf("DELETE FROM `%s` WHERE `id` = ?", warehouseTable)
+)
+
 type WarehouseRepository interface {
-	GetAll() ([]models.Warehouse, error)
-	Create(warehouse models.Warehouse) (models.Warehouse, error)
-	ExistsByCode(code string) (bool, error)
-	GetById(id int) (models.Warehouse, error)
-	Delete(id int) error
-	Update(id int, warehouse models.Warehouse) (models.Warehouse, error)
+	GetAll(ctx context.Context) ([]models.Warehouse, error)
+	Create(ctx context.Context, warehouse models.Warehouse) (models.Warehouse, error)
+	ExistsByCode(ctx context.Context, code string) (bool, error)
+	GetById(ctx context.Context, id int) (models.Warehouse, error)
+	Delete(ctx context.Context, id int) error
+	Update(ctx context.Context, id int, warehouse models.Warehouse) (models.Warehouse, error)
 }
 
 type WarehouseRepositoryImpl struct {
@@ -25,9 +53,9 @@ func NewWarehouseRepository(db *sql.DB) *WarehouseRepositoryImpl {
 	return &WarehouseRepositoryImpl{db: db}
 }
 
-func (r *WarehouseRepositoryImpl) GetAll() ([]models.Warehouse, error) {
+func (r *WarehouseRepositoryImpl) GetAll(ctx context.Context) ([]models.Warehouse, error) {
 	//1. Correr la query
-	rows, err := r.db.Query("SELECT `id` , `address` , `telephone` , `warehouse_code` , `minimum_capacity` , `minimum_temperature` FROM `warehouse`")
+	rows, err := r.db.QueryContext(ctx, queryGetAllWarehouses)
 	if err != nil {
 		fmt.Printf("warehouse: %v\n", err.Error())
 		return nil, fmt.Errorf("%w: %v", error_message.ErrInternalServerError, err)
@@ -48,8 +76,8 @@ func (r *WarehouseRepositoryImpl) GetAll() ([]models.Warehouse, error) {
 
 }
 
-func (r *WarehouseRepositoryImpl) Create(warehouse models.Warehouse) (models.Warehouse, error) {
-	result, err := r.db.Exec("INSERT INTO `warehouse`(`address`, `telephone`, `warehouse_code` , `minimum_capacity` , `minimum_temperature` , `locality_id` ) VALUES (?,?,?,?,?,?)",
+func (r *WarehouseRepositoryImpl) Create(ctx context.Context, warehouse models.Warehouse) (models.Warehouse, error) {
+	result, err := r.db.ExecContext(ctx, queryCreateWarehouse,
 		warehouse.Address, warehouse.Telephone, warehouse.WareHouseCode, warehouse.MinimumCapacity, warehouse.MinimumTemperature, warehouse.LocalityId)
 	if err != nil {
 		fmt.Printf("warehouse: %v\n", err.Error())
@@ -65,8 +93,8 @@ func (r *WarehouseRepositoryImpl) Create(warehouse models.Warehouse) (models.War
 	return warehouse, nil
 }
 
-func (r *WarehouseRepositoryImpl) ExistsByCode(code string) (bool, error) {
-	row := r.db.QueryRow("SELECT COUNT(*) FROM `warehouse` WHERE `warehouse_code` = ?", code)
+func (r *WarehouseRepositoryImpl) ExistsByCode(ctx context.Context, code string) (bool, error) {
+	row := r.db.QueryRowContext(ctx, queryExistsByCode, code)
 
 	var count int
 	err := row.Scan(&count)
@@ -77,11 +105,8 @@ func (r *WarehouseRepositoryImpl) ExistsByCode(code string) (bool, error) {
 	return count > 0, nil
 }
 
-func (r *WarehouseRepositoryImpl) GetById(id int) (models.Warehouse, error) {
-	row := r.db.QueryRow(
-		"SELECT `id`,`address`, `telephone`, `warehouse_code` , `minimum_capacity` , `minimum_temperature` FROM `warehouse` WHERE `id` = ?",
-		id,
-	)
+func (r *WarehouseRepositoryImpl) GetById(ctx context.Context, id int) (models.Warehouse, error) {
+	row := r.db.QueryRowContext(ctx, queryGetWarehouseById, id)
 
 	var warehouse models.Warehouse
 	err := row.Scan(&warehouse.Id, &warehouse.Address, &warehouse.Telephone, &warehouse.WareHouseCode, &warehouse.MinimumCapacity, &warehouse.MinimumTemperature)
@@ -95,8 +120,8 @@ func (r *WarehouseRepositoryImpl) GetById(id int) (models.Warehouse, error) {
 	return warehouse, nil
 }
 
-func (r *WarehouseRepositoryImpl) Delete(id int) error {
-	_, err := r.db.Exec("DELETE FROM `warehouse` WHERE `id` = ? ", id)
+func (r *WarehouseRepositoryImpl) Delete(ctx context.Context, id int) error {
+	_, err := r.db.ExecContext(ctx, queryDeleteWarehouse, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return fmt.Errorf("%w: warehouse with id %d", error_message.ErrNotFound, id)
@@ -108,8 +133,8 @@ func (r *WarehouseRepositoryImpl) Delete(id int) error {
 	return nil
 }
 
-func (r *WarehouseRepositoryImpl) Update(id int, warehouse models.Warehouse) (models.Warehouse, error) {
-	result, err := r.db.Exec("UPDATE `warehouse` SET `address` = ?, `telephone` = ?, `warehouse_code` = ?, `minimum_capacity` = ?, `minimum_temperature` = ? WHERE `id` = ?",
+func (r *WarehouseRepositoryImpl) Update(ctx context.Context, id int, warehouse models.Warehouse) (models.Warehouse, error) {
+	result, err := r.db.ExecContext(ctx, queryUpdateWarehouse,
 		warehouse.Address, warehouse.Telephone, warehouse.WareHouseCode, warehouse.MinimumCapacity, warehouse.MinimumTemperature, id)
 	if err != nil {
 		return models.Warehouse{}, fmt.Errorf("%w: %v", error_message.ErrInternalServerError, err)
