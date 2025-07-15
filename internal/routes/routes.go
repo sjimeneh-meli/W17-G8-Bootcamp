@@ -62,7 +62,7 @@ func SetupRoutes(c *container.Container) *chi.Mux {
 		r.Route("/sections", func(rt chi.Router) {
 			rt.Get("/", c.SectionHandler.GetAll)
 			rt.Get("/{id}", c.SectionHandler.GetByID)
-			rt.Get("/reportProducts", c.SectionHandler.GetReportProduct)
+			rt.Get("/reportProducts", c.ProductBatchHandler.GetReportProduct)
 			rt.Post("/", c.SectionHandler.Create)
 			rt.Patch("/{id}", c.SectionHandler.Update)
 			rt.Delete("/{id}", c.SectionHandler.DeleteByID)
