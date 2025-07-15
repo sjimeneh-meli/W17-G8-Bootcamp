@@ -2,6 +2,7 @@ package mappers
 
 import (
 	"errors"
+	"time"
 
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/requests"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/responses"
@@ -20,10 +21,16 @@ func GetProductBatchModelFromRequest(request *requests.ProductBatchRequest) (*mo
 		return nil, errors.New("cannot convert the field manufacturingDate")
 	}
 
-	manufacturingHour, convErr := tools.ConvertFloatToDuration(request.ManufacturingHour)
-	if convErr != nil {
-		return nil, errors.New("cannot convert the field manufacturingHour")
-	}
+	manufacturingHour := time.Date(
+		manufacturingDate.Year(),
+		manufacturingDate.Month(),
+		manufacturingDate.Day(),
+		request.ManufacturingHour,
+		manufacturingDate.Minute(),
+		manufacturingDate.Second(),
+		manufacturingDate.Nanosecond(),
+		manufacturingDate.Location(),
+	)
 
 	return &models.ProductBatch{
 		BatchNumber:        request.BatchNumber,
@@ -48,7 +55,7 @@ func GetProductBatchResponseFromModel(model *models.ProductBatch) *responses.Pro
 		DueDate:            model.DueDate.String(),
 		InitialQuantity:    model.InitialQuantity,
 		ManufacturingDate:  model.ManufacturingDate.String(),
-		ManufacturingHour:  model.ManufacturingHour.String(),
+		ManufacturingHour:  float64(model.ManufacturingHour.Hour()),
 		MinimumTemperature: model.MinimumTemperature,
 		ProductID:          model.ProductID,
 		SectionID:          model.SectionID,
