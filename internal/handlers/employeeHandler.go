@@ -2,6 +2,9 @@ package handlers
 
 import (
 	"encoding/json"
+	"net/http"
+	"strconv"
+
 	"github.com/bootcamp-go/web/response"
 	"github.com/go-chi/chi/v5"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/requests"
@@ -10,8 +13,6 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/services"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/validations"
-	"net/http"
-	"strconv"
 )
 
 func GetEmployeeHandler(service services.EmployeeServiceI, validation *validations.EmployeeValidation) EmployeeHandlerI {
@@ -92,7 +93,7 @@ func (h *EmployeeHandler) Create(w http.ResponseWriter, r *http.Request) {
 	employee = mappers.GetEmployeeModelFromRequest(request)
 
 	if h.service.ExistsWhCardNumber(employee.Id, employee.CardNumberID) {
-		response.Error(w, http.StatusConflict, "Already exist with same card_number_id")
+		response.Error(w, http.StatusConflict, "Already exist with same id_card_number")
 		return
 	}
 
