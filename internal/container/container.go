@@ -111,10 +111,7 @@ func (c *Container) initializeSellerHandler() error {
 }
 
 func (c *Container) initializeSectionHandler() error {
-	sectionRepository, err := repositories.GetSectionRepository(c.StorageDB)
-	if err != nil {
-		return err
-	}
+	sectionRepository := repositories.GetSectionRepository(c.StorageDB)
 	sectionService := services.GetSectionService(sectionRepository)
 	sectionValidation := validations.GetSectionValidation()
 	c.SectionHandler = handlers.GetSectionHandler(sectionService, sectionValidation)
@@ -135,17 +132,10 @@ func (c *Container) initializeProductHandler() error {
 }
 
 func (c *Container) initializeProductBatchHandler() error {
-	sectionRepository, err := repositories.GetSectionRepository(c.StorageDB)
-	if err != nil {
-		return err
-	}
+	sectionRepository := repositories.GetSectionRepository(c.StorageDB)
 	sectionService := services.GetSectionService(sectionRepository)
 
-	productBatchRepository, err := repositories.GetProductBatchRepository(c.StorageDB)
-	if err != nil {
-		return err
-	}
-
+	productBatchRepository := repositories.GetProductBatchRepository(c.StorageDB)
 	productBatchService := services.GetProductBatchService(productBatchRepository)
 	productBatchValidation := validations.GetProductBatchValidation()
 	c.ProductBatchHandler = handlers.GetProductBatchHandler(productBatchService, sectionService, *productBatchValidation)
