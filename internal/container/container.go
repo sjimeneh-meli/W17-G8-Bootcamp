@@ -23,6 +23,7 @@ type Container struct {
 	ProductHandler       *handlers.ProductHandler
 	PurchaseOrderHandler handlers.PurchaseOrderHandlerI
 	ProductRecordHandler handlers.ProductRecordHandlerI
+	LocalityHandler      *handlers.LocalityHandler
 	StorageDB            *sql.DB
 }
 
@@ -63,6 +64,7 @@ func NewContainer(storeDB *sql.DB) (*Container, error) {
 		{"product handler", container.initializeProductHandler},
 		{"purchase order handler", container.initializePurchaseOrderHandler},
 		{"product record handler", container.initializeProductRecordHandler},
+		{"locality handler", container.initializeLocalityHandler},
 	}
 
 	if err := errorHandler.Execute(tasks); err != nil {
@@ -100,10 +102,15 @@ func (c *Container) initializeWarehouseHandler() error {
 }
 
 func (c *Container) initializeSellerHandler() error {
-	sellerStorage := loader.NewJSONStorage[models.Seller](fmt.Sprintf("%s/%s", "docs/database", "sellers.json"))
-	sellerRepo := repositories.NewJSONSellerRepository(sellerStorage)
+	sellerRepo := repositories.NewSQLSellerRepository(c.StorageDB)
 	sellerService := services.NewJSONSellerService(sellerRepo)
 	c.SellerHandler = handlers.NewSellerHandler(sellerService)
+	return nil
+}
+func (c *Container) initializeLocalityHandler() error {
+	localityRepo := repositories.NewSQLLocalityRepository(c.StorageDB)
+	localityService := services.NewSQLLocalityService(localityRepo)
+	c.LocalityHandler = handlers.NewLocalityHandler(localityService)
 	return nil
 }
 
