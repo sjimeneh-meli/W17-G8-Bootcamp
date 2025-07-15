@@ -13,6 +13,7 @@ func GetProductBatchService(repository repositories.ProductBatchRepositoryI) Pro
 
 type ProductBatchServiceI interface {
 	Create(model *models.ProductBatch) error
+	GetProductQuantityBySectionId(id int) int
 	ExistsWithBatchNumber(id int, batchNumber string) bool
 }
 
@@ -22,6 +23,10 @@ type productBatchService struct {
 
 func (s *productBatchService) Create(model *models.ProductBatch) error {
 	return s.repository.Create(model)
+}
+
+func (s *productBatchService) GetProductQuantityBySectionId(id int) int {
+	return s.repository.GetProductQuantityBySectionId(id)
 }
 
 func (s *productBatchService) ExistsWithBatchNumber(id int, batchNumber string) bool {
