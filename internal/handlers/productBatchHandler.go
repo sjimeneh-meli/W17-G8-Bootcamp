@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/bootcamp-go/web/response"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/requests"
@@ -12,20 +13,23 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/validations"
 )
 
-func GetProductBatchHandler(service services.ProductBatchServiceI, validation validations.ProductBatchValidation) ProductBatchHandlerI {
+func GetProductBatchHandler(service services.ProductBatchServiceI, sectionService services.SectionServiceI, validation validations.ProductBatchValidation) ProductBatchHandlerI {
 	return &ProductBatchHandler{
-		service:    service,
-		validation: &validation,
+		service:        service,
+		sectionService: sectionService,
+		validation:     &validation,
 	}
 }
 
 type ProductBatchHandlerI interface {
 	Create(w http.ResponseWriter, r *http.Request)
+	GetReportProduct(w http.ResponseWriter, r *http.Request)
 }
 
 type ProductBatchHandler struct {
-	service    services.ProductBatchServiceI
-	validation *validations.ProductBatchValidation
+	service        services.ProductBatchServiceI
+	sectionService services.SectionServiceI
+	validation     *validations.ProductBatchValidation
 }
 
 func (h *ProductBatchHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -62,4 +66,54 @@ func (h *ProductBatchHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	responseJson.Data = mappers.GetProductBatchResponseFromModel(productBatch)
 	response.JSON(w, http.StatusCreated, responseJson)
+}
+
+func (h *ProductBatchHandler) GetReportProduct(w http.ResponseWriter, r *http.Request) {
+	var responseJson *responses.DataResponse = &responses.DataResponse{}
+
+	idParamString := r.URL.Query().Get("id")
+	if idParamString != "" {
+
+		idParam, convErr := strconv.Atoi(idParamString)
+		if convErr != nil {
+			response.Error(w, http.StatusExpectationFailed, convErr.Error())
+			return
+		}
+
+		section, srvErr := h.sectionService.GetByID(idParam)
+		if srvErr != nil {
+			response.Error(w, http.StatusNotFound, srvErr.Error())
+			return
+		}
+
+		quantity := h.service.GetProductQuantityBySectionId(section.Id)
+		responseJson.Data = map[string]any{
+			"section_id":     section.Id,
+			"section_number": section.SectionNumber,
+			"products_count": quantity,
+		}
+		response.JSON(w, http.StatusCreated, responseJson)
+
+	} else {
+		sections, srvErr := h.sectionService.GetAll()
+		data := make([]map[string]any, 0, len(sections))
+		if srvErr != nil {
+			response.Error(w, http.StatusExpectationFailed, srvErr.Error())
+			return
+		}
+
+		for _, s := range sections {
+			quantity := h.service.GetProductQuantityBySectionId(s.Id)
+			data = append(data, map[string]any{
+				"section_id":     s.Id,
+				"section_number": s.SectionNumber,
+				"products_count": quantity,
+			})
+		}
+		responseJson.Data = data
+
+		response.JSON(w, http.StatusCreated, responseJson)
+
+	}
+
 }
