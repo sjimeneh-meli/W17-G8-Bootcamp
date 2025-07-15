@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/error_message"
@@ -9,7 +10,7 @@ import (
 )
 
 type CarryService interface {
-	CreateCarry(carry models.Carry) (models.Carry, error)
+	CreateCarry(ctx context.Context, carry models.Carry) (models.Carry, error)
 }
 
 type CarryServiceImpl struct {
@@ -22,15 +23,15 @@ func NewCarryService(r repositories.CarryRepository) *CarryServiceImpl {
 
 // Falta validar que locality id exista en la base de datos
 
-func (s *CarryServiceImpl) CreateCarry(carry models.Carry) (models.Carry, error) {
-	exists, err := s.carryRepository.ExistsByCid(carry.Cid)
+func (s *CarryServiceImpl) CreateCarry(ctx context.Context, carry models.Carry) (models.Carry, error) {
+	exists, err := s.carryRepository.ExistsByCid(ctx, carry.Cid)
 	if err != nil {
 		return models.Carry{}, fmt.Errorf("%w: %v", error_message.ErrInternalServerError, err)
 	}
 	if exists {
 		return models.Carry{}, fmt.Errorf("%w: resource with the provided identifier already exists", error_message.ErrAlreadyExists)
 	}
-	carry, err = s.carryRepository.Create(carry)
+	carry, err = s.carryRepository.Create(ctx, carry)
 	if err != nil {
 		return models.Carry{}, fmt.Errorf("%w: %v", error_message.ErrInternalServerError, err)
 	}

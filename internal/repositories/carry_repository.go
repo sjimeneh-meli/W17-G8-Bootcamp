@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 
@@ -9,8 +10,8 @@ import (
 )
 
 type CarryRepository interface {
-	Create(carry models.Carry) (models.Carry, error)
-	ExistsByCid(cid string) (bool, error)
+	Create(ctx context.Context, carry models.Carry) (models.Carry, error)
+	ExistsByCid(ctx context.Context, cid string) (bool, error)
 }
 
 type CarryRepositoryImpl struct {
@@ -21,8 +22,8 @@ func NewCarryRepository(db *sql.DB) *CarryRepositoryImpl {
 	return &CarryRepositoryImpl{db: db}
 }
 
-func (r *CarryRepositoryImpl) Create(carry models.Carry) (models.Carry, error) {
-	result, err := r.db.Exec(
+func (r *CarryRepositoryImpl) Create(ctx context.Context, carry models.Carry) (models.Carry, error) {
+	result, err := r.db.ExecContext(ctx,
 		"INSERT INTO `carriers`(`cid`, `company_name`, `address`, `telephone`, `locality_id`) VALUES (?,?,?,?,?)",
 		carry.Cid, carry.CompanyName, carry.Address, carry.Telephone, carry.LocalityId,
 	)
@@ -39,8 +40,8 @@ func (r *CarryRepositoryImpl) Create(carry models.Carry) (models.Carry, error) {
 	return carry, nil
 }
 
-func (r *CarryRepositoryImpl) ExistsByCid(cid string) (bool, error) {
-	row := r.db.QueryRow("SELECT COUNT(*) FROM `carriers` WHERE `cid` = ?", cid)
+func (r *CarryRepositoryImpl) ExistsByCid(ctx context.Context, cid string) (bool, error) {
+	row := r.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM `carriers` WHERE `cid` = ?", cid)
 
 	var count int
 	err := row.Scan(&count)

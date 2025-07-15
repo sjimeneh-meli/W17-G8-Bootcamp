@@ -1,9 +1,11 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/bootcamp-go/web/response"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/error_message"
@@ -23,6 +25,9 @@ func NewCarryHandler(carryService services.CarryService) *CarryHandler {
 }
 
 func (h *CarryHandler) Create(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+	defer cancel()
+
 	var request requests.CarryRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -39,8 +44,13 @@ func (h *CarryHandler) Create(w http.ResponseWriter, r *http.Request) {
 	carry := mappers.MapCarryRequestToCarry(request)
 
 	// Crear carry a través del servicio
-	newCarry, err := h.carryService.CreateCarry(carry)
+	newCarry, err := h.carryService.CreateCarry(ctx, carry)
+
 	if err != nil {
+		if ctx.Err() != nil {
+			response.Error(w, http.StatusRequestTimeout, "Request timeout cancelled")
+			return
+		}
 		// Manejar error de CID duplicado
 		if errors.Is(err, error_message.ErrAlreadyExists) {
 			response.Error(w, http.StatusConflict, err.Error())
