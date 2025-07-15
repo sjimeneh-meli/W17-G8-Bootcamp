@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
@@ -30,38 +31,38 @@ func InitDB(cfg *config.Config) *sql.DB {
 	return db
 }
 
-func SelectOne(db *sql.DB, tablename string, fields []string, condition string, values ...any) *sql.Row {
+func SelectOne(ctx context.Context, db *sql.DB, tablename string, fields []string, condition string, values ...any) *sql.Row {
 	columns := tools.SliceToString(fields, ",")
 	sqlStatement := fmt.Sprintf("SELECT %s FROM %s", columns, tablename)
 	if condition != "" {
 		sqlStatement = fmt.Sprintf("%s WHERE %s", sqlStatement, condition)
 	}
 
-	return db.QueryRow(sqlStatement, values...)
+	return db.QueryRowContext(ctx, sqlStatement, values...)
 }
 
-func Select(db *sql.DB, tablename string, fields []string, condition string, values ...any) (*sql.Rows, error) {
+func Select(ctx context.Context, db *sql.DB, tablename string, fields []string, condition string, values ...any) (*sql.Rows, error) {
 	columns := tools.SliceToString(fields, ",")
 	sqlStatement := fmt.Sprintf("SELECT %s FROM %s", columns, tablename)
 	if condition != "" {
 		sqlStatement = fmt.Sprintf("%s WHERE %s", sqlStatement, condition)
 	}
 
-	return db.Query(sqlStatement, values...)
+	return db.QueryContext(ctx, sqlStatement, values...)
 }
 
-func Insert(db *sql.DB, tablename string, data map[any]any) (sql.Result, error) {
+func Insert(ctx context.Context, db *sql.DB, tablename string, data map[any]any) (sql.Result, error) {
 	keys, values := tools.GetSlicesOfKeyAndValuesFromMap(data)
 	columns := tools.SliceToString(keys, ",")
 	placeholders := tools.SliceToString(tools.FillNewSlice(len(data), "?"), ",")
 
 	sqlStatement := fmt.Sprintf("INSERT INTO %s(%s) VALUES (%s);", tablename, columns, placeholders)
 
-	return db.Exec(sqlStatement, values...)
+	return db.ExecContext(ctx, sqlStatement, values...)
 }
 
-func Delete(db *sql.DB, tablename string, condition string, values ...any) (sql.Result, error) {
+func Delete(ctx context.Context, db *sql.DB, tablename string, condition string, values ...any) (sql.Result, error) {
 	sqlStatement := fmt.Sprintf("DELETE FROM %s WHERE %s;", tablename, condition)
 
-	return db.Exec(sqlStatement, values...)
+	return db.ExecContext(ctx, sqlStatement, values...)
 }

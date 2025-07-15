@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 
@@ -24,13 +25,13 @@ func GetSectionRepository(db *sql.DB) SectionRepositoryI {
 }
 
 type SectionRepositoryI interface {
-	GetAll() ([]*models.Section, error)
-	GetByID(id int) (*models.Section, error)
-	Create(model *models.Section) error
-	Update(model *models.Section) error
-	ExistWithID(id int) bool
-	ExistsWithSectionNumber(id int, sectionNumber string) bool
-	DeleteByID(id int) error
+	GetAll(ctx context.Context) ([]*models.Section, error)
+	GetByID(ctx context.Context, id int) (*models.Section, error)
+	Create(ctx context.Context, model *models.Section) error
+	Update(ctx context.Context, model *models.Section) error
+	ExistWithID(ctx context.Context, id int) bool
+	ExistsWithSectionNumber(ctx context.Context, id int, sectionNumber string) bool
+	DeleteByID(ctx context.Context, id int) error
 }
 
 type sectionRepository struct {
@@ -38,10 +39,10 @@ type sectionRepository struct {
 	tablename string
 }
 
-func (r *sectionRepository) GetAll() ([]*models.Section, error) {
+func (r *sectionRepository) GetAll(ctx context.Context) ([]*models.Section, error) {
 	columns := []string{"Id", "section_number", "current_capacity", "current_temperature", "maximum_capacity", "minimum_capacity", "minimum_temperature", "product_type_id", "warehouse_id"}
 
-	rows, err := database.Select(r.database, r.tablename, columns, "")
+	rows, err := database.Select(ctx, r.database, r.tablename, columns, "")
 
 	if err != nil {
 		return nil, err
@@ -74,9 +75,9 @@ func (r *sectionRepository) GetAll() ([]*models.Section, error) {
 
 }
 
-func (r *sectionRepository) GetByID(id int) (*models.Section, error) {
+func (r *sectionRepository) GetByID(ctx context.Context, id int) (*models.Section, error) {
 	columns := []string{"Id", "section_number", "current_capacity", "current_temperature", "maximum_capacity", "minimum_capacity", "minimum_temperature", "product_type_id", "warehouse_id"}
-	row := database.SelectOne(r.database, r.tablename, columns, "Id = ?", id)
+	row := database.SelectOne(ctx, r.database, r.tablename, columns, "Id = ?", id)
 
 	var section models.Section
 
@@ -97,7 +98,7 @@ func (r *sectionRepository) GetByID(id int) (*models.Section, error) {
 	return &section, nil
 }
 
-func (r *sectionRepository) Create(model *models.Section) error {
+func (r *sectionRepository) Create(ctx context.Context, model *models.Section) error {
 	data := make(map[any]any)
 	data["section_number"] = model.SectionNumber
 	data["current_capacity"] = model.CurrentCapacity
@@ -108,7 +109,7 @@ func (r *sectionRepository) Create(model *models.Section) error {
 	data["product_type_id"] = model.ProductTypeID
 	data["warehouse_id"] = model.WarehouseID
 
-	result, err := database.Insert(r.database, r.tablename, data)
+	result, err := database.Insert(ctx, r.database, r.tablename, data)
 
 	if err != nil {
 		return err
@@ -123,7 +124,7 @@ func (r *sectionRepository) Create(model *models.Section) error {
 	return nil
 }
 
-func (r *sectionRepository) Update(model *models.Section) error {
+func (r *sectionRepository) Update(ctx context.Context, model *models.Section) error {
 	sqlStatement := fmt.Sprintf("UPDATE %s SET `section_number`=?, `current_capacity`=?, `current_temperature`=?, `maximum_capacity`=?, `minimum_capacity`=?, `minimum_temperature`=?, `product_type_id`=?, `warehouse_id`=? WHERE `Id`=?", r.tablename)
 	_, err := r.database.Exec(sqlStatement,
 		model.SectionNumber,
@@ -142,8 +143,8 @@ func (r *sectionRepository) Update(model *models.Section) error {
 	return nil
 }
 
-func (r *sectionRepository) ExistWithID(id int) bool {
-	row := database.SelectOne(r.database, r.tablename, []string{"COUNT(Id)"}, "Id = ?", id)
+func (r *sectionRepository) ExistWithID(ctx context.Context, id int) bool {
+	row := database.SelectOne(ctx, r.database, r.tablename, []string{"COUNT(Id)"}, "Id = ?", id)
 	var count int
 	if err := row.Scan(&count); err != nil {
 		return true
@@ -152,8 +153,8 @@ func (r *sectionRepository) ExistWithID(id int) bool {
 	return count != 0
 }
 
-func (r *sectionRepository) ExistsWithSectionNumber(id int, sectionNumber string) bool {
-	row := database.SelectOne(r.database, r.tablename, []string{"COUNT(Id)"}, "section_number = ? AND Id <> ?", sectionNumber, id)
+func (r *sectionRepository) ExistsWithSectionNumber(ctx context.Context, id int, sectionNumber string) bool {
+	row := database.SelectOne(ctx, r.database, r.tablename, []string{"COUNT(Id)"}, "section_number = ? AND Id <> ?", sectionNumber, id)
 	var count string
 	if err := row.Scan(&count); err != nil {
 		return true
@@ -162,8 +163,8 @@ func (r *sectionRepository) ExistsWithSectionNumber(id int, sectionNumber string
 	return count != "0"
 }
 
-func (r *sectionRepository) DeleteByID(id int) error {
-	_, err := database.Delete(r.database, r.tablename, "Id = ?", id)
+func (r *sectionRepository) DeleteByID(ctx context.Context, id int) error {
+	_, err := database.Delete(ctx, r.database, r.tablename, "Id = ?", id)
 	if err != nil {
 		return err
 	}

@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"context"
 	"database/sql"
 
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
@@ -22,9 +23,9 @@ func GetProductBatchRepository(db *sql.DB) ProductBatchRepositoryI {
 }
 
 type ProductBatchRepositoryI interface {
-	Create(model *models.ProductBatch) error
-	GetProductQuantityBySectionId(id int) int
-	ExistsWithBatchNumber(id int, batchNumber string) bool
+	Create(ctx context.Context, model *models.ProductBatch) error
+	GetProductQuantityBySectionId(ctx context.Context, id int) int
+	ExistsWithBatchNumber(ctx context.Context, id int, batchNumber string) bool
 }
 
 type productBatchRepository struct {
@@ -32,7 +33,7 @@ type productBatchRepository struct {
 	tablename string
 }
 
-func (r *productBatchRepository) Create(model *models.ProductBatch) error {
+func (r *productBatchRepository) Create(ctx context.Context, model *models.ProductBatch) error {
 	data := make(map[any]any)
 	data["batch_number"] = model.BatchNumber
 	data["current_quantity"] = model.CurrentQuantity
@@ -45,7 +46,7 @@ func (r *productBatchRepository) Create(model *models.ProductBatch) error {
 	data["product_id"] = model.ProductID
 	data["section_id"] = model.SectionID
 
-	result, err := database.Insert(r.database, r.tablename, data)
+	result, err := database.Insert(ctx, r.database, r.tablename, data)
 
 	if err != nil {
 		return err
@@ -60,8 +61,8 @@ func (r *productBatchRepository) Create(model *models.ProductBatch) error {
 	return nil
 }
 
-func (r *productBatchRepository) ExistsWithBatchNumber(id int, batchNumber string) bool {
-	row := database.SelectOne(r.database, r.tablename, []string{"COUNT(Id)"}, "batch_number = ? AND Id <> ?", batchNumber, id)
+func (r *productBatchRepository) ExistsWithBatchNumber(ctx context.Context, id int, batchNumber string) bool {
+	row := database.SelectOne(ctx, r.database, r.tablename, []string{"COUNT(Id)"}, "batch_number = ? AND Id <> ?", batchNumber, id)
 	var count string
 	if err := row.Scan(&count); err != nil {
 		return true
@@ -70,8 +71,8 @@ func (r *productBatchRepository) ExistsWithBatchNumber(id int, batchNumber strin
 	return count != "0"
 }
 
-func (r *productBatchRepository) GetProductQuantityBySectionId(id int) int {
-	row := database.SelectOne(r.database, r.tablename, []string{"SUM(current_quantity)"}, "section_id = ?", id)
+func (r *productBatchRepository) GetProductQuantityBySectionId(ctx context.Context, id int) int {
+	row := database.SelectOne(ctx, r.database, r.tablename, []string{"SUM(current_quantity)"}, "section_id = ?", id)
 	var quantity int
 	if err := row.Scan(&quantity); err != nil {
 		return quantity

@@ -59,7 +59,7 @@ func (h *ProductBatchHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !h.sectionService.ExistWithID(request.SectionID) {
+	if !h.sectionService.ExistWithID(ctx, request.SectionID) {
 		response.Error(w, http.StatusNotFound, "section not found")
 	}
 
@@ -74,12 +74,12 @@ func (h *ProductBatchHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if h.service.ExistsWithBatchNumber(productBatch.Id, productBatch.BatchNumber) {
+	if h.service.ExistsWithBatchNumber(ctx, productBatch.Id, productBatch.BatchNumber) {
 		response.Error(w, http.StatusConflict, "already exist a batch with the same number")
 		return
 	}
 
-	if srvErr := h.service.Create(productBatch); srvErr != nil {
+	if srvErr := h.service.Create(ctx, productBatch); srvErr != nil {
 		response.Error(w, http.StatusExpectationFailed, srvErr.Error())
 		return
 	}
@@ -91,6 +91,9 @@ func (h *ProductBatchHandler) Create(w http.ResponseWriter, r *http.Request) {
 func (h *ProductBatchHandler) GetReportProduct(w http.ResponseWriter, r *http.Request) {
 	var responseJson *responses.DataResponse = &responses.DataResponse{}
 
+	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+	defer cancel()
+
 	idParamString := r.URL.Query().Get("id")
 	if idParamString != "" {
 
@@ -100,13 +103,13 @@ func (h *ProductBatchHandler) GetReportProduct(w http.ResponseWriter, r *http.Re
 			return
 		}
 
-		section, srvErr := h.sectionService.GetByID(idParam)
+		section, srvErr := h.sectionService.GetByID(ctx, idParam)
 		if srvErr != nil {
 			response.Error(w, http.StatusNotFound, srvErr.Error())
 			return
 		}
 
-		quantity := h.service.GetProductQuantityBySectionId(section.Id)
+		quantity := h.service.GetProductQuantityBySectionId(ctx, section.Id)
 		responseJson.Data = map[string]any{
 			"section_id":     section.Id,
 			"section_number": section.SectionNumber,
@@ -115,7 +118,7 @@ func (h *ProductBatchHandler) GetReportProduct(w http.ResponseWriter, r *http.Re
 		response.JSON(w, http.StatusCreated, responseJson)
 
 	} else {
-		sections, srvErr := h.sectionService.GetAll()
+		sections, srvErr := h.sectionService.GetAll(ctx)
 		data := make([]map[string]any, 0, len(sections))
 		if srvErr != nil {
 			response.Error(w, http.StatusExpectationFailed, srvErr.Error())
@@ -123,7 +126,7 @@ func (h *ProductBatchHandler) GetReportProduct(w http.ResponseWriter, r *http.Re
 		}
 
 		for _, s := range sections {
-			quantity := h.service.GetProductQuantityBySectionId(s.Id)
+			quantity := h.service.GetProductQuantityBySectionId(ctx, s.Id)
 			data = append(data, map[string]any{
 				"section_id":     s.Id,
 				"section_number": s.SectionNumber,
