@@ -22,6 +22,7 @@ type Container struct {
 	SellerHandler    *handlers.SellerHandler
 	SectionHandler   handlers.SectionHandlerI
 	ProductHandler   *handlers.ProductHandler
+	CarryHandler     *handlers.CarryHandler
 	StorageDB        *sql.DB
 }
 
@@ -60,6 +61,7 @@ func NewContainer(storeDB *sql.DB) (*Container, error) {
 		{"seller handler", container.initializeSellerHandler},
 		{"section handler", container.initializeSectionHandler},
 		{"product handler", container.initializeProductHandler},
+		{"carry handler", container.initializeCarryHandler},
 	}
 
 	if err := errorHandler.Execute(tasks); err != nil {
@@ -129,5 +131,11 @@ func (c *Container) initializeProductHandler() error {
 	ps := seeders.NewSeeder(service)
 	ps.LoadAllData()
 
+	return nil
+}
+func (c *Container) initializeCarryHandler() error {
+	carryRepo := repositories.NewCarryRepository(c.StorageDB)
+	carryService := services.NewCarryService(carryRepo)
+	c.CarryHandler = handlers.NewCarryHandler(carryService)
 	return nil
 }

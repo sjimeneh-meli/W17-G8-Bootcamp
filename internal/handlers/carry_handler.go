@@ -11,6 +11,7 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/responses"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/mappers"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/services"
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/validations"
 )
 
 type CarryHandler struct {
@@ -29,11 +30,16 @@ func (h *CarryHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := validations.ValidateCarryRequest(request); err != nil {
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
 	// Mapear request a modelo
-	carry := mappers.GetCarryModelFromRequest(&request)
+	carry := mappers.MapCarryRequestToCarry(request)
 
 	// Crear carry a través del servicio
-	newCarry, err := h.carryService.Create(*carry)
+	newCarry, err := h.carryService.CreateCarry(carry)
 	if err != nil {
 		// Manejar error de CID duplicado
 		if errors.Is(err, error_message.ErrAlreadyExists) {
@@ -45,7 +51,7 @@ func (h *CarryHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Mapear modelo a respuesta
-	carryResponse := mappers.GetCarryResponseFromModel(&newCarry)
+	carryResponse := mappers.MapCarryToCreateCarryResponse(newCarry)
 
 	response.JSON(w, http.StatusCreated, responses.DataResponse{
 		Data: carryResponse,

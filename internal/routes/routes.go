@@ -1,10 +1,11 @@
 package routes
 
 import (
+	"net/http"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/container"
-	"net/http"
 )
 
 func SetupRoutes(c *container.Container) *chi.Mux {
@@ -73,6 +74,10 @@ func SetupRoutes(c *container.Container) *chi.Mux {
 			r.Post("/", c.ProductHandler.Save)
 			r.Patch("/{id}", c.ProductHandler.Update)
 			r.Delete("/{id}", c.ProductHandler.DeleteById)
+		})
+
+		r.Route("/carriers", func(r chi.Router) {
+			r.Post("/", c.CarryHandler.Create)
 		})
 	})
 

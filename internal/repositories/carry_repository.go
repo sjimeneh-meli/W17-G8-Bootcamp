@@ -23,7 +23,7 @@ func NewCarryRepository(db *sql.DB) *CarryRepositoryImpl {
 
 func (r *CarryRepositoryImpl) Create(carry models.Carry) (models.Carry, error) {
 	result, err := r.db.Exec(
-		"INSERT INTO `carry`(`cid`, `company_name`, `address`, `telephone`, `locality_id`) VALUES (?,?,?,?,?)",
+		"INSERT INTO `carriers`(`cid`, `company_name`, `address`, `telephone`, `locality_id`) VALUES (?,?,?,?,?)",
 		carry.Cid, carry.CompanyName, carry.Address, carry.Telephone, carry.LocalityId,
 	)
 	if err != nil {
@@ -40,7 +40,7 @@ func (r *CarryRepositoryImpl) Create(carry models.Carry) (models.Carry, error) {
 }
 
 func (r *CarryRepositoryImpl) ExistsByCid(cid string) (bool, error) {
-	row := r.db.QueryRow("SELECT COUNT(*) FROM `carry` WHERE `cid` = ?", cid)
+	row := r.db.QueryRow("SELECT COUNT(*) FROM `carriers` WHERE `cid` = ?", cid)
 
 	var count int
 	err := row.Scan(&count)
