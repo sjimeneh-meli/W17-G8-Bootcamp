@@ -1,52 +1,61 @@
 package services
 
 import (
+	"context"
+	"fmt"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/error_message"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/repositories"
+	"slices"
 )
 
 func GetEmployeeService(repository repositories.EmployeeRepositoryI) EmployeeServiceI {
-	return &employeeService{
+	return &EmployeeService{
 		repository: repository,
 	}
 }
 
 type EmployeeServiceI interface {
-	GetAll() []*models.Employee
-	Create(e *models.Employee) error
-	GetById(id int) (*models.Employee, error)
-	DeleteById(id int) error
-
-	ExistsWhCardNumber(id int, cardNumber string) bool
+	GetAll(ctx context.Context) (map[int]models.Employee, error)
+	GetById(ctx context.Context, id int) (models.Employee, error)
+	DeleteById(ctx context.Context, id int) error
+	Create(ctx context.Context, employee models.Employee) (models.Employee, error)
+	Update(ctx context.Context, employeeId int, employee models.Employee) (models.Employee, error)
 }
-type employeeService struct {
+type EmployeeService struct {
 	repository repositories.EmployeeRepositoryI
 }
 
-func (s *employeeService) GetAll() []*models.Employee {
-	return s.repository.GetAll()
+func (s *EmployeeService) GetAll(ctx context.Context) (map[int]models.Employee, error) {
+	return s.repository.GetAll(ctx)
+
+}
+func (s *EmployeeService) GetById(ctx context.Context, id int) (models.Employee, error) {
+	return s.repository.GetById(ctx, id)
 }
 
-func (s *employeeService) GetById(id int) (*models.Employee, error) {
-	if model := s.repository.GetById(id); model != nil {
-		return model, nil
+func (s *EmployeeService) DeleteById(ctx context.Context, id int) error {
+	return s.repository.DeleteById(ctx, id)
+}
+
+func (s *EmployeeService) Create(ctx context.Context, employee models.Employee) (models.Employee, error) {
+	existingCardNumbers, err := s.repository.GetCardNumberIds()
+	if err != nil {
+		return models.Employee{}, err
 	}
-	return nil, error_message.ErrNotFound
-}
-
-func (s *employeeService) Create(e *models.Employee) error {
-	s.repository.Create(e)
-	return nil
-}
-
-func (s *employeeService) DeleteById(id int) error {
-	if s.repository.DeleteById(id) {
-		return nil
+	if slices.Contains(existingCardNumbers, employee.CardNumberID) {
+		return models.Employee{}, fmt.Errorf("%w - %s %s %s", error_message.ErrAlreadyExists, "card number with id:", employee.CardNumberID, "already exists.")
 	}
-	return error_message.ErrNotFound
+	return s.repository.Create(ctx, employee)
 }
-func (s *employeeService) ExistsWhCardNumber(id int, cardNumber string) bool {
-	return s.repository.ExistsWhCardNumber(id, cardNumber)
 
+func (s *EmployeeService) Update(ctx context.Context, employeeId int, employee models.Employee) (models.Employee, error) {
+	existingCardNumbers, err := s.repository.GetCardNumberIds()
+	if err != nil {
+		return models.Employee{}, err
+	}
+	if slices.Contains(existingCardNumbers, employee.CardNumberID) {
+		return models.Employee{}, fmt.Errorf("%w - %s %s %s", error_message.ErrAlreadyExists, "card number with id:", employee.CardNumberID, "already exists.")
+	}
+	return s.repository.Update(ctx, employeeId, employee)
 }
