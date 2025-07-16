@@ -34,38 +34,32 @@ func GetNewEmployeeMySQLRepository(db *sql.DB) EmployeeRepositoryI {
 func (r *MySqlEmployeeRepository) GetAll(ctx context.Context) (map[int]models.Employee, error) {
 	employees := make(map[int]models.Employee)
 
-	query := "select id, id_card_number, first_name, last_name, warehouse_id from employee"
+	query := "SELECT id, id_card_number, first_name, last_name, warehouse_id FROM employees"
 	rows, err := r.db.QueryContext(ctx, query)
 	if err != nil {
 		return employees, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
 	}
 	defer rows.Close()
 
-	tEmployeeMap := make(map[int]models.Employee)
 	for rows.Next() {
 		employee := models.Employee{}
 		err = rows.Scan(&employee.Id, &employee.CardNumberID, &employee.FirstName, &employee.LastName, &employee.WarehouseID)
 		if err != nil {
 			return employees, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
 		}
-		tEmployeeMap[employee.Id] = employee
+		employees[employee.Id] = employee
 	}
 
-	employees = tEmployeeMap
 	return employees, nil
 }
 
 func (r *MySqlEmployeeRepository) GetById(ctx context.Context, id int) (models.Employee, error) {
 	employee := models.Employee{}
 
-	query := "select id, id_card_number, first_name, last_name, warehouse_id, from buyers where id = ?"
+	query := "SELECT id, id_card_number, first_name, last_name, warehouse_id FROM employees WHERE id = ?"
 	row := r.db.QueryRowContext(ctx, query, id)
-	err := row.Err()
-	if err != nil {
-		return employee, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
-	}
 
-	err = row.Scan(&employee.Id, &employee.CardNumberID, &employee.FirstName, &employee.LastName, &employee.WarehouseID)
+	err := row.Scan(&employee.Id, &employee.CardNumberID, &employee.FirstName, &employee.LastName, &employee.WarehouseID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return models.Employee{}, fmt.Errorf("%w. %s %d %s", error_message.ErrNotFound, "employee with Id", id, "not exists.")
@@ -77,7 +71,7 @@ func (r *MySqlEmployeeRepository) GetById(ctx context.Context, id int) (models.E
 }
 
 func (r *MySqlEmployeeRepository) DeleteById(ctx context.Context, id int) error {
-	query := "delete from buyers where id = ?"
+	query := "DELETE FROM employees WHERE id = ?"
 
 	result, err := r.db.ExecContext(ctx, query, id)
 	if err != nil {
@@ -90,17 +84,16 @@ func (r *MySqlEmployeeRepository) DeleteById(ctx context.Context, id int) error 
 	}
 
 	if rowsAffected == 0 {
-		return fmt.Errorf("%w. %s %d %s", error_message.ErrNotFound, "Buyer with Id", id, "doesn't exists.")
+		return fmt.Errorf("%w. %s %d %s", error_message.ErrNotFound, "Employee with Id", id, "doesn't exist.")
 	}
 
 	return nil
 }
 
 func (r *MySqlEmployeeRepository) Create(ctx context.Context, employee models.Employee) (models.Employee, error) {
-	query := `insert into employee (id_card_number, first_name, last_name, warehouse_id ) values (?, ?, ?, ?)`
+	query := `INSERT INTO employees (id_card_number, first_name, last_name, warehouse_id) VALUES (?, ?, ?, ?)`
 
 	result, err := r.db.ExecContext(ctx, query, employee.CardNumberID, employee.FirstName, employee.LastName, employee.WarehouseID)
-
 	if err != nil {
 		return models.Employee{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
 	}
@@ -130,11 +123,12 @@ func (r *MySqlEmployeeRepository) Update(ctx context.Context, employeeId int, em
 		updates = append(updates, "id_card_number = ?")
 		values = append(values, employee.CardNumberID)
 	}
-	if employee.CardNumberID != "" {
+	if employee.WarehouseID != 0 {
 		updates = append(updates, "warehouse_id = ?")
-		values = append(values, employee.CardNumberID)
+		values = append(values, employee.WarehouseID)
 	}
-	query := "UPDATE employee SET " + strings.Join(updates, ", ") + " WHERE id = ?"
+
+	query := "UPDATE employees SET " + strings.Join(updates, ", ") + " WHERE id = ?"
 	values = append(values, employeeId)
 
 	result, err := r.db.ExecContext(ctx, query, values...)
@@ -151,22 +145,23 @@ func (r *MySqlEmployeeRepository) Update(ctx context.Context, employeeId int, em
 		return models.Employee{}, fmt.Errorf("%w. %s %d %s", error_message.ErrNotFound, "employee with Id", employeeId, "not exists.")
 	}
 
-	updatedUser, err := r.GetById(ctx, employeeId)
+	updatedEmployee, err := r.GetById(ctx, employeeId)
 	if err != nil {
 		return models.Employee{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
 	}
-	return updatedUser, nil
+	return updatedEmployee, nil
 }
 
 func (r *MySqlEmployeeRepository) GetCardNumberIds() ([]string, error) {
 	cardNumberIds := []string{}
 
-	query := "select id_card_number from employee"
+	query := "SELECT id_card_number FROM employees"
 	rows, err := r.db.Query(query)
 	if err != nil {
 		return []string{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
 	}
 	defer rows.Close()
+
 	for rows.Next() {
 		cardNumberId := ""
 		err = rows.Scan(&cardNumberId)
@@ -179,8 +174,9 @@ func (r *MySqlEmployeeRepository) GetCardNumberIds() ([]string, error) {
 
 	return cardNumberIds, nil
 }
+
 func (r *MySqlEmployeeRepository) ExistEmployeeById(ctx context.Context, employeeId int) (bool, error) {
-	query := "SELECT 1 FROM employee WHERE id = ? LIMIT 1;"
+	query := "SELECT 1 FROM employees WHERE id = ? LIMIT 1"
 
 	var exists int64
 	err := r.db.QueryRowContext(ctx, query, employeeId).Scan(&exists)
@@ -189,7 +185,7 @@ func (r *MySqlEmployeeRepository) ExistEmployeeById(ctx context.Context, employe
 		if errors.Is(err, sql.ErrNoRows) {
 			return false, nil
 		}
-		return false, fmt.Errorf("error al verificar la existencia del producto: %w", err)
+		return false, fmt.Errorf("error verifying employee existence: %w", err)
 	}
 	return true, nil
 }

@@ -24,11 +24,14 @@ func SetupRoutes(c *container.Container) *chi.Mux {
 
 		r.Route("/employee", func(rt chi.Router) {
 
-			rt.Get("/", c.EmployeeHandler.GetAll)
-			rt.Get("/{id}", c.EmployeeHandler.GetById)
-			rt.Post("/", c.EmployeeHandler.Create)
-			rt.Patch("/{id}", c.EmployeeHandler.Update)
-			rt.Delete("/{id}", c.EmployeeHandler.DeleteById)
+			rt.Get("/", c.EmployeeHandler.GetAllEmployee())
+			rt.Get("/{id}", c.EmployeeHandler.GetByIdEmployee())
+			rt.Post("/", c.EmployeeHandler.PostEmployee())
+			rt.Patch("/{id}", c.EmployeeHandler.PatchEmployee())
+			rt.Delete("/{id}", c.EmployeeHandler.DeleteByIdEmployee())
+
+			rt.Get("/reportInboundOrders", c.InboundOrderHandler.GetInboundOrdersReport())
+
 		})
 
 		r.Route("/buyers", func(r chi.Router) {
@@ -74,6 +77,11 @@ func SetupRoutes(c *container.Container) *chi.Mux {
 			r.Patch("/{id}", c.ProductHandler.Update)
 			r.Delete("/{id}", c.ProductHandler.DeleteById)
 		})
+
+		r.Route("/inboundOrders", func(rt chi.Router) {
+			rt.Get("/", c.InboundOrderHandler.GetInboundOrdersReport())
+		})
+
 	})
 
 	return router

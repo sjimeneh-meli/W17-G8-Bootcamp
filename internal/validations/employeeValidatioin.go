@@ -9,6 +9,10 @@ import (
 type EmployeeValidation struct {
 }
 
+func GetEmployeeValidation() *EmployeeValidation {
+	return &EmployeeValidation{}
+}
+
 func ValidateEmployeeRequestStruct(r requests.EmployeeRequest) error {
 	return validation.ValidateStruct(&r,
 		validation.Field(&r.CardNumberID, validation.Required),

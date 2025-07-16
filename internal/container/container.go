@@ -15,13 +15,14 @@ import (
 )
 
 type Container struct {
-	EmployeeHandler  handlers.EmployeeHandlerI
-	BuyerHandler     handlers.BuyerHandlerI
-	WarehouseHandler *handlers.WarehouseHandler
-	SellerHandler    *handlers.SellerHandler
-	SectionHandler   handlers.SectionHandlerI
-	ProductHandler   *handlers.ProductHandler
-	StorageDB        *sql.DB
+	EmployeeHandler     handlers.EmployeeHandlerI
+	BuyerHandler        handlers.BuyerHandlerI
+	WarehouseHandler    *handlers.WarehouseHandler
+	SellerHandler       *handlers.SellerHandler
+	SectionHandler      handlers.SectionHandlerI
+	ProductHandler      *handlers.ProductHandler
+	InboundOrderHandler handlers.InboundOrderHandlerI
+	StorageDB           *sql.DB
 }
 
 // Strategy para manejo de errores
@@ -59,6 +60,7 @@ func NewContainer(storeDB *sql.DB) (*Container, error) {
 		{"seller handler", container.initializeSellerHandler},
 		{"section handler", container.initializeSectionHandler},
 		{"product handler", container.initializeProductHandler},
+		{"inbound order handler", container.initializeInboundOrderHandler},
 	}
 
 	if err := errorHandler.Execute(tasks); err != nil {
@@ -69,11 +71,7 @@ func NewContainer(storeDB *sql.DB) (*Container, error) {
 }
 
 func (c *Container) initializeEmployeeHandler() error {
-	employeeLoader := loader.NewJSONStorage[models.Employee](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "employees.json"))
-	employeeRepository, err := repositories.GetEmployeeRepository(employeeLoader)
-	if err != nil {
-		return err
-	}
+	employeeRepository := repositories.GetNewEmployeeMySQLRepository(c.StorageDB)
 	employeeService := services.GetEmployeeService(employeeRepository)
 	employeeValidation := validations.GetEmployeeValidation()
 	c.EmployeeHandler = handlers.GetEmployeeHandler(employeeService, employeeValidation)
@@ -129,5 +127,12 @@ func (c *Container) initializeProductHandler() error {
 	ps := seeders.NewSeeder(service)
 	ps.LoadAllData()
 
+	return nil
+}
+func (c *Container) initializeInboundOrderHandler() error {
+	inboundOrderRepository := repositories.GetNewInboundOrderMySQLRepository(c.StorageDB)
+	employeeRepository := repositories.GetNewEmployeeMySQLRepository(c.StorageDB)
+	inboundOrderService := services.GetInboundOrdersService(inboundOrderRepository, employeeRepository)
+	c.InboundOrderHandler = handlers.GetInboundOrderHandler(inboundOrderService)
 	return nil
 }
