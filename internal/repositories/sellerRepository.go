@@ -1,9 +1,9 @@
 package repositories
 
 import (
+	"database/sql"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/error_message"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
-	"github.com/sajimenezher_meli/meli-frescos-8/pkg/loader"
 )
 
 type SellerRepository interface {
@@ -13,117 +13,109 @@ type SellerRepository interface {
 	Delete(id int) error
 }
 
-type JsonSellerRepository struct {
-	storage loader.Storage[models.Seller]
+type SQLSellerRepository struct {
+	db *sql.DB
 }
 
-func NewJSONSellerRepository(storage loader.Storage[models.Seller]) *JsonSellerRepository {
-
-	return &JsonSellerRepository{
-		storage: storage,
-	}
+func NewSQLSellerRepository(db *sql.DB) *SQLSellerRepository {
+	return &SQLSellerRepository{db: db}
 }
 
-func (r *JsonSellerRepository) GetAll() ([]models.Seller, error) {
-	data, err := r.storage.ReadAll()
-
+func (r *SQLSellerRepository) GetAll() ([]models.Seller, error) {
+	rows, err := r.db.Query("SELECT id, cid, company_name, address, telephone, locality_id FROM sellers")
 	if err != nil {
 		return nil, err
 	}
-	itemSlice := r.storage.MapToSlice(data)
+	defer rows.Close()
 
-	return itemSlice, err
+	var sellers []models.Seller
+	for rows.Next() {
+		var s models.Seller
+		if err := rows.Scan(&s.Id, &s.CID, &s.CompanyName, &s.Address, &s.Telephone, &s.LocalityID); err != nil {
+			return nil, err
+		}
+		sellers = append(sellers, s)
+	}
+	return sellers, nil
 }
 
-func (r *JsonSellerRepository) Save(seller models.Seller) ([]models.Seller, error) {
-	sellers, err := r.storage.ReadAll()
+func (r *SQLSellerRepository) Save(seller models.Seller) ([]models.Seller, error) {
+	// Validar que no exista otro con el mismo CID
+	var exists bool
+	err := r.db.QueryRow("SELECT EXISTS(SELECT 1 FROM sellers WHERE cid = ?)", seller.CID).Scan(&exists)
 	if err != nil {
-		return []models.Seller{}, err
+		return nil, err
 	}
-	var id int
-	for _, value := range sellers {
-		if value.Id > id {
-			id = value.Id
-		}
-		if value.CID == seller.CID {
-			return []models.Seller{}, error_message.ErrAlreadyExists
-		}
+	if exists {
+		return nil, error_message.ErrAlreadyExists
 	}
-	seller.Id = id + 1
-	sellers[seller.Id] = seller
 
-	itemSlice := r.storage.MapToSlice(sellers)
-
-	err = r.storage.WriteAll(itemSlice)
-
+	res, err := r.db.Exec("INSERT INTO sellers (cid, company_name, address, telephone, locality_id) VALUES (?, ?, ?, ?, ?)",
+		seller.CID, seller.CompanyName, seller.Address, seller.Telephone, seller.LocalityID)
 	if err != nil {
-		return []models.Seller{}, err
+		return nil, err
 	}
 
+	lastID, err := res.LastInsertId()
+	if err != nil {
+		return nil, err
+	}
+	seller.Id = int(lastID)
 	return []models.Seller{seller}, nil
 }
 
-func (r *JsonSellerRepository) Update(id int, seller models.Seller) ([]models.Seller, error) {
-	sellers, err := r.storage.ReadAll()
+func (r *SQLSellerRepository) Update(id int, seller models.Seller) ([]models.Seller, error) {
+	var existing models.Seller
+	err := r.db.QueryRow("SELECT id, cid, company_name, address, telephone, locality_id FROM sellers WHERE id = ?", id).
+		Scan(&existing.Id, &existing.CID, &existing.CompanyName, &existing.Address, &existing.Telephone, &existing.LocalityID)
+
+	if err == sql.ErrNoRows {
+		return nil, error_message.ErrNotFound
+	}
 	if err != nil {
 		return nil, err
 	}
-	_, ok := sellers[id]
 
-	if !ok {
-		return []models.Seller{}, error_message.ErrNotFound
-	}
-
-	existingSeller := sellers[id]
-
+	// Solo actualiza los campos no vacíos
 	if seller.CID != "" {
-		existingSeller.CID = seller.CID
+		existing.CID = seller.CID
 	}
 	if seller.CompanyName != "" {
-		existingSeller.CompanyName = seller.CompanyName
+		existing.CompanyName = seller.CompanyName
 	}
 	if seller.Address != "" {
-		existingSeller.Address = seller.Address
+		existing.Address = seller.Address
 	}
 	if seller.Telephone != "" {
-		existingSeller.Telephone = seller.Telephone
+		existing.Telephone = seller.Telephone
 	}
 
-	sellers[id] = existingSeller
+	if seller.LocalityID != 0 {
+		existing.LocalityID = seller.LocalityID
+	}
 
-	itemSlice := r.storage.MapToSlice(sellers)
-
-	err = r.storage.WriteAll(itemSlice)
+	_, err = r.db.Exec("UPDATE sellers SET cid = ?, company_name = ?, address = ?, telephone = ?, locality_id = ? WHERE id = ?",
+		existing.CID, existing.CompanyName, existing.Address, existing.Telephone, existing.LocalityID, id)
 
 	if err != nil {
-		return []models.Seller{}, err
+		return nil, err
 	}
 
-	return []models.Seller{existingSeller}, nil
-
+	return []models.Seller{existing}, nil
 }
 
-func (r *JsonSellerRepository) Delete(id int) error {
-	sellers, err := r.storage.ReadAll()
+func (r *SQLSellerRepository) Delete(id int) error {
+	res, err := r.db.Exec("DELETE FROM sellers WHERE id = ?", id)
 	if err != nil {
 		return err
 	}
 
-	_, ok := sellers[id]
-
-	if !ok {
+	count, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if count == 0 {
 		return error_message.ErrNotFound
 	}
-
-	delete(sellers, id)
-
-	itemSlice := r.storage.MapToSlice(sellers)
-
-	errWrite := r.storage.WriteAll(itemSlice)
-
-	if errWrite != nil {
-		return errWrite
-	}
-
 	return nil
 }

@@ -24,6 +24,7 @@ func ToRequest(warehouseRequest requests.WarehouseRequest) models.Warehouse {
 		WareHouseCode:      warehouseRequest.WareHouseCode,
 		MinimumCapacity:    warehouseRequest.MinimumCapacity,
 		MinimumTemperature: warehouseRequest.MinimumTemperature,
+		LocalityId:         warehouseRequest.LocalityId,
 	}
 }
 
