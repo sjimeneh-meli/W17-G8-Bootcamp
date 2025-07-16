@@ -48,8 +48,7 @@ func NewProductRecordHandler(service services.ProductRecordServiceI) ProductReco
 func (prh *productRecordHandler) Create(w http.ResponseWriter, r *http.Request) {
 	// CONTEXT MANAGEMENT: Create context with timeout for request processing
 	// GESTIÓN DE CONTEXTO: Crear contexto con timeout para procesamiento de peticiones
-	parentCtx := context.Background()
-	ctx, cancel := context.WithTimeout(parentCtx, 2*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
 	defer cancel() // Ensure context is cancelled to prevent resource leaks / Asegurar que el contexto se cancele para prevenir fugas de recursos
 
 	var productRecordRequest requests.ProductRecordRequest
@@ -103,9 +102,8 @@ func (prh *productRecordHandler) Create(w http.ResponseWriter, r *http.Request) 
 func (prh *productRecordHandler) GetReport(w http.ResponseWriter, r *http.Request) {
 	// CONTEXT MANAGEMENT: Create context with longer timeout for report generation
 	// GESTIÓN DE CONTEXTO: Crear contexto con timeout más largo para generación de reportes
-	parentCtx := context.Background()
-	ctx, cancel := context.WithTimeout(parentCtx, 5*time.Second)
-	defer cancel() // Ensure context cleanup / Asegurar limpieza del contexto
+	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+	defer cancel() // Ensure context is cancelled to prevent resource leaks / Asegurar que el contexto se cancele para prevenir fugas de recursos
 
 	// URL PARAMETER EXTRACTION: Extract and validate ID parameter from query string
 	// EXTRACCIÓN DE PARÁMETROS URL: Extraer y validar parámetro ID del query string

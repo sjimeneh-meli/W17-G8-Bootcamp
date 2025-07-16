@@ -1,9 +1,9 @@
 package requests
 
-type SellerRequest struct {
-	CID         string `json:"cid"`
+type CarryRequest struct {
+	Cid         string `json:"cid"`
 	CompanyName string `json:"company_name"`
 	Address     string `json:"address"`
 	Telephone   string `json:"telephone"`
-	LocalityID  int    `json:"locality_id"`
+	LocalityId  int    `json:"locality_id"`
 }

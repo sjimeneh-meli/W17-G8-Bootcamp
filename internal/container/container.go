@@ -26,6 +26,8 @@ type Container struct {
 	ProductHandler       *handlers.ProductHandler
 	PurchaseOrderHandler handlers.PurchaseOrderHandlerI
 	ProductRecordHandler handlers.ProductRecordHandlerI
+	LocalityHandler      *handlers.LocalityHandler
+	CarryHandler         *handlers.CarryHandler
 	StorageDB            *sql.DB
 }
 
@@ -67,6 +69,8 @@ func NewContainer(storeDB *sql.DB) (*Container, error) {
 		{"productBatch handler", container.initializeProductBatchHandler},
 		{"purchase order handler", container.initializePurchaseOrderHandler},
 		{"product record handler", container.initializeProductRecordHandler},
+		{"locality handler", container.initializeLocalityHandler},
+		{"carry handler", container.initializeCarryHandler},
 	}
 
 	if err := errorHandler.Execute(tasks); err != nil {
@@ -96,18 +100,22 @@ func (c *Container) initializeBuyerHandler() error {
 }
 
 func (c *Container) initializeWarehouseHandler() error {
-	warehouseStorage := loader.NewJSONStorage[models.Warehouse](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "warehouse.json"))
-	repository := repositories.NewWarehouseRepository(*warehouseStorage)
+	repository := repositories.NewWarehouseRepository(c.StorageDB)
 	service := services.NewWarehouseService(repository)
 	c.WarehouseHandler = handlers.NewWarehouseHandler(service)
 	return nil
 }
 
 func (c *Container) initializeSellerHandler() error {
-	sellerStorage := loader.NewJSONStorage[models.Seller](fmt.Sprintf("%s/%s", "docs/database", "sellers.json"))
-	sellerRepo := repositories.NewJSONSellerRepository(sellerStorage)
+	sellerRepo := repositories.NewSQLSellerRepository(c.StorageDB)
 	sellerService := services.NewJSONSellerService(sellerRepo)
 	c.SellerHandler = handlers.NewSellerHandler(sellerService)
+	return nil
+}
+func (c *Container) initializeLocalityHandler() error {
+	localityRepo := repositories.NewSQLLocalityRepository(c.StorageDB)
+	localityService := services.NewSQLLocalityService(localityRepo)
+	c.LocalityHandler = handlers.NewLocalityHandler(localityService)
 	return nil
 }
 
@@ -160,5 +168,12 @@ func (c *Container) initializePurchaseOrderHandler() error {
 
 	purchaseOrderService := services.GetPurchaseOrderService(purchaseOrderRepository, buyerRepository, productRecordsRepository)
 	c.PurchaseOrderHandler = handlers.GetPurchaseOrderHandler(purchaseOrderService)
+	return nil
+}
+func (c *Container) initializeCarryHandler() error {
+	carryRepo := repositories.NewCarryRepository(c.StorageDB)
+	localityRepo := repositories.NewSQLLocalityRepository(c.StorageDB)
+	carryService := services.NewCarryService(carryRepo, localityRepo)
+	c.CarryHandler = handlers.NewCarryHandler(carryService)
 	return nil
 }
