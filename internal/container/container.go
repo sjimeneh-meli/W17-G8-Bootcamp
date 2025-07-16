@@ -25,6 +25,7 @@ type Container struct {
 	ProductRecordHandler handlers.ProductRecordHandlerI
 	LocalityHandler      *handlers.LocalityHandler
 	CarryHandler         *handlers.CarryHandler
+	InboundOrderHandler  handlers.InboundOrderHandlerI
 	StorageDB            *sql.DB
 }
 
@@ -67,6 +68,7 @@ func NewContainer(storeDB *sql.DB) (*Container, error) {
 		{"product record handler", container.initializeProductRecordHandler},
 		{"locality handler", container.initializeLocalityHandler},
 		{"carry handler", container.initializeCarryHandler},
+		{"inbound order handler", container.initializeInboundOrderHandler},
 	}
 
 	if err := errorHandler.Execute(tasks); err != nil {
@@ -77,11 +79,7 @@ func NewContainer(storeDB *sql.DB) (*Container, error) {
 }
 
 func (c *Container) initializeEmployeeHandler() error {
-	employeeLoader := loader.NewJSONStorage[models.Employee](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "employees.json"))
-	employeeRepository, err := repositories.GetEmployeeRepository(employeeLoader)
-	if err != nil {
-		return err
-	}
+	employeeRepository := repositories.GetNewEmployeeMySQLRepository(c.StorageDB)
 	employeeService := services.GetEmployeeService(employeeRepository)
 	employeeValidation := validations.GetEmployeeValidation()
 	c.EmployeeHandler = handlers.GetEmployeeHandler(employeeService, employeeValidation)
@@ -164,5 +162,12 @@ func (c *Container) initializeCarryHandler() error {
 	localityRepo := repositories.NewSQLLocalityRepository(c.StorageDB)
 	carryService := services.NewCarryService(carryRepo, localityRepo)
 	c.CarryHandler = handlers.NewCarryHandler(carryService)
+	return nil
+}
+func (c *Container) initializeInboundOrderHandler() error {
+	inboundOrderRepository := repositories.GetNewInboundOrderMySQLRepository(c.StorageDB)
+	employeeRepository := repositories.GetNewEmployeeMySQLRepository(c.StorageDB)
+	inboundOrderService := services.GetInboundOrdersService(inboundOrderRepository, employeeRepository)
+	c.InboundOrderHandler = handlers.GetInboundOrderHandler(inboundOrderService)
 	return nil
 }
