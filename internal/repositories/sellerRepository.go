@@ -50,6 +50,16 @@ func (r *SQLSellerRepository) Save(seller models.Seller) ([]models.Seller, error
 		return nil, error_message.ErrAlreadyExists
 	}
 
+	// Validar que el locality existe
+	var existsLocality bool
+	err = r.db.QueryRow("SELECT EXISTS(SELECT 1 FROM localities WHERE id = ?)", seller.LocalityID).Scan(&existsLocality)
+	if err != nil {
+		return nil, err
+	}
+	if !existsLocality {
+		return nil, error_message.ErrDependencyNotFound
+	}
+
 	res, err := r.db.Exec("INSERT INTO sellers (cid, company_name, address, telephone, locality_id) VALUES (?, ?, ?, ?, ?)",
 		seller.CID, seller.CompanyName, seller.Address, seller.Telephone, seller.LocalityID)
 	if err != nil {
