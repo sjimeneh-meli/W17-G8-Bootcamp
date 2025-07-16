@@ -3,16 +3,23 @@ package services
 import (
 	"context"
 	"fmt"
+	"slices"
+
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/error_message"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/repositories"
-	"slices"
 )
 
+var employeeServiceInstance EmployeeServiceI
+
 func GetEmployeeService(repository repositories.EmployeeRepositoryI) EmployeeServiceI {
-	return &EmployeeService{
+	if employeeServiceInstance != nil {
+		return employeeServiceInstance
+	}
+	employeeServiceInstance = &EmployeeService{
 		repository: repository,
 	}
+	return employeeServiceInstance
 }
 
 type EmployeeServiceI interface {

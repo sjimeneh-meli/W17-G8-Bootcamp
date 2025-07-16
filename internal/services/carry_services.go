@@ -10,6 +10,16 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/repositories"
 )
 
+var carryServiceInstance CarryService
+
+func NewCarryService(r repositories.CarryRepository, lr repositories.LocalityRepository) CarryService {
+	if carryServiceInstance != nil {
+		return carryServiceInstance
+	}
+	carryServiceInstance = &CarryServiceImpl{carryRepository: r, localityRepository: lr}
+	return carryServiceInstance
+}
+
 type CarryService interface {
 	CreateCarry(ctx context.Context, carry models.Carry) (models.Carry, error)
 	GetCarryReportByLocality(ctx context.Context, localityID int) ([]responses.LocalityCarryReport, error)
@@ -18,10 +28,6 @@ type CarryService interface {
 type CarryServiceImpl struct {
 	carryRepository    repositories.CarryRepository
 	localityRepository repositories.LocalityRepository
-}
-
-func NewCarryService(r repositories.CarryRepository, lr repositories.LocalityRepository) *CarryServiceImpl {
-	return &CarryServiceImpl{carryRepository: r, localityRepository: lr}
 }
 
 // Falta validar que locality id exista en la base de datos

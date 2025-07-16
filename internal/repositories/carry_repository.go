@@ -32,6 +32,17 @@ var (
 	queryGetAllCarryReports        = "SELECT l.id, l.locality_name, COUNT(c.id) AS carriers_count FROM localities l LEFT JOIN carriers c ON l.id = c.locality_id GROUP BY l.id"
 )
 
+var carryRepositoryInstance CarryRepository
+
+func NewCarryRepository(db *sql.DB) CarryRepository {
+	if carryRepositoryInstance != nil {
+		return carryRepositoryInstance
+	}
+
+	carryRepositoryInstance = &CarryRepositoryImpl{db: db}
+	return carryRepositoryInstance
+}
+
 type CarryRepository interface {
 	Create(ctx context.Context, carry models.Carry) (models.Carry, error)
 	ExistsByCid(ctx context.Context, cid string) (bool, error)
@@ -40,10 +51,6 @@ type CarryRepository interface {
 
 type CarryRepositoryImpl struct {
 	db *sql.DB
-}
-
-func NewCarryRepository(db *sql.DB) *CarryRepositoryImpl {
-	return &CarryRepositoryImpl{db: db}
 }
 
 func (r *CarryRepositoryImpl) Create(ctx context.Context, carry models.Carry) (models.Carry, error) {

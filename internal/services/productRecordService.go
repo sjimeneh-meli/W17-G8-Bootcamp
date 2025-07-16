@@ -9,6 +9,18 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/repositories"
 )
 
+var productRecordServiceInstance ProductRecordServiceI
+
+// NewProductRecordService - Función constructora que crea una nueva instancia del servicio con inyección de dependencias
+// NewProductRecordService - Constructor function that creates a new service instance with dependency injection
+func NewProductRecordService(repository repositories.IProductRecordRepository, ProductService ProductService) ProductRecordServiceI {
+	if productRecordServiceInstance != nil {
+		return productRecordServiceInstance
+	}
+	productRecordServiceInstance = &productRecordService{Repository: repository, ProductService: ProductService}
+	return productRecordServiceInstance
+}
+
 // ProductRecordServiceI - Interfaz que define el contrato para la lógica de negocio de registros de productos
 // ProductRecordServiceI - Interface defining the contract for product record business logic
 type ProductRecordServiceI interface {
@@ -34,12 +46,6 @@ type ProductRecordServiceI interface {
 type productRecordService struct {
 	Repository     repositories.IProductRecordRepository // Dependencia del repositorio para acceso a datos / Repository dependency for data access
 	ProductService ProductService                        // Dependencia del servicio de productos para validaciones / Product service dependency for validations
-}
-
-// NewProductRecordService - Función constructora que crea una nueva instancia del servicio con inyección de dependencias
-// NewProductRecordService - Constructor function that creates a new service instance with dependency injection
-func NewProductRecordService(repository repositories.IProductRecordRepository, ProductService ProductService) ProductRecordServiceI {
-	return &productRecordService{Repository: repository, ProductService: ProductService}
 }
 
 // CreateProductRecord - Lógica de negocio para crear registros de productos con validación

@@ -4,14 +4,11 @@ package container
 import (
 	"database/sql"
 	"fmt"
-	"os"
 
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers"
-	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/repositories"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/services"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/validations"
-	"github.com/sajimenezher_meli/meli-frescos-8/pkg/loader"
 )
 
 type Container struct {
@@ -20,6 +17,7 @@ type Container struct {
 	WarehouseHandler     *handlers.WarehouseHandler
 	SellerHandler        *handlers.SellerHandler
 	SectionHandler       handlers.SectionHandlerI
+	ProductBatchHandler  handlers.ProductBatchHandlerI
 	ProductHandler       *handlers.ProductHandler
 	PurchaseOrderHandler handlers.PurchaseOrderHandlerI
 	ProductRecordHandler handlers.ProductRecordHandlerI
@@ -64,6 +62,7 @@ func NewContainer(storeDB *sql.DB) (*Container, error) {
 		{"seller handler", container.initializeSellerHandler},
 		{"section handler", container.initializeSectionHandler},
 		{"product handler", container.initializeProductHandler},
+		{"productBatch handler", container.initializeProductBatchHandler},
 		{"purchase order handler", container.initializePurchaseOrderHandler},
 		{"product record handler", container.initializeProductRecordHandler},
 		{"locality handler", container.initializeLocalityHandler},
@@ -114,14 +113,13 @@ func (c *Container) initializeLocalityHandler() error {
 }
 
 func (c *Container) initializeSectionHandler() error {
-	sectionLoader := loader.NewJSONStorage[models.Section](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "sections.json"))
-	sectionRepository, err := repositories.GetSectionRepository(sectionLoader)
-	if err != nil {
-		return err
-	}
+	warehouseRepository := repositories.NewWarehouseRepository(c.StorageDB)
+	warehouseService := services.NewWarehouseService(warehouseRepository)
+
+	sectionRepository := repositories.GetSectionRepository(c.StorageDB)
 	sectionService := services.GetSectionService(sectionRepository)
 	sectionValidation := validations.GetSectionValidation()
-	c.SectionHandler = handlers.GetSectionHandler(sectionService, sectionValidation)
+	c.SectionHandler = handlers.GetSectionHandler(sectionService, warehouseService, sectionValidation)
 	return nil
 }
 
@@ -145,6 +143,20 @@ func (c *Container) initializeProductRecordHandler() error {
 
 	c.ProductRecordHandler = productRecordHandler
 
+	return nil
+}
+
+func (c *Container) initializeProductBatchHandler() error {
+	sectionRepository := repositories.GetSectionRepository(c.StorageDB)
+	sectionService := services.GetSectionService(sectionRepository)
+
+	productRepository := repositories.NewProductRepository(c.StorageDB)
+	productService := services.NewProductService(productRepository)
+
+	productBatchRepository := repositories.GetProductBatchRepository(c.StorageDB)
+	productBatchService := services.GetProductBatchService(productBatchRepository)
+	productBatchValidation := validations.GetProductBatchValidation()
+	c.ProductBatchHandler = handlers.GetProductBatchHandler(productBatchService, sectionService, productService, *productBatchValidation)
 	return nil
 }
 

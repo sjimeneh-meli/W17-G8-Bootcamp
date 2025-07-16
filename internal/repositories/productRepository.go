@@ -37,6 +37,21 @@ const (
 	queryExistProductCode = "SELECT 1 FROM products WHERE product_code = ? LIMIT 1"
 )
 
+var productRepositoryInstance ProductRepository
+
+// NewProductRepository crea una nueva instancia del repositorio de productos
+// NewProductRepository creates a new instance of the product repository
+func NewProductRepository(db *sql.DB) ProductRepository {
+	if productRepositoryInstance != nil {
+		return productRepositoryInstance
+	}
+
+	productRepositoryInstance = &service{
+		db: db,
+	}
+	return productRepositoryInstance
+}
+
 // ProductRepository define la interfaz para operaciones de productos en la base de datos
 // ProductRepository defines the interface for product database operations
 type ProductRepository interface {
@@ -77,14 +92,6 @@ type ProductRepository interface {
 // service implements the ProductRepository interface
 type service struct {
 	db *sql.DB
-}
-
-// NewProductRepository crea una nueva instancia del repositorio de productos
-// NewProductRepository creates a new instance of the product repository
-func NewProductRepository(db *sql.DB) ProductRepository {
-	return &service{
-		db: db,
-	}
 }
 
 // GetAll obtiene todos los productos de la base de datos

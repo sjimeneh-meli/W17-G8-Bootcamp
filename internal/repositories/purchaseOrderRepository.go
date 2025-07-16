@@ -10,6 +10,20 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 )
 
+var purchaseOrderRepositoryInstance PurchaseOrderRepositoryI
+
+// GetNewPurchaseOrderMySQLRepository creates and returns a new instance of MySqlPurchaseOrderRepository
+func GetNewPurchaseOrderMySQLRepository(db *sql.DB) PurchaseOrderRepositoryI {
+	if purchaseOrderRepositoryInstance != nil {
+		return purchaseOrderRepositoryInstance
+	}
+
+	purchaseOrderRepositoryInstance = &MySqlPurchaseOrderRepository{
+		db: db,
+	}
+	return purchaseOrderRepositoryInstance
+}
+
 // PurchaseOrderRepositoryI defines the interface for purchase order repository operations
 type PurchaseOrderRepositoryI interface {
 	GetAll(ctx context.Context) (map[int]models.PurchaseOrder, error)
@@ -22,13 +36,6 @@ type PurchaseOrderRepositoryI interface {
 // MySqlPurchaseOrderRepository implements PurchaseOrderRepositoryI for MySQL database
 type MySqlPurchaseOrderRepository struct {
 	db *sql.DB
-}
-
-// GetNewPurchaseOrderMySQLRepository creates and returns a new instance of MySqlPurchaseOrderRepository
-func GetNewPurchaseOrderMySQLRepository(db *sql.DB) PurchaseOrderRepositoryI {
-	return &MySqlPurchaseOrderRepository{
-		db: db,
-	}
 }
 
 // GetAll retrieves all purchase orders from the database and returns them as a map with order ID as key

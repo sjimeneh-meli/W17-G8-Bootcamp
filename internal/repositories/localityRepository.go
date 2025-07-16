@@ -10,6 +10,17 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 )
 
+var localityRepositoryInstance LocalityRepository
+
+func NewSQLLocalityRepository(db *sql.DB) LocalityRepository {
+	if localityRepositoryInstance != nil {
+		return localityRepositoryInstance
+	}
+
+	localityRepositoryInstance = &SQLLocalityRepository{db: db}
+	return localityRepositoryInstance
+}
+
 type LocalityRepository interface {
 	Save(ctx context.Context, locality models.Locality) (models.Locality, error)
 	GetSellerReports(ctx context.Context, localityID int) ([]responses.LocalitySellerReport, error)
@@ -17,10 +28,6 @@ type LocalityRepository interface {
 }
 type SQLLocalityRepository struct {
 	db *sql.DB
-}
-
-func NewSQLLocalityRepository(db *sql.DB) *SQLLocalityRepository {
-	return &SQLLocalityRepository{db: db}
 }
 
 func (r *SQLLocalityRepository) Save(ctx context.Context, locality models.Locality) (models.Locality, error) {

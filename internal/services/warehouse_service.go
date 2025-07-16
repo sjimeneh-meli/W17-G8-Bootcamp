@@ -9,6 +9,16 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/repositories"
 )
 
+var warehouseServiceInstance WarehouseService
+
+func NewWarehouseService(warehouseRepository repositories.WarehouseRepository) WarehouseService {
+	if warehouseServiceInstance != nil {
+		return warehouseServiceInstance
+	}
+	warehouseServiceInstance = &WarehouseServiceImpl{warehouseRepository: warehouseRepository}
+	return warehouseServiceInstance
+}
+
 type WarehouseService interface {
 	GetAll(ctx context.Context) ([]models.Warehouse, error)
 	Create(ctx context.Context, warehouse models.Warehouse) (models.Warehouse, error)
@@ -20,10 +30,6 @@ type WarehouseService interface {
 
 type WarehouseServiceImpl struct {
 	warehouseRepository repositories.WarehouseRepository
-}
-
-func NewWarehouseService(warehouseRepository repositories.WarehouseRepository) *WarehouseServiceImpl {
-	return &WarehouseServiceImpl{warehouseRepository: warehouseRepository}
 }
 
 func (s *WarehouseServiceImpl) GetAll(ctx context.Context) ([]models.Warehouse, error) {
