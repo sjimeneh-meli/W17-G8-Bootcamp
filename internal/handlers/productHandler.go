@@ -1,10 +1,12 @@
 package handlers
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
+	"time" // Import the time package
 
 	"github.com/bootcamp-go/web/request"
 	"github.com/bootcamp-go/web/response"
@@ -17,227 +19,257 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/validations"
 )
 
-// ProductHandler handles HTTP requests for product operations.
-// It acts as a bridge between HTTP requests and business logic services.
-//
-// ProductHandler maneja las peticiones HTTP para operaciones de productos.
-// Actúa como un puente entre las peticiones HTTP y los servicios de lógica de negocio.
+// ProductHandler maneja las solicitudes HTTP relacionadas con productos
+// ProductHandler handles HTTP requests related to products
 type ProductHandler struct {
-	service services.ProductServiceI
+	service services.ProductService // Dependencia del servicio de productos / Product service dependency
 }
 
-// NewProductHandler creates a new product handler instance with the provided service.
-// It follows the dependency injection pattern for better testability and modularity.
-//
-// NewProductHandler crea una nueva instancia del manejador de productos con el servicio proporcionado.
-// Sigue el patrón de inyección de dependencias para mejor testabilidad y modularidad.
-func NewProductHandler(service services.ProductServiceI) *ProductHandler {
+// NewProductHandler crea una nueva instancia del handler de productos con inyección de dependencias
+// NewProductHandler creates a new instance of the product handler with dependency injection
+func NewProductHandler(service services.ProductService) *ProductHandler {
 	return &ProductHandler{
 		service: service,
 	}
 }
 
-// GetAll retrieves all products from the system.
-// Returns 200 OK with products data or appropriate error status codes.
-//
-// GetAll obtiene todos los productos del sistema.
-// Retorna 200 OK con los datos de productos o códigos de estado de error apropiados.
+// GetAll maneja las solicitudes GET para obtener todos los productos
+// GetAll handles GET requests to retrieve all products
 func (ph *ProductHandler) GetAll(w http.ResponseWriter, r *http.Request) {
-	products, err := ph.service.GetAll()
+	// Establece timeout de 3 segundos para la operación
+	// Set a 3-second timeout for the operation
+	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+	defer cancel()
 
+	// Obtiene todos los productos del servicio
+	// Get all products from the service
+	products, err := ph.service.GetAll(ctx)
 	if err != nil {
-		// Handle not found case / Manejar caso de no encontrado
-		if errors.Is(err, error_message.ErrNotFound) {
-			response.Error(w, http.StatusNotFound, err.Error())
+		// Manejo de timeout
+		// Handle timeout
+		if errors.Is(err, context.DeadlineExceeded) {
+			response.Error(w, http.StatusGatewayTimeout, "the request took too long to process")
 			return
 		}
-		// Handle internal server errors / Manejar errores internos del servidor
+		// Manejo de errores generales
+		// Handle general errors
 		response.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
+	// Respuesta exitosa con los productos
+	// Successful response with products
 	response.JSON(w, http.StatusOK, responses.DataResponse{Data: products})
 }
 
-// Save creates a new product in the system.
-// Validates the request payload and returns 201 Created on success.
-// Returns 400 Bad Request for validation errors or 409 Conflict if product already exists.
-//
-// Save crea un nuevo producto en el sistema.
-// Valida la carga útil de la petición y retorna 201 Created en caso de éxito.
-// Retorna 400 Bad Request para errores de validación o 409 Conflict si el producto ya existe.
-func (ph *ProductHandler) Save(w http.ResponseWriter, r *http.Request) {
+// Create maneja las solicitudes POST para crear un nuevo producto
+// Create handles POST requests to create a new product
+func (ph *ProductHandler) Create(w http.ResponseWriter, r *http.Request) {
+	// Establece timeout de 3 segundos para la operación
+	// Set a 3-second timeout for the operation
+	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+	defer cancel()
+
+	// Decodifica el JSON del request
+	// Decode JSON from request
 	var productRequest requests.ProductRequest
-
-	// Parse JSON request body / Parsear el cuerpo de la petición JSON
-	err := request.JSON(r, &productRequest)
-
-	if err != nil {
-		response.Error(w, http.StatusBadRequest, err.Error())
+	if err := request.JSON(r, &productRequest); err != nil {
+		response.Error(w, http.StatusBadRequest, "Invalid request payload: "+err.Error())
 		return
 	}
 
-	// Validate request data / Validar datos de la petición
+	// Valida la estructura del request
+	// Validate request structure
 	validation := validations.GetProductValidation()
-
-	err = validation.ValidateProductRequestStruct(productRequest)
-
-	if err != nil {
-		response.Error(w, http.StatusBadRequest, err.Error())
+	if err := validation.ValidateProductRequestStruct(productRequest); err != nil {
+		response.Error(w, http.StatusUnprocessableEntity, err.Error())
 		return
 	}
 
-	// Map request to domain model / Mapear petición a modelo de dominio
+	// Mapea el request a modelo de dominio
+	// Map request to domain model
 	product := mappers.GetProductFromRequest(productRequest)
 
-	// Create product through service layer / Crear producto a través de la capa de servicio
-	newProduct, err := ph.service.Create(product)
-
+	// Crea el producto a través del servicio
+	// Create product through service
+	newProduct, err := ph.service.Create(ctx, product)
 	if err != nil {
-		// Handle duplicate product case / Manejar caso de producto duplicado
+		// Manejo de timeout
+		// Handle timeout
+		if errors.Is(err, context.DeadlineExceeded) {
+			response.Error(w, http.StatusGatewayTimeout, "the request took too long to process")
+			return
+		}
+		// Manejo de conflictos (producto ya existe)
+		// Handle conflicts (product already exists)
 		if errors.Is(err, error_message.ErrAlreadyExists) {
 			response.Error(w, http.StatusConflict, err.Error())
 			return
 		}
+		// Manejo de errores generales
+		// Handle general errors
 		response.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	// Map domain model to response / Mapear modelo de dominio a respuesta
+	// Mapea el modelo a response y retorna
+	// Map model to response and return
 	productResponse := mappers.GetProductResponseFromModel(&newProduct)
-
 	response.JSON(w, http.StatusCreated, responses.DataResponse{Data: productResponse})
-
 }
 
-// GetById retrieves a specific product by its ID.
-// Validates the ID parameter and returns 200 OK with product data or 404 Not Found.
-//
-// GetById obtiene un producto específico por su ID.
-// Valida el parámetro ID y retorna 200 OK con los datos del producto o 404 Not Found.
-func (ph *ProductHandler) GetById(w http.ResponseWriter, r *http.Request) {
+// Get maneja las solicitudes GET para obtener un producto específico por ID
+// Get handles GET requests to retrieve a specific product by ID
+func (ph *ProductHandler) Get(w http.ResponseWriter, r *http.Request) {
+	// Establece timeout de 3 segundos para la operación
+	// Set a 3-second timeout for the operation
+	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+	defer cancel()
 
-	// Extract and validate ID from URL path / Extraer y validar ID de la ruta URL
-	idString := strings.TrimSpace(chi.URLParam(r, "id"))
-
-	if idString == "" {
-		response.Error(w, http.StatusBadRequest, "error: id is required")
-		return
-	}
-
-	// Convert ID to integer / Convertir ID a entero
-	idInt, err := strconv.Atoi(idString)
-
-	if err != nil {
-		response.Error(w, http.StatusBadRequest, "error: id is not a number")
-		return
-	}
-
-	// Retrieve product from service / Obtener producto del servicio
-	product, err := ph.service.GetByID(idInt)
-
-	if err != nil {
-		if errors.Is(err, error_message.ErrNotFound) {
-			response.Error(w, http.StatusNotFound, err.Error())
-			return
-		}
-
-		response.Error(w, http.StatusInternalServerError, err.Error())
-		return
-
-	}
-
-	// Map to response format / Mapear a formato de respuesta
-	productResponse := mappers.GetProductResponseFromModel(product)
-
-	response.JSON(w, http.StatusOK, responses.DataResponse{Data: productResponse})
-
-}
-
-// Update modifies an existing product by its ID.
-// Validates the ID parameter and request payload, returns 200 OK on success.
-//
-// Update modifica un producto existente por su ID.
-// Valida el parámetro ID y la carga útil de la petición, retorna 200 OK en caso de éxito.
-func (ph *ProductHandler) Update(w http.ResponseWriter, r *http.Request) {
-	// Extract and validate ID from URL path / Extraer y validar ID de la ruta URL
-	idString := strings.TrimSpace(chi.URLParam(r, "id"))
-
-	if idString == "" {
-		response.Error(w, http.StatusBadRequest, "id is required")
-		return
-	}
-
-	idInt, err := strconv.Atoi(idString)
-
-	if err != nil {
-		response.Error(w, http.StatusBadRequest, "id is not a number")
-		return
-	}
-
-	var productRequest requests.ProductRequest
-
-	// Parse update request payload / Parsear carga útil de petición de actualización
-	err = request.JSON(r, &productRequest)
-
+	// Extrae y valida el ID del parámetro de URL
+	// Extract and validate ID from URL parameter
+	id, err := parseID(r)
 	if err != nil {
 		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	// Map request to domain model / Mapear petición a modelo de dominio
-	productToUpdate := mappers.GetProductFromRequest(productRequest)
-
-	// Update product through service layer / Actualizar producto a través de la capa de servicio
-	productUpdated, err := ph.service.UpdateById(idInt, productToUpdate)
-
+	// Obtiene el producto por ID del servicio
+	// Get product by ID from service
+	product, err := ph.service.GetByID(ctx, id)
 	if err != nil {
+		// Manejo de timeout
+		// Handle timeout
+		if errors.Is(err, context.DeadlineExceeded) {
+			response.Error(w, http.StatusGatewayTimeout, "the request took too long to process")
+			return
+		}
+		// Manejo de producto no encontrado
+		// Handle product not found
 		if errors.Is(err, error_message.ErrNotFound) {
 			response.Error(w, http.StatusNotFound, err.Error())
 			return
 		}
-
+		// Manejo de errores generales
+		// Handle general errors
 		response.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	response.JSON(w, http.StatusOK, responses.DataResponse{Data: productUpdated})
-
+	// Mapea el modelo a response y retorna
+	// Map model to response and return
+	productResponse := mappers.GetProductResponseFromModel(&product)
+	response.JSON(w, http.StatusOK, responses.DataResponse{Data: productResponse})
 }
 
-// DeleteById removes a product from the system by its ID.
-// Validates the ID parameter and returns 204 No Content on successful deletion.
-//
-// DeleteById elimina un producto del sistema por su ID.
-// Valida el parámetro ID y retorna 204 No Content en caso de eliminación exitosa.
-func (ph *ProductHandler) DeleteById(w http.ResponseWriter, r *http.Request) {
-	// Extract and validate ID from URL path / Extraer y validar ID de la ruta URL
-	idString := strings.TrimSpace(chi.URLParam(r, "id"))
+// Update maneja las solicitudes PUT para actualizar un producto existente
+// Update handles PUT requests to update an existing product
+func (ph *ProductHandler) Update(w http.ResponseWriter, r *http.Request) {
+	// Establece timeout de 3 segundos para la operación
+	// Set a 3-second timeout for the operation
+	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+	defer cancel()
 
-	if idString == "" {
-		response.Error(w, http.StatusBadRequest, "id is required")
+	// Extrae y valida el ID del parámetro de URL
+	// Extract and validate ID from URL parameter
+	id, err := parseID(r)
+	if err != nil {
+		response.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	idInt, err := strconv.Atoi(idString)
-
-	if err != nil {
-		response.Error(w, http.StatusBadRequest, "id is not a number")
+	// Decodifica el JSON del request
+	// Decode JSON from request
+	var productRequest requests.ProductRequest
+	if err := request.JSON(r, &productRequest); err != nil {
+		response.Error(w, http.StatusBadRequest, "Invalid request payload: "+err.Error())
 		return
 	}
 
-	// Delete product through service layer / Eliminar producto a través de la capa de servicio
-	err = ph.service.DeleteById(idInt)
+	// Mapea el request a modelo de dominio
+	// Map request to domain model
+	productToUpdate := mappers.GetProductFromRequest(productRequest)
 
+	// Actualiza el producto a través del servicio
+	// Update product through service
+	updatedProduct, err := ph.service.Update(ctx, id, productToUpdate)
 	if err != nil {
+		// Manejo de timeout
+		// Handle timeout
+		if errors.Is(err, context.DeadlineExceeded) {
+			response.Error(w, http.StatusGatewayTimeout, "the request took too long to process")
+			return
+		}
+		// Manejo de producto no encontrado
+		// Handle product not found
 		if errors.Is(err, error_message.ErrNotFound) {
 			response.Error(w, http.StatusNotFound, err.Error())
 			return
 		}
-
+		// Manejo de errores generales
+		// Handle general errors
 		response.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	response.JSON(w, http.StatusNoContent, nil)
+	// Mapea el modelo a response y retorna
+	// Map model to response and return
+	productResponse := mappers.GetProductResponseFromModel(&updatedProduct)
+	response.JSON(w, http.StatusOK, responses.DataResponse{Data: productResponse})
+}
+
+// Delete maneja las solicitudes DELETE para eliminar un producto
+// Delete handles DELETE requests to remove a product
+func (ph *ProductHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	// Establece timeout de 3 segundos para la operación
+	// Set a 3-second timeout for the operation
+	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+	defer cancel()
+
+	// Extrae y valida el ID del parámetro de URL
+	// Extract and validate ID from URL parameter
+	id, err := parseID(r)
+	if err != nil {
+		response.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// Elimina el producto a través del servicio
+	// Delete product through service
+	if err := ph.service.Delete(ctx, id); err != nil {
+		// Manejo de timeout
+		// Handle timeout
+		if errors.Is(err, context.DeadlineExceeded) {
+			response.Error(w, http.StatusGatewayTimeout, "the request took too long to process")
+			return
+		}
+		// Manejo de producto no encontrado
+		// Handle product not found
+		if errors.Is(err, error_message.ErrNotFound) {
+			response.Error(w, http.StatusNotFound, err.Error())
+			return
+		}
+		// Manejo de errores generales
+		// Handle general errors
+		response.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	// Respuesta exitosa sin contenido
+	// Successful response with no content
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// parseID extrae y valida el parámetro ID de la URL
+// parseID extracts and validates the ID parameter from the URL
+func parseID(r *http.Request) (int64, error) {
+	idStr := chi.URLParam(r, "id")
+	if idStr == "" {
+		return 0, errors.New("id parameter is required")
+	}
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("invalid id parameter: '%s' is not a valid number", idStr)
+	}
+	return id, nil
 }

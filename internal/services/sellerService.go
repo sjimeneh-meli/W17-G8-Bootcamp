@@ -6,6 +6,18 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/repositories"
 )
 
+var sellerServiceInstance SellerService
+
+func NewJSONSellerService(repo repositories.SellerRepository) SellerService {
+	if sellerServiceInstance != nil {
+		return sellerServiceInstance
+	}
+	sellerServiceInstance = &JsonSellerService{
+		repo: repo,
+	}
+	return sellerServiceInstance
+}
+
 type SellerService interface {
 	GetAll() ([]models.Seller, error)
 	GetById(id int) (models.Seller, error)
@@ -16,12 +28,6 @@ type SellerService interface {
 
 type JsonSellerService struct {
 	repo repositories.SellerRepository
-}
-
-func NewJSONSellerService(repo repositories.SellerRepository) *JsonSellerService {
-	return &JsonSellerService{
-		repo: repo,
-	}
 }
 
 func (s *JsonSellerService) GetAll() ([]models.Seller, error) {

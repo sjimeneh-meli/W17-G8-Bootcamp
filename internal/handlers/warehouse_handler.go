@@ -1,10 +1,12 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/bootcamp-go/web/response"
 	"github.com/go-chi/chi/v5"
@@ -25,8 +27,15 @@ func NewWarehouseHandler(warehouseService services.WarehouseService) *WarehouseH
 }
 
 func (h *WarehouseHandler) GetAll(w http.ResponseWriter, r *http.Request) {
-	warehouses, err := h.warehouseService.GetAll()
+	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+	defer cancel()
+
+	warehouses, err := h.warehouseService.GetAll(ctx)
 	if err != nil {
+		if ctx.Err() != nil {
+			response.Error(w, http.StatusRequestTimeout, "Request timeout cancelled")
+			return
+		}
 		if errors.Is(err, error_message.ErrInternalServerError) {
 			response.Error(w, http.StatusInternalServerError, "Error al leer la base de datos de warehouses")
 			return
@@ -51,6 +60,9 @@ func (h *WarehouseHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *WarehouseHandler) Create(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+	defer cancel()
+
 	var warehouseRequest requests.WarehouseRequest
 	if err := json.NewDecoder(r.Body).Decode(&warehouseRequest); err != nil {
 		response.Error(w, http.StatusBadRequest, "Formato JSON inválido")
@@ -62,7 +74,11 @@ func (h *WarehouseHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.warehouseService.ValidateCodeUniqueness(warehouseRequest.WareHouseCode); err != nil {
+	if err := h.warehouseService.ValidateCodeUniqueness(ctx, warehouseRequest.WareHouseCode); err != nil {
+		if ctx.Err() != nil {
+			response.Error(w, http.StatusRequestTimeout, "Request timeout cancelled")
+			return
+		}
 		if errors.Is(err, error_message.ErrAlreadyExists) {
 			response.Error(w, http.StatusConflict, err.Error())
 			return
@@ -76,8 +92,12 @@ func (h *WarehouseHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	warehouse := mappers.ToRequest(warehouseRequest)
-	createdWarehouse, err := h.warehouseService.Create(warehouse)
+	createdWarehouse, err := h.warehouseService.Create(ctx, warehouse)
 	if err != nil {
+		if ctx.Err() != nil {
+			response.Error(w, http.StatusRequestTimeout, "Request timeout cancelled")
+			return
+		}
 		if errors.Is(err, error_message.ErrInternalServerError) {
 			response.Error(w, http.StatusInternalServerError, "Error al guardar el warehouse en la base de datos")
 			return
@@ -92,6 +112,9 @@ func (h *WarehouseHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *WarehouseHandler) GetById(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+	defer cancel()
+
 	idStr := chi.URLParam(r, "id")
 	if idStr == "" {
 		response.Error(w, http.StatusBadRequest, "El ID del almacén es requerido")
@@ -104,8 +127,12 @@ func (h *WarehouseHandler) GetById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	warehouse, err := h.warehouseService.GetById(id)
+	warehouse, err := h.warehouseService.GetById(ctx, id)
 	if err != nil {
+		if ctx.Err() != nil {
+			response.Error(w, http.StatusRequestTimeout, "Request timeout cancelled")
+			return
+		}
 		if errors.Is(err, error_message.ErrNotFound) {
 			response.Error(w, http.StatusNotFound, err.Error())
 			return
@@ -125,6 +152,9 @@ func (h *WarehouseHandler) GetById(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *WarehouseHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+	defer cancel()
+
 	idStr := chi.URLParam(r, "id")
 	if idStr == "" {
 		response.Error(w, http.StatusBadRequest, "El ID del almacén es requerido")
@@ -137,7 +167,11 @@ func (h *WarehouseHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.warehouseService.Delete(id); err != nil {
+	if err := h.warehouseService.Delete(ctx, id); err != nil {
+		if ctx.Err() != nil {
+			response.Error(w, http.StatusRequestTimeout, "Request timeout cancelled")
+			return
+		}
 		if errors.Is(err, error_message.ErrNotFound) {
 			response.Error(w, http.StatusNotFound, err.Error())
 			return
@@ -156,6 +190,9 @@ func (h *WarehouseHandler) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *WarehouseHandler) Update(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+	defer cancel()
+
 	idStr := chi.URLParam(r, "id")
 	if idStr == "" {
 		response.Error(w, http.StatusBadRequest, "El ID del almacén es requerido")
@@ -168,8 +205,12 @@ func (h *WarehouseHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	existingWarehouse, err := h.warehouseService.GetById(id)
+	existingWarehouse, err := h.warehouseService.GetById(ctx, id)
 	if err != nil {
+		if ctx.Err() != nil {
+			response.Error(w, http.StatusRequestTimeout, "Request timeout cancelled")
+			return
+		}
 		if errors.Is(err, error_message.ErrNotFound) {
 			response.Error(w, http.StatusNotFound, err.Error())
 			return
@@ -196,7 +237,11 @@ func (h *WarehouseHandler) Update(w http.ResponseWriter, r *http.Request) {
 	updatedWarehouse := mappers.ApplyPatch(existingWarehouse, warehousePatchRequest)
 
 	if warehousePatchRequest.WareHouseCode != nil && *warehousePatchRequest.WareHouseCode != existingWarehouse.WareHouseCode {
-		if err := h.warehouseService.ValidateCodeUniqueness(*warehousePatchRequest.WareHouseCode); err != nil {
+		if err := h.warehouseService.ValidateCodeUniqueness(ctx, *warehousePatchRequest.WareHouseCode); err != nil {
+			if ctx.Err() != nil {
+				response.Error(w, http.StatusRequestTimeout, "Request timeout cancelled")
+				return
+			}
 			if errors.Is(err, error_message.ErrAlreadyExists) {
 				response.Error(w, http.StatusConflict, err.Error())
 				return
@@ -210,14 +255,14 @@ func (h *WarehouseHandler) Update(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	finalWarehouse, err := h.warehouseService.Update(id, updatedWarehouse)
+	updatedWarehouse, err = h.warehouseService.Update(ctx, id, updatedWarehouse)
 	if err != nil {
-		if errors.Is(err, error_message.ErrNotFound) {
-			response.Error(w, http.StatusNotFound, err.Error())
+		if ctx.Err() != nil {
+			response.Error(w, http.StatusRequestTimeout, "Request timeout cancelled")
 			return
 		}
-		if errors.Is(err, error_message.ErrAlreadyExists) {
-			response.Error(w, http.StatusConflict, err.Error())
+		if errors.Is(err, error_message.ErrNotFound) {
+			response.Error(w, http.StatusNotFound, err.Error())
 			return
 		}
 		if errors.Is(err, error_message.ErrInternalServerError) {
@@ -228,7 +273,7 @@ func (h *WarehouseHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	warehouseResponse := mappers.ToResponse(finalWarehouse)
+	warehouseResponse := mappers.ToResponse(updatedWarehouse)
 	response.JSON(w, http.StatusOK, responses.DataResponse{
 		Data: warehouseResponse,
 	})

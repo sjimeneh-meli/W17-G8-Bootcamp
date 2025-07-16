@@ -2,9 +2,21 @@ package repositories
 
 import (
 	"database/sql"
+
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/error_message"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 )
+
+var sellerRepositoryInstance SellerRepository
+
+func NewSQLSellerRepository(db *sql.DB) SellerRepository {
+	if sellerRepositoryInstance != nil {
+		return sellerRepositoryInstance
+	}
+
+	sellerRepositoryInstance = &SQLSellerRepository{db: db}
+	return sellerRepositoryInstance
+}
 
 type SellerRepository interface {
 	GetAll() ([]models.Seller, error)
@@ -15,10 +27,6 @@ type SellerRepository interface {
 
 type SQLSellerRepository struct {
 	db *sql.DB
-}
-
-func NewSQLSellerRepository(db *sql.DB) *SQLSellerRepository {
-	return &SQLSellerRepository{db: db}
 }
 
 func (r *SQLSellerRepository) GetAll() ([]models.Seller, error) {

@@ -4,24 +4,27 @@ package container
 import (
 	"database/sql"
 	"fmt"
+
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers"
-	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/repositories"
-	"github.com/sajimenezher_meli/meli-frescos-8/internal/seeders"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/services"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/validations"
-	"github.com/sajimenezher_meli/meli-frescos-8/pkg/loader"
-	"os"
 )
 
 type Container struct {
-	EmployeeHandler  handlers.EmployeeHandlerI
-	BuyerHandler     handlers.BuyerHandlerI
-	WarehouseHandler *handlers.WarehouseHandler
-	SellerHandler    *handlers.SellerHandler
-	SectionHandler   handlers.SectionHandlerI
-	ProductHandler   *handlers.ProductHandler
-	StorageDB        *sql.DB
+	EmployeeHandler      handlers.EmployeeHandlerI
+	BuyerHandler         handlers.BuyerHandlerI
+	WarehouseHandler     *handlers.WarehouseHandler
+	SellerHandler        *handlers.SellerHandler
+	SectionHandler       handlers.SectionHandlerI
+	ProductBatchHandler  handlers.ProductBatchHandlerI
+	ProductHandler       *handlers.ProductHandler
+	PurchaseOrderHandler handlers.PurchaseOrderHandlerI
+	ProductRecordHandler handlers.ProductRecordHandlerI
+	LocalityHandler      *handlers.LocalityHandler
+	CarryHandler         *handlers.CarryHandler
+	InboundOrderHandler  handlers.InboundOrderHandlerI
+	StorageDB            *sql.DB
 }
 
 // Strategy para manejo de errores
@@ -59,6 +62,12 @@ func NewContainer(storeDB *sql.DB) (*Container, error) {
 		{"seller handler", container.initializeSellerHandler},
 		{"section handler", container.initializeSectionHandler},
 		{"product handler", container.initializeProductHandler},
+		{"productBatch handler", container.initializeProductBatchHandler},
+		{"purchase order handler", container.initializePurchaseOrderHandler},
+		{"product record handler", container.initializeProductRecordHandler},
+		{"locality handler", container.initializeLocalityHandler},
+		{"carry handler", container.initializeCarryHandler},
+		{"inbound order handler", container.initializeInboundOrderHandler},
 	}
 
 	if err := errorHandler.Execute(tasks); err != nil {
@@ -69,11 +78,7 @@ func NewContainer(storeDB *sql.DB) (*Container, error) {
 }
 
 func (c *Container) initializeEmployeeHandler() error {
-	employeeLoader := loader.NewJSONStorage[models.Employee](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "employees.json"))
-	employeeRepository, err := repositories.GetEmployeeRepository(employeeLoader)
-	if err != nil {
-		return err
-	}
+	employeeRepository := repositories.GetNewEmployeeMySQLRepository(c.StorageDB)
 	employeeService := services.GetEmployeeService(employeeRepository)
 	employeeValidation := validations.GetEmployeeValidation()
 	c.EmployeeHandler = handlers.GetEmployeeHandler(employeeService, employeeValidation)
@@ -81,53 +86,100 @@ func (c *Container) initializeEmployeeHandler() error {
 }
 
 func (c *Container) initializeBuyerHandler() error {
-	buyerLoader := loader.NewJSONStorage[models.Buyer](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "buyers.json"))
-	buyerRepository, err := repositories.GetNewBuyerRepository(buyerLoader)
-	if err != nil {
-		return err
-	}
+	buyerRepository := repositories.GetNewBuyerMySQLRepository(c.StorageDB)
 	buyerService := services.GetBuyerService(buyerRepository)
 	c.BuyerHandler = handlers.GetBuyerHandler(buyerService)
 	return nil
 }
 
 func (c *Container) initializeWarehouseHandler() error {
-	warehouseStorage := loader.NewJSONStorage[models.Warehouse](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "warehouse.json"))
-	repository := repositories.NewWarehouseRepository(*warehouseStorage)
+	repository := repositories.NewWarehouseRepository(c.StorageDB)
 	service := services.NewWarehouseService(repository)
 	c.WarehouseHandler = handlers.NewWarehouseHandler(service)
 	return nil
 }
 
 func (c *Container) initializeSellerHandler() error {
-	//sellerStorage := loader.NewJSONStorage[models.Seller](fmt.Sprintf("%s/%s", "docs/database", "sellers.json"))
 	sellerRepo := repositories.NewSQLSellerRepository(c.StorageDB)
 	sellerService := services.NewJSONSellerService(sellerRepo)
 	c.SellerHandler = handlers.NewSellerHandler(sellerService)
 	return nil
 }
+func (c *Container) initializeLocalityHandler() error {
+	localityRepo := repositories.NewSQLLocalityRepository(c.StorageDB)
+	localityService := services.NewSQLLocalityService(localityRepo)
+	c.LocalityHandler = handlers.NewLocalityHandler(localityService)
+	return nil
+}
 
 func (c *Container) initializeSectionHandler() error {
-	sectionLoader := loader.NewJSONStorage[models.Section](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "sections.json"))
-	sectionRepository, err := repositories.GetSectionRepository(sectionLoader)
-	if err != nil {
-		return err
-	}
+	warehouseRepository := repositories.NewWarehouseRepository(c.StorageDB)
+	warehouseService := services.NewWarehouseService(warehouseRepository)
+
+	sectionRepository := repositories.GetSectionRepository(c.StorageDB)
 	sectionService := services.GetSectionService(sectionRepository)
 	sectionValidation := validations.GetSectionValidation()
-	c.SectionHandler = handlers.GetSectionHandler(sectionService, sectionValidation)
+	c.SectionHandler = handlers.GetSectionHandler(sectionService, warehouseService, sectionValidation)
 	return nil
 }
 
 func (c *Container) initializeProductHandler() error {
-	storage := loader.NewJSONStorage[models.Product](fmt.Sprintf("%s/%s", os.Getenv("folder_database"), "products.json"))
-	repository := repositories.NewProductRepository(*storage)
-	service := services.NewProductService(repository)
-	c.ProductHandler = handlers.NewProductHandler(service)
+	productDB := c.StorageDB
+	productRepository := repositories.NewProductRepository(productDB)
+	productService := services.NewProductService(productRepository)
+	c.ProductHandler = handlers.NewProductHandler(productService)
+	return nil
+}
 
-	// Ejecutar seeder
-	ps := seeders.NewSeeder(service)
-	ps.LoadAllData()
+func (c *Container) initializeProductRecordHandler() error {
+	productRecordDb := c.StorageDB
+	productRecordRepository := repositories.NewProductRecordRepository(productRecordDb)
 
+	productRepository := repositories.NewProductRepository(productRecordDb)
+	productService := services.NewProductService(productRepository)
+
+	productRecordService := services.NewProductRecordService(productRecordRepository, productService)
+	productRecordHandler := handlers.NewProductRecordHandler(productRecordService)
+
+	c.ProductRecordHandler = productRecordHandler
+
+	return nil
+}
+
+func (c *Container) initializeProductBatchHandler() error {
+	sectionRepository := repositories.GetSectionRepository(c.StorageDB)
+	sectionService := services.GetSectionService(sectionRepository)
+
+	productRepository := repositories.NewProductRepository(c.StorageDB)
+	productService := services.NewProductService(productRepository)
+
+	productBatchRepository := repositories.GetProductBatchRepository(c.StorageDB)
+	productBatchService := services.GetProductBatchService(productBatchRepository)
+	productBatchValidation := validations.GetProductBatchValidation()
+	c.ProductBatchHandler = handlers.GetProductBatchHandler(productBatchService, sectionService, productService, *productBatchValidation)
+	return nil
+}
+
+func (c *Container) initializePurchaseOrderHandler() error {
+	purchaseOrderRepository := repositories.GetNewPurchaseOrderMySQLRepository(c.StorageDB)
+	buyerRepository := repositories.GetNewBuyerMySQLRepository(c.StorageDB)
+	productRecordsRepository := repositories.NewProductRecordRepository(c.StorageDB)
+
+	purchaseOrderService := services.GetPurchaseOrderService(purchaseOrderRepository, buyerRepository, productRecordsRepository)
+	c.PurchaseOrderHandler = handlers.GetPurchaseOrderHandler(purchaseOrderService)
+	return nil
+}
+func (c *Container) initializeCarryHandler() error {
+	carryRepo := repositories.NewCarryRepository(c.StorageDB)
+	localityRepo := repositories.NewSQLLocalityRepository(c.StorageDB)
+	carryService := services.NewCarryService(carryRepo, localityRepo)
+	c.CarryHandler = handlers.NewCarryHandler(carryService)
+	return nil
+}
+func (c *Container) initializeInboundOrderHandler() error {
+	inboundOrderRepository := repositories.GetNewInboundOrderMySQLRepository(c.StorageDB)
+	employeeRepository := repositories.GetNewEmployeeMySQLRepository(c.StorageDB)
+	inboundOrderService := services.GetInboundOrdersService(inboundOrderRepository, employeeRepository)
+	c.InboundOrderHandler = handlers.GetInboundOrderHandler(inboundOrderService)
 	return nil
 }

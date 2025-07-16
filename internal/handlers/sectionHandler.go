@@ -1,9 +1,11 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/bootcamp-go/web/response"
 	"github.com/go-chi/chi/v5"
@@ -15,10 +17,11 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/validations"
 )
 
-func GetSectionHandler(service services.SectionServiceI, validation *validations.SectionValidation) SectionHandlerI {
+func GetSectionHandler(service services.SectionServiceI, warehouseService services.WarehouseService, validation *validations.SectionValidation) SectionHandlerI {
 	return &SectionHandler{
-		service:    service,
-		validation: validation,
+		service:          service,
+		warehouseService: warehouseService,
+		validation:       validation,
 	}
 }
 
@@ -31,57 +34,59 @@ type SectionHandlerI interface {
 }
 
 type SectionHandler struct {
-	service    services.SectionServiceI
-	validation *validations.SectionValidation
+	service          services.SectionServiceI
+	warehouseService services.WarehouseService
+	validation       *validations.SectionValidation
 }
 
 func (h *SectionHandler) GetAll(w http.ResponseWriter, r *http.Request) {
+	var responseJson *responses.DataResponse = &responses.DataResponse{}
 
-	var (
-		responseJson     *responses.DataResponse = &responses.DataResponse{}
-		sectionsResponse []*responses.SectionResponse
-		sections         []*models.Section
-	)
+	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+	defer cancel()
 
-	sections = h.service.GetAll()
-	sectionsResponse = mappers.GetListSectionResponseFromListModel(sections)
-	responseJson.Data = sectionsResponse
+	sections, srvErr := h.service.GetAll(ctx)
+	if srvErr != nil {
+		response.Error(w, http.StatusNotFound, srvErr.Error())
+		return
+	}
 
+	responseJson.Data = mappers.GetListSectionResponseFromListModel(sections)
 	response.JSON(w, http.StatusOK, responseJson)
-
 }
 
 func (h *SectionHandler) GetByID(w http.ResponseWriter, r *http.Request) {
+	var responseJson *responses.DataResponse = &responses.DataResponse{}
 
-	var (
-		responseJson    *responses.DataResponse = &responses.DataResponse{}
-		sectionResponse *responses.SectionResponse
-	)
+	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+	defer cancel()
 
 	idParam, convErr := strconv.Atoi(chi.URLParam(r, "id"))
 	if convErr != nil {
 		response.Error(w, http.StatusExpectationFailed, convErr.Error())
+		return
 	}
 
-	section, srvErr := h.service.GetByID(idParam)
+	section, srvErr := h.service.GetByID(ctx, idParam)
 	if srvErr != nil {
 		response.Error(w, http.StatusNotFound, srvErr.Error())
+		return
 	}
 
-	sectionResponse = mappers.GetSectionResponseFromModel(section)
-	responseJson.Data = sectionResponse
-
+	responseJson.Data = mappers.GetSectionResponseFromModel(section)
 	response.JSON(w, http.StatusOK, responseJson)
 
 }
 
 func (h *SectionHandler) Create(w http.ResponseWriter, r *http.Request) {
-	//VALIDATE IF PRODUCT AND WAREHOUSE EXIST
 	var (
 		request      *requests.SectionRequest = &requests.SectionRequest{}
 		responseJson *responses.DataResponse  = &responses.DataResponse{}
 		section      *models.Section
 	)
+
+	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+	defer cancel()
 
 	if reqErr := json.NewDecoder(r.Body).Decode(request); reqErr != nil {
 		response.Error(w, http.StatusExpectationFailed, reqErr.Error())
@@ -93,14 +98,20 @@ func (h *SectionHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	_, srvErr := h.warehouseService.GetById(ctx, request.WarehouseID)
+	if srvErr != nil {
+		response.Error(w, http.StatusNotFound, srvErr.Error())
+		return
+	}
+
 	section = mappers.GetSectionModelFromRequest(request)
 
-	if h.service.ExistsWithSectionNumber(section.Id, section.SectionNumber) {
+	if h.service.ExistsWithSectionNumber(ctx, section.Id, section.SectionNumber) {
 		response.Error(w, http.StatusConflict, "already exist a section with the same number")
 		return
 	}
 
-	if srvErr := h.service.Create(section); srvErr != nil {
+	if srvErr := h.service.Create(ctx, section); srvErr != nil {
 		response.Error(w, http.StatusExpectationFailed, srvErr.Error())
 		return
 	}
@@ -111,11 +122,13 @@ func (h *SectionHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *SectionHandler) Update(w http.ResponseWriter, r *http.Request) {
-
 	var (
 		request      *requests.SectionRequest = &requests.SectionRequest{}
 		responseJson *responses.DataResponse  = &responses.DataResponse{}
 	)
+
+	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+	defer cancel()
 
 	idParam, convErr := strconv.Atoi(chi.URLParam(r, "id"))
 	if convErr != nil {
@@ -123,7 +136,7 @@ func (h *SectionHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	section, srvErr := h.service.GetByID(idParam)
+	section, srvErr := h.service.GetByID(ctx, idParam)
 	if srvErr != nil {
 		response.Error(w, http.StatusNotFound, srvErr.Error())
 		return
@@ -139,12 +152,16 @@ func (h *SectionHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if h.service.ExistsWithSectionNumber(section.Id, request.SectionNumber) {
+	if h.service.ExistsWithSectionNumber(ctx, section.Id, request.SectionNumber) {
 		response.Error(w, http.StatusConflict, "already exist a section with the same number")
 		return
 	}
 
 	mappers.UpdateSectionModelFromRequest(section, request)
+	if srvErr := h.service.Update(ctx, section); srvErr != nil {
+		response.Error(w, http.StatusExpectationFailed, srvErr.Error())
+		return
+	}
 
 	responseJson.Data = mappers.GetSectionResponseFromModel(section)
 	response.JSON(w, http.StatusOK, responseJson)
@@ -152,6 +169,8 @@ func (h *SectionHandler) Update(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *SectionHandler) DeleteByID(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+	defer cancel()
 
 	idParam, convErr := strconv.Atoi(chi.URLParam(r, "id"))
 	if convErr != nil {
@@ -159,7 +178,7 @@ func (h *SectionHandler) DeleteByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	srvErr := h.service.DeleteByID(idParam)
+	srvErr := h.service.DeleteByID(ctx, idParam)
 	if srvErr != nil {
 		response.Error(w, http.StatusNotFound, srvErr.Error())
 		return
