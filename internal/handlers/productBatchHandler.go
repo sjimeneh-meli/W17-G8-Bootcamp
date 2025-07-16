@@ -75,12 +75,14 @@ func (h *ProductBatchHandler) Create(w http.ResponseWriter, r *http.Request) {
 	// Validate that section exists / Validar que la sección exista
 	if !h.sectionService.ExistWithID(ctx, request.SectionID) {
 		response.Error(w, http.StatusNotFound, "section not found")
+		return
 	}
 
 	// Validate that product exists / Validar que el producto exista
 	exists, _ := h.productService.ExistById(ctx, int64(request.ProductID))
 	if !exists {
 		response.Error(w, http.StatusNotFound, "product not found")
+		return
 	}
 
 	// Map request to product batch model / Mapear solicitud a modelo de lote de productos
