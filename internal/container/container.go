@@ -118,10 +118,13 @@ func (c *Container) initializeLocalityHandler() error {
 }
 
 func (c *Container) initializeSectionHandler() error {
+	warehouseRepository := repositories.NewWarehouseRepository(c.StorageDB)
+	warehouseService := services.NewWarehouseService(warehouseRepository)
+
 	sectionRepository := repositories.GetSectionRepository(c.StorageDB)
 	sectionService := services.GetSectionService(sectionRepository)
 	sectionValidation := validations.GetSectionValidation()
-	c.SectionHandler = handlers.GetSectionHandler(sectionService, sectionValidation)
+	c.SectionHandler = handlers.GetSectionHandler(sectionService, warehouseService, sectionValidation)
 	return nil
 }
 

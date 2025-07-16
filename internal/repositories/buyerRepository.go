@@ -11,6 +11,20 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 )
 
+var buyerRepositoryInstance BuyerRepositoryI
+
+// GetNewBuyerMySQLRepository creates and returns a new instance of MySqlBuyerRepository
+func GetNewBuyerMySQLRepository(db *sql.DB) BuyerRepositoryI {
+	if buyerRepositoryInstance != nil {
+		return buyerRepositoryInstance
+	}
+
+	buyerRepositoryInstance = &MySqlBuyerRepository{
+		db: db,
+	}
+	return buyerRepositoryInstance
+}
+
 // BuyerRepositoryI defines the interface for buyer repository operations
 type BuyerRepositoryI interface {
 	GetAll(ctx context.Context) (map[int]models.Buyer, error)
@@ -26,13 +40,6 @@ type BuyerRepositoryI interface {
 // MySqlBuyerRepository implements BuyerRepositoryI for MySQL database operations
 type MySqlBuyerRepository struct {
 	db *sql.DB
-}
-
-// GetNewBuyerMySQLRepository creates and returns a new instance of MySqlBuyerRepository
-func GetNewBuyerMySQLRepository(db *sql.DB) BuyerRepositoryI {
-	return &MySqlBuyerRepository{
-		db: db,
-	}
 }
 
 // GetAll retrieves all buyers from the MySQL database

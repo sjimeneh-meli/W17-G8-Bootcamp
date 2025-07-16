@@ -10,6 +10,19 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 )
 
+var productRecordInstance IProductRecordRepository
+
+// NewProductRecordRepository - Constructor function that creates a new repository instance
+// NewProductRecordRepository - Función constructora que crea una nueva instancia del repositorio
+func NewProductRecordRepository(db *sql.DB) IProductRecordRepository {
+	if productRecordInstance != nil {
+		return productRecordInstance
+	}
+
+	productRecordInstance = &productRecordRepository{DB: db}
+	return productRecordInstance
+}
+
 // productRecordRepository - Repository implementation for product records operations
 // productRecordRepository - Implementación del repositorio para operaciones de registros de productos
 type productRecordRepository struct {
@@ -34,12 +47,6 @@ type IProductRecordRepository interface {
 	// ExistProductRecordByID - Checks if a product record exists in the database
 	// ExistProductRecordByID - Verifica si un registro de producto existe en la base de datos
 	ExistProductRecordByID(ctx context.Context, id int64) bool
-}
-
-// NewProductRecordRepository - Constructor function that creates a new repository instance
-// NewProductRecordRepository - Función constructora que crea una nueva instancia del repositorio
-func NewProductRecordRepository(db *sql.DB) IProductRecordRepository {
-	return &productRecordRepository{DB: db}
 }
 
 // Create - Inserts a new product record into the database and returns the created record with its ID

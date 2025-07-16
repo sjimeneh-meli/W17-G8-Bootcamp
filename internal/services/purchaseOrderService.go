@@ -9,13 +9,19 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/repositories"
 )
 
+var purchaseOrderServiceInstance PurchaseOrderServiceI
+
 // GetPurchaseOrderService creates and returns a new instance of PurchaseOrderService with the required repositories
 func GetPurchaseOrderService(purchaseOrderRepository repositories.PurchaseOrderRepositoryI, buyerRepository repositories.BuyerRepositoryI, productRecordRepository repositories.IProductRecordRepository) PurchaseOrderServiceI {
-	return &PurchaseOrderService{
+	if purchaseOrderServiceInstance != nil {
+		return purchaseOrderServiceInstance
+	}
+	purchaseOrderServiceInstance = &PurchaseOrderService{
 		PurchaseOrderRepository: purchaseOrderRepository,
 		BuyerRepository:         buyerRepository,
 		ProductRecordRepository: productRecordRepository,
 	}
+	return purchaseOrderServiceInstance
 }
 
 // PurchaseOrderServiceI defines the interface for purchase order service operations

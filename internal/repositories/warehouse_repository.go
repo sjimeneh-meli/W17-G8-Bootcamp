@@ -34,7 +34,17 @@ var (
 
 	// DELETE queries
 	queryDeleteWarehouse = fmt.Sprintf("DELETE FROM `%s` WHERE `id` = ?", warehouseTable)
+
+	warehouseRepositoryInstance WarehouseRepository
 )
+
+func NewWarehouseRepository(db *sql.DB) WarehouseRepository {
+	if warehouseRepositoryInstance != nil {
+		return warehouseRepositoryInstance
+	}
+	warehouseRepositoryInstance = &WarehouseRepositoryImpl{db: db}
+	return warehouseRepositoryInstance
+}
 
 type WarehouseRepository interface {
 	GetAll(ctx context.Context) ([]models.Warehouse, error)
@@ -47,10 +57,6 @@ type WarehouseRepository interface {
 
 type WarehouseRepositoryImpl struct {
 	db *sql.DB
-}
-
-func NewWarehouseRepository(db *sql.DB) *WarehouseRepositoryImpl {
-	return &WarehouseRepositoryImpl{db: db}
 }
 
 func (r *WarehouseRepositoryImpl) GetAll(ctx context.Context) ([]models.Warehouse, error) {

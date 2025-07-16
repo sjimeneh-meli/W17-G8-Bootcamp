@@ -7,6 +7,20 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/repositories"
 )
 
+var productServiceInstance ProductService
+
+// NewProductService crea una nueva instancia del servicio de productos con inyección de dependencias
+// NewProductService creates a new instance of the product service with dependency injection
+func NewProductService(r repositories.ProductRepository) ProductService {
+	if productServiceInstance != nil {
+		return productServiceInstance
+	}
+	productServiceInstance = &service{
+		repository: r,
+	}
+	return productServiceInstance
+}
+
 // ProductService define la interfaz para la lógica de negocio de productos
 // ProductService defines the interface for product business logic
 type ProductService interface {
@@ -43,14 +57,6 @@ type ProductService interface {
 // service implements the ProductService interface
 type service struct {
 	repository repositories.ProductRepository
-}
-
-// NewProductService crea una nueva instancia del servicio de productos con inyección de dependencias
-// NewProductService creates a new instance of the product service with dependency injection
-func NewProductService(r repositories.ProductRepository) ProductService {
-	return &service{
-		repository: r,
-	}
 }
 
 // GetAll delega la obtención de todos los productos al repositorio

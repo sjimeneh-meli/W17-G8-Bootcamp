@@ -17,10 +17,11 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/validations"
 )
 
-func GetSectionHandler(service services.SectionServiceI, validation *validations.SectionValidation) SectionHandlerI {
+func GetSectionHandler(service services.SectionServiceI, warehouseService services.WarehouseService, validation *validations.SectionValidation) SectionHandlerI {
 	return &SectionHandler{
-		service:    service,
-		validation: validation,
+		service:          service,
+		warehouseService: warehouseService,
+		validation:       validation,
 	}
 }
 
@@ -33,8 +34,9 @@ type SectionHandlerI interface {
 }
 
 type SectionHandler struct {
-	service    services.SectionServiceI
-	validation *validations.SectionValidation
+	service          services.SectionServiceI
+	warehouseService services.WarehouseService
+	validation       *validations.SectionValidation
 }
 
 func (h *SectionHandler) GetAll(w http.ResponseWriter, r *http.Request) {
@@ -93,6 +95,12 @@ func (h *SectionHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	if valErr := h.validation.ValidateSectionRequestStruct(*request); valErr != nil {
 		response.Error(w, http.StatusUnprocessableEntity, valErr.Error())
+		return
+	}
+
+	_, srvErr := h.warehouseService.GetById(ctx, request.WarehouseID)
+	if srvErr != nil {
+		response.Error(w, http.StatusNotFound, srvErr.Error())
 		return
 	}
 

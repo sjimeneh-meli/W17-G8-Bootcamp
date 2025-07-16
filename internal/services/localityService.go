@@ -8,6 +8,16 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/repositories"
 )
 
+var localityServiceInstance LocalityService
+
+func NewSQLLocalityService(repo repositories.LocalityRepository) LocalityService {
+	if localityServiceInstance != nil {
+		return localityServiceInstance
+	}
+	localityServiceInstance = &SQLLocalityService{repo: repo}
+	return localityServiceInstance
+}
+
 type LocalityService interface {
 	Save(ctx context.Context, locality models.Locality) (models.Locality, error)
 	GetSellerReports(ctx context.Context, id int) ([]responses.LocalitySellerReport, error)
@@ -15,10 +25,6 @@ type LocalityService interface {
 
 type SQLLocalityService struct {
 	repo repositories.LocalityRepository
-}
-
-func NewSQLLocalityService(repo repositories.LocalityRepository) *SQLLocalityService {
-	return &SQLLocalityService{repo: repo}
 }
 
 func (s *SQLLocalityService) Save(ctx context.Context, locality models.Locality) (models.Locality, error) {

@@ -10,11 +10,18 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/repositories"
 )
 
+var buyerServiceInstance BuyerServiceI
+
 // GetBuyerService creates and returns a new instance of BuyerService with the required repository
 func GetBuyerService(repo repositories.BuyerRepositoryI) BuyerServiceI {
-	return &BuyerService{
+	if buyerServiceInstance != nil {
+		return buyerServiceInstance
+	}
+
+	buyerServiceInstance = &BuyerService{
 		repository: repo,
 	}
+	return buyerServiceInstance
 }
 
 // BuyerServiceI defines the interface for buyer service operations
