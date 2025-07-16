@@ -79,7 +79,7 @@ func SetupRoutes(c *container.Container) *chi.Mux {
 		})
 
 		r.Route("/inboundOrders", func(rt chi.Router) {
-			rt.Get("/", c.InboundOrderHandler.GetInboundOrdersReport())
+			rt.Post("/", c.InboundOrderHandler.PostInboundOrder())
 		})
 
 	})

@@ -12,6 +12,8 @@ import (
 type InboundOrderRepositoryI interface {
 	GetAllInboundOrdersReports(ctx context.Context) ([]models.InboundOrderReport, error)
 	GetInboundOrdersReportByEmployeeId(ctx context.Context, employeeId int) (models.InboundOrderReport, error)
+	Create(ctx context.Context, inbound models.InboundOrder) (models.InboundOrder, error)
+	ExistsByOrderNumber(ctx context.Context, orderNumber string) (bool, error)
 }
 
 type MySqlInboundOrderRepository struct {
@@ -75,4 +77,39 @@ func (r *MySqlInboundOrderRepository) GetInboundOrdersReportByEmployeeId(ctx con
 	}
 
 	return report, nil
+}
+func (r *MySqlInboundOrderRepository) Create(ctx context.Context, inbound models.InboundOrder) (models.InboundOrder, error) {
+	query := `
+		INSERT INTO inbound_orders (order_date, order_number, employee_id, product_batch_id, warehouse_id)
+		VALUES (?, ?, ?, ?, ?)
+	`
+
+	result, err := r.db.ExecContext(ctx, query,
+		inbound.OrderDate,
+		inbound.OrderNumber,
+		inbound.EmployeeId,
+		inbound.ProductBatchId,
+		inbound.WarehouseId,
+	)
+	if err != nil {
+		return models.InboundOrder{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return models.InboundOrder{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
+	}
+
+	inbound.Id = int(id)
+	return inbound, nil
+}
+
+func (r *MySqlInboundOrderRepository) ExistsByOrderNumber(ctx context.Context, orderNumber string) (bool, error) {
+	var exists bool
+	query := "SELECT EXISTS(SELECT 1 FROM inbound_orders WHERE order_number = ?)"
+	err := r.db.QueryRowContext(ctx, query, orderNumber).Scan(&exists)
+	if err != nil {
+		return false, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
+	}
+	return exists, nil
 }
