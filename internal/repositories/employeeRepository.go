@@ -11,6 +11,19 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 )
 
+var employeeRepositoryInstance EmployeeRepositoryI
+
+func GetNewEmployeeMySQLRepository(db *sql.DB) EmployeeRepositoryI {
+	if employeeRepositoryInstance != nil {
+		return employeeRepositoryInstance
+	}
+
+	employeeRepositoryInstance = &MySqlEmployeeRepository{
+		db: db,
+	}
+	return employeeRepositoryInstance
+}
+
 type EmployeeRepositoryI interface {
 	GetAll(ctx context.Context) (map[int]models.Employee, error)
 	GetById(ctx context.Context, id int) (models.Employee, error)
@@ -23,12 +36,6 @@ type EmployeeRepositoryI interface {
 
 type MySqlEmployeeRepository struct {
 	db *sql.DB
-}
-
-func GetNewEmployeeMySQLRepository(db *sql.DB) EmployeeRepositoryI {
-	return &MySqlEmployeeRepository{
-		db: db,
-	}
 }
 
 func (r *MySqlEmployeeRepository) GetAll(ctx context.Context) (map[int]models.Employee, error) {

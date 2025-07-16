@@ -5,9 +5,22 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/error_message"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 )
+
+var inboundOrderRepositoryInstance InboundOrderRepositoryI
+
+func GetNewInboundOrderMySQLRepository(db *sql.DB) InboundOrderRepositoryI {
+	if inboundOrderRepositoryInstance != nil {
+		return inboundOrderRepositoryInstance
+	}
+	inboundOrderRepositoryInstance = &MySqlInboundOrderRepository{
+		db: db,
+	}
+	return inboundOrderRepositoryInstance
+}
 
 type InboundOrderRepositoryI interface {
 	GetAllInboundOrdersReports(ctx context.Context) ([]models.InboundOrderReport, error)
@@ -18,12 +31,6 @@ type InboundOrderRepositoryI interface {
 
 type MySqlInboundOrderRepository struct {
 	db *sql.DB
-}
-
-func GetNewInboundOrderMySQLRepository(db *sql.DB) InboundOrderRepositoryI {
-	return &MySqlInboundOrderRepository{
-		db: db,
-	}
 }
 
 func (r *MySqlInboundOrderRepository) GetAllInboundOrdersReports(ctx context.Context) ([]models.InboundOrderReport, error) {

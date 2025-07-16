@@ -2,10 +2,24 @@ package services
 
 import (
 	"context"
+
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/error_message"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/repositories"
 )
+
+var inboundOrdersServiceInstance InboundOrdersServiceI
+
+func GetInboundOrdersService(inboundOrderRepository repositories.InboundOrderRepositoryI, employeeRepository repositories.EmployeeRepositoryI) InboundOrdersServiceI {
+	if inboundOrdersServiceInstance != nil {
+		return inboundOrdersServiceInstance
+	}
+	inboundOrdersServiceInstance = &InboundOrdersService{
+		InboundOrderRepository: inboundOrderRepository,
+		EmployeeRepository:     employeeRepository,
+	}
+	return inboundOrdersServiceInstance
+}
 
 type InboundOrdersServiceI interface {
 	GetAllInboundOrdersReports(ctx context.Context) ([]models.InboundOrderReport, error)
@@ -17,13 +31,6 @@ type InboundOrdersServiceI interface {
 type InboundOrdersService struct {
 	InboundOrderRepository repositories.InboundOrderRepositoryI
 	EmployeeRepository     repositories.EmployeeRepositoryI
-}
-
-func GetInboundOrdersService(inboundOrderRepository repositories.InboundOrderRepositoryI, employeeRepository repositories.EmployeeRepositoryI) InboundOrdersServiceI {
-	return &InboundOrdersService{
-		InboundOrderRepository: inboundOrderRepository,
-		EmployeeRepository:     employeeRepository,
-	}
 }
 
 func (s *InboundOrdersService) GetAllInboundOrdersReports(ctx context.Context) ([]models.InboundOrderReport, error) {
