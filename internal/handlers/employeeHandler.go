@@ -3,9 +3,15 @@ package handlers
 import (
 	"context"
 	"errors"
+	"net/http"
+	"strconv"
+	"time"
+
 	"github.com/bootcamp-go/web/request"
 	"github.com/bootcamp-go/web/response"
+
 	"github.com/go-chi/chi/v5"
+
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/error_message"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/requests"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/responses"
@@ -13,9 +19,6 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/services"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/validations"
-	"net/http"
-	"strconv"
-	"time"
 )
 
 func GetEmployeeHandler(service services.EmployeeServiceI, validation *validations.EmployeeValidation) EmployeeHandlerI {

@@ -12,6 +12,7 @@ func ToRequestToSellerStruct(seller requests.SellerRequest) models.Seller {
 		CompanyName: seller.CompanyName,
 		Address:     seller.Address,
 		Telephone:   seller.Telephone,
+		LocalityID:  seller.LocalityID,
 	}
 	return sellerFormated
 }
@@ -23,6 +24,7 @@ func ToSellerStructToResponse(seller models.Seller) responses.SellerResponse {
 		CompanyName: seller.CompanyName,
 		Address:     seller.Address,
 		Telephone:   seller.Telephone,
+		LocalityID:  seller.LocalityID,
 	}
 	return sellerFormated
 }

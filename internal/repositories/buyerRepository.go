@@ -1,144 +1,212 @@
 package repositories
 
 import (
+	"context"
+	"database/sql"
+	"errors"
 	"fmt"
-	"slices"
+	"strings"
 
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/error_message"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
-	"github.com/sajimenezher_meli/meli-frescos-8/pkg/loader"
 )
 
+// BuyerRepositoryI defines the interface for buyer repository operations
 type BuyerRepositoryI interface {
-	GetAll() (map[int]models.Buyer, error)
-	GetById(id int) (models.Buyer, error)
-	DeleteById(id int) error
-	Create(buyer models.Buyer) (models.Buyer, error)
-	Update(buyerId int, buyer models.Buyer) (models.Buyer, error)
+	GetAll(ctx context.Context) (map[int]models.Buyer, error)
+	GetById(ctx context.Context, id int) (models.Buyer, error)
+	DeleteById(ctx context.Context, id int) error
+	Create(ctx context.Context, buyer models.Buyer) (models.Buyer, error)
+	Update(ctx context.Context, buyerId int, buyer models.Buyer) (models.Buyer, error)
 
-	Save() error
-	GetNewId() int
-	GetCardNumberIds() []string
+	GetCardNumberIds() ([]string, error)
+	ExistBuyerById(ctx context.Context, buyerId int) (bool, error)
 }
 
-type BuyerRepository struct {
-	storage map[int]models.Buyer
-	loader  loader.Storage[models.Buyer]
+// MySqlBuyerRepository implements BuyerRepositoryI for MySQL database operations
+type MySqlBuyerRepository struct {
+	db *sql.DB
 }
 
-func (r *BuyerRepository) Update(id int, buyer models.Buyer) (models.Buyer, error) {
-	_, exists := r.storage[id]
-	if !exists {
-		return models.Buyer{}, fmt.Errorf("%w. %s %d %s", error_message.ErrNotFound, "Buyer with Id", id, "doesn't exists.")
+// GetNewBuyerMySQLRepository creates and returns a new instance of MySqlBuyerRepository
+func GetNewBuyerMySQLRepository(db *sql.DB) BuyerRepositoryI {
+	return &MySqlBuyerRepository{
+		db: db,
 	}
+}
 
-	updatedBuyer := r.storage[id]
-	if buyer.CardNumberId != "" {
-		existingCardNumberIds := r.GetCardNumberIds()
-		if slices.Contains(existingCardNumberIds, buyer.CardNumberId) {
-			return models.Buyer{}, fmt.Errorf("%w. %s %s %s", error_message.ErrAlreadyExists, "Card number with Id", buyer.CardNumberId, "already exists.")
+// GetAll retrieves all buyers from the MySQL database
+// Returns a map with buyer ID as key and buyer model as value
+func (r *MySqlBuyerRepository) GetAll(ctx context.Context) (map[int]models.Buyer, error) {
+	buyers := make(map[int]models.Buyer)
+
+	query := "select id, id_card_number, first_name, last_name from buyers"
+	rows, err := r.db.QueryContext(ctx, query)
+	if err != nil {
+		return buyers, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
+	}
+	defer rows.Close()
+
+	tempBuyersMap := make(map[int]models.Buyer)
+	for rows.Next() {
+		buyer := models.Buyer{}
+		err = rows.Scan(&buyer.Id, &buyer.CardNumberId, &buyer.FirstName, &buyer.LastName)
+		if err != nil {
+			return buyers, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
 		}
-		updatedBuyer.CardNumberId = buyer.CardNumberId
-	}
-	if buyer.FirstName != "" {
-		updatedBuyer.FirstName = buyer.FirstName
-	}
-	if buyer.LastName != "" {
-		updatedBuyer.LastName = buyer.LastName
+		tempBuyersMap[buyer.Id] = buyer
 	}
 
-	r.storage[id] = updatedBuyer
-	err := r.Save()
+	buyers = tempBuyersMap
+	return buyers, nil
+}
+
+// GetById retrieves a buyer by their ID from the MySQL database
+// Returns an error if the buyer doesn't exist
+func (r *MySqlBuyerRepository) GetById(ctx context.Context, id int) (models.Buyer, error) {
+	buyer := models.Buyer{}
+
+	query := "select id, id_card_number, first_name, last_name from buyers where id = ?"
+	row := r.db.QueryRowContext(ctx, query, id)
+	err := row.Err()
 	if err != nil {
+		return buyer, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
+	}
+
+	err = row.Scan(&buyer.Id, &buyer.CardNumberId, &buyer.FirstName, &buyer.LastName)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return models.Buyer{}, fmt.Errorf("%w. %s %d %s", error_message.ErrNotFound, "Buyer with Id", id, "doesn't exists.")
+		}
 		return models.Buyer{}, err
-	}
-
-	return updatedBuyer, nil
-}
-
-func (r *BuyerRepository) GetAll() (map[int]models.Buyer, error) {
-	return r.storage, nil
-}
-
-func (r *BuyerRepository) GetById(id int) (models.Buyer, error) {
-	_, exists := r.storage[id]
-	if !exists {
-		return models.Buyer{}, fmt.Errorf("%w. %s %d %s", error_message.ErrNotFound, "Buyer with Id", id, "doesn't exists.")
-	}
-
-	return r.storage[id], nil
-}
-
-func (r *BuyerRepository) DeleteById(id int) error {
-	_, exists := r.storage[id]
-	if !exists {
-		return fmt.Errorf("%w. %s %d %s", error_message.ErrNotFound, "Buyer with Id", id, "doesn't exists.")
-	}
-	delete(r.storage, id)
-
-	err := r.Save()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (r *BuyerRepository) Create(buyer models.Buyer) (models.Buyer, error) {
-	_, exists := r.storage[buyer.Id]
-	if exists {
-		return models.Buyer{}, fmt.Errorf("%w. %s %d %s", error_message.ErrAlreadyExists, "Buyer with Id", buyer.Id, "already exists.")
-	}
-
-	r.storage[buyer.Id] = buyer
-
-	err := r.Save()
-	if err != nil {
-		return models.Buyer{}, fmt.Errorf("%w. %s", error_message.ErrInternalServerError, err.Error())
 	}
 
 	return buyer, nil
 }
 
-func (r *BuyerRepository) GetNewId() int {
-	lastId := 0
-	for _, buyer := range r.storage {
-		if buyer.Id > lastId {
-			lastId = buyer.Id
-		}
-	}
-	return (lastId + 1)
-}
+// DeleteById removes a buyer from the MySQL database by their ID
+// Returns an error if the buyer doesn't exist
+func (r *MySqlBuyerRepository) DeleteById(ctx context.Context, id int) error {
+	query := "delete from buyers where id = ?"
 
-func (r *BuyerRepository) Save() error {
-	buyerArray := []models.Buyer{}
-
-	for _, buyer := range r.storage {
-		buyerArray = append(buyerArray, buyer)
-	}
-
-	err := r.loader.WriteAll(buyerArray)
+	result, err := r.db.ExecContext(ctx, query, id)
 	if err != nil {
-		return fmt.Errorf("%w. %s", error_message.ErrInternalServerError, err.Error())
+		return fmt.Errorf("%w. %s", error_message.ErrInternalServerError, err)
 	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("%w. %s", error_message.ErrInternalServerError, err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("%w. %s %d %s", error_message.ErrNotFound, "Buyer with Id", id, "doesn't exists.")
+	}
+
 	return nil
 }
 
-func GetNewBuyerRepository(loader loader.Storage[models.Buyer]) (BuyerRepositoryI, error) {
-	storage, err := loader.ReadAll()
+// Create inserts a new buyer into the MySQL database
+// Returns the created buyer with its generated ID
+func (r *MySqlBuyerRepository) Create(ctx context.Context, buyer models.Buyer) (models.Buyer, error) {
+	query := `insert into buyers (id_card_number, first_name, last_name) values (?, ?, ?)`
+
+	result, err := r.db.ExecContext(ctx, query, buyer.CardNumberId, buyer.FirstName, buyer.LastName)
+
 	if err != nil {
-		return nil, fmt.Errorf("%w:%v", error_message.ErrInternalServerError, err)
+		return models.Buyer{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
 	}
 
-	return &BuyerRepository{
-		storage: storage,
-		loader:  loader,
-	}, nil
+	lastId, err := result.LastInsertId()
+	if err != nil {
+		return models.Buyer{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
+	}
+
+	buyer.Id = int(lastId)
+	return buyer, nil
 }
 
-func (r *BuyerRepository) GetCardNumberIds() []string {
-	cardNumbers := []string{}
-	for _, buyer := range r.storage {
-		cardNumbers = append(cardNumbers, buyer.CardNumberId)
+// Update modifies an existing buyer in the MySQL database
+// Only updates the fields that are provided (non-empty values)
+// Returns an error if the buyer doesn't exist
+func (r *MySqlBuyerRepository) Update(ctx context.Context, buyerId int, buyer models.Buyer) (models.Buyer, error) {
+	updates := []string{}
+	values := []interface{}{}
+
+	if buyer.FirstName != "" {
+		updates = append(updates, "first_name = ?")
+		values = append(values, buyer.FirstName)
 	}
-	return cardNumbers
+	if buyer.LastName != "" {
+		updates = append(updates, "last_name = ?")
+		values = append(values, buyer.LastName)
+	}
+	if buyer.CardNumberId != "" {
+		updates = append(updates, "id_card_number = ?")
+		values = append(values, buyer.CardNumberId)
+	}
+
+	query := "UPDATE buyers SET " + strings.Join(updates, ", ") + " WHERE id = ?"
+	values = append(values, buyerId)
+
+	result, err := r.db.ExecContext(ctx, query, values...)
+	if err != nil {
+		return models.Buyer{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return models.Buyer{}, fmt.Errorf("%w. %s", error_message.ErrInternalServerError, err)
+	}
+
+	if rowsAffected == 0 {
+		return models.Buyer{}, fmt.Errorf("%w. %s %d %s", error_message.ErrNotFound, "Buyer with Id", buyerId, "doesn't exists.")
+	}
+
+	updatedUser, err := r.GetById(ctx, buyerId)
+	if err != nil {
+		return models.Buyer{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
+	}
+	return updatedUser, nil
+}
+
+// GetCardNumberIds retrieves all card number IDs from the MySQL database
+// Returns a slice of all existing card number IDs
+func (r *MySqlBuyerRepository) GetCardNumberIds() ([]string, error) {
+	cardNumberIds := []string{}
+
+	query := "select id_card_number from buyers"
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return []string{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
+	}
+	defer rows.Close()
+	for rows.Next() {
+		cardNumberId := ""
+		err = rows.Scan(&cardNumberId)
+		if err != nil {
+			return []string{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
+		}
+
+		cardNumberIds = append(cardNumberIds, cardNumberId)
+	}
+
+	return cardNumberIds, nil
+}
+
+// ExistBuyerById checks if a buyer with the given ID exists in the MySQL database
+// Returns true if the buyer exists, false otherwise
+func (r *MySqlBuyerRepository) ExistBuyerById(ctx context.Context, buyerId int) (bool, error) {
+	query := "SELECT 1 FROM buyers WHERE id = ? LIMIT 1"
+
+	var exists int64
+	err := r.db.QueryRowContext(ctx, query, buyerId).Scan(&exists)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return false, nil
+		}
+		return false, fmt.Errorf("error al verificar la existencia del producto: %w", err)
+	}
+	return true, nil
 }
