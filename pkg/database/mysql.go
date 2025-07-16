@@ -1,10 +1,13 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
-	"github.com/sajimenezher_meli/meli-frescos-8/internal/config"
 	"log"
+
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/config"
+	tools "github.com/sajimenezher_meli/meli-frescos-8/pkg"
 
 	_ "github.com/go-sql-driver/mysql" // MySQL driver
 )
@@ -26,4 +29,40 @@ func InitDB(cfg *config.Config) *sql.DB {
 
 	log.Println("Successfully connected to MySQL!")
 	return db
+}
+
+func SelectOne(ctx context.Context, db *sql.DB, tablename string, fields []string, condition string, values ...any) *sql.Row {
+	columns := tools.SliceToString(fields, ",")
+	sqlStatement := fmt.Sprintf("SELECT %s FROM %s", columns, tablename)
+	if condition != "" {
+		sqlStatement = fmt.Sprintf("%s WHERE %s", sqlStatement, condition)
+	}
+
+	return db.QueryRowContext(ctx, sqlStatement, values...)
+}
+
+func Select(ctx context.Context, db *sql.DB, tablename string, fields []string, condition string, values ...any) (*sql.Rows, error) {
+	columns := tools.SliceToString(fields, ",")
+	sqlStatement := fmt.Sprintf("SELECT %s FROM %s", columns, tablename)
+	if condition != "" {
+		sqlStatement = fmt.Sprintf("%s WHERE %s", sqlStatement, condition)
+	}
+
+	return db.QueryContext(ctx, sqlStatement, values...)
+}
+
+func Insert(ctx context.Context, db *sql.DB, tablename string, data map[any]any) (sql.Result, error) {
+	keys, values := tools.GetSlicesOfKeyAndValuesFromMap(data)
+	columns := tools.SliceToString(keys, ",")
+	placeholders := tools.SliceToString(tools.FillNewSlice(len(data), "?"), ",")
+
+	sqlStatement := fmt.Sprintf("INSERT INTO %s(%s) VALUES (%s);", tablename, columns, placeholders)
+
+	return db.ExecContext(ctx, sqlStatement, values...)
+}
+
+func Delete(ctx context.Context, db *sql.DB, tablename string, condition string, values ...any) (sql.Result, error) {
+	sqlStatement := fmt.Sprintf("DELETE FROM %s WHERE %s;", tablename, condition)
+
+	return db.ExecContext(ctx, sqlStatement, values...)
 }

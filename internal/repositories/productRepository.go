@@ -1,271 +1,292 @@
 package repositories
 
 import (
+	"context"
+	"database/sql"
 	"errors"
-	"strings"
+	"fmt"
 
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/error_message"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
-	"github.com/sajimenezher_meli/meli-frescos-8/pkg/loader"
 )
 
-// ProductRepositoryI defines the contract for product repository operations
-// ProductRepositoryI define el contrato para las operaciones del repositorio de productos
-type ProductRepositoryI interface {
-	// GetAll retrieves all products from storage
-	// GetAll obtiene todos los productos del almacenamiento
-	GetAll() ([]models.Product, error)
+// Constantes SQL para operaciones de productos
+// SQL constants for product operations
+const (
+	// productColumns define las columnas principales de la tabla products
+	// productColumns defines the main columns of the products table
+	productColumns = `
+		id, description, expiration_rate, freezing_rate, height, 
+		length, net_weight, product_code, recommended_freezing_temperature, 
+		width, product_type_id, seller_id
+	`
+	queryGetAllProducts = "SELECT " + productColumns + " FROM products"
+	queryGetProductByID = "SELECT " + productColumns + " FROM products WHERE id = ?"
+	queryCreateProduct  = `
+		INSERT INTO products (description, expiration_rate, freezing_rate, height, 
+							  length, net_weight, product_code, recommended_freezing_temperature, 
+							  width, product_type_id, seller_id) 
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	queryUpdateProduct = `
+		UPDATE products SET description = ?, expiration_rate = ?, freezing_rate = ?, height = ?, 
+		length = ?, net_weight = ?, product_code = ?, recommended_freezing_temperature = ?, 
+		width = ?, product_type_id = ?, seller_id = ?
+		WHERE id = ?`
+	queryDeleteProduct    = "DELETE FROM products WHERE id = ?"
+	queryExistProductID   = "SELECT 1 FROM products WHERE id = ? LIMIT 1"
+	queryExistProductCode = "SELECT 1 FROM products WHERE product_code = ? LIMIT 1"
+)
 
-	// GetByID retrieves a product by its ID
-	// GetByID obtiene un producto por su ID
-	GetByID(id int) (*models.Product, error)
+var productRepositoryInstance ProductRepository
 
-	// Create adds a new product to storage
-	// Create agrega un nuevo producto al almacenamiento
-	Create(product models.Product) (models.Product, error)
-
-	// CreateByBatch adds multiple products to storage in a single operation
-	// CreateByBatch agrega múltiples productos al almacenamiento en una sola operación
-	CreateByBatch(products []models.Product) ([]models.Product, error)
-
-	// UpdateById updates an existing product by its ID
-	// UpdateById actualiza un producto existente por su ID
-	UpdateById(id int, product models.Product) (models.Product, error)
-
-	// DeleteById removes a product from storage by its ID
-	// DeleteById elimina un producto del almacenamiento por su ID
-	DeleteById(id int) error
-
-	// ExistById checks if a product exists by its ID
-	// ExistById verifica si un producto existe por su ID
-	ExistById(id int) bool
-
-	// ExistByProductCode checks if a product exists by its product code
-	// ExistByProductCode verifica si un producto existe por su código de producto
-	ExistByProductCode(id string) bool
-}
-
-// productRepository implements ProductRepositoryI interface using JSON storage
-// productRepository implementa la interfaz ProductRepositoryI usando almacenamiento JSON
-type productRepository struct {
-	Storage loader.StorageJSON[models.Product]
-}
-
-// NewProductRepository creates a new instance of product repository
 // NewProductRepository crea una nueva instancia del repositorio de productos
-func NewProductRepository(storage loader.StorageJSON[models.Product]) ProductRepositoryI {
-	return &productRepository{
-		Storage: storage,
+// NewProductRepository creates a new instance of the product repository
+func NewProductRepository(db *sql.DB) ProductRepository {
+	if productRepositoryInstance != nil {
+		return productRepositoryInstance
 	}
+
+	productRepositoryInstance = &service{
+		db: db,
+	}
+	return productRepositoryInstance
 }
 
-// GetAll retrieves all products from storage and returns them as a slice
-// GetAll obtiene todos los productos del almacenamiento y los devuelve como un slice
-func (pr *productRepository) GetAll() ([]models.Product, error) {
-	// Read all products from storage
-	// Leer todos los productos del almacenamiento
-	productsMap, err := pr.Storage.ReadAll()
+// ProductRepository define la interfaz para operaciones de productos en la base de datos
+// ProductRepository defines the interface for product database operations
+type ProductRepository interface {
+	// GetAll obtiene todos los productos de la base de datos
+	// GetAll retrieves all products from the database
+	GetAll(ctx context.Context) ([]models.Product, error)
 
-	if err != nil {
-		return nil, err
-	}
+	// GetByID obtiene un producto por su ID
+	// GetByID retrieves a product by its ID
+	GetByID(ctx context.Context, id int64) (models.Product, error)
 
-	// Check if there are no products
-	// Verificar si no hay productos
-	if len(productsMap) == 0 {
-		return nil, error_message.ErrNotFound
-	}
+	// Create crea un nuevo producto en la base de datos
+	// Create creates a new product in the database
+	Create(ctx context.Context, newProduct models.Product) (models.Product, error)
 
-	// Convert the map to a slice
-	// Convertir el mapa a un slice
-	productSlice := pr.Storage.MapToSlice(productsMap)
+	// CreateByBatch crea múltiples productos en una sola transacción
+	// CreateByBatch creates multiple products in a single transaction
+	CreateByBatch(ctx context.Context, products []models.Product) ([]models.Product, error)
 
-	return productSlice, nil
+	// Update actualiza un producto existente
+	// Update updates an existing product
+	Update(ctx context.Context, id int64, product models.Product) (models.Product, error)
+
+	// Delete elimina un producto por su ID
+	// Delete removes a product by its ID
+	Delete(ctx context.Context, id int64) error
+
+	// Exists verifica si un producto existe por su ID
+	// Exists checks if a product exists by its ID
+	Exists(ctx context.Context, id int64) (bool, error)
+
+	// ExistsByProductCode verifica si existe un producto con el código dado
+	// ExistsByProductCode checks if a product exists with the given product code
+	ExistsByProductCode(ctx context.Context, productCode string) (bool, error)
 }
 
-// GetByID retrieves a specific product by its ID
-// GetByID obtiene un producto específico por su ID
-func (pr *productRepository) GetByID(id int) (*models.Product, error) {
-	products, err := pr.Storage.ReadAll()
-
-	if err != nil {
-		return nil, err
-	}
-
-	if len(products) == 0 {
-		return nil, error_message.ErrNotFound
-	}
-
-	// Get the product by ID
-	// Obtener el producto por ID
-	productFound := products[id]
-
-	if productFound == (models.Product{}) {
-		return nil, error_message.ErrNotFound
-	}
-
-	return &productFound, nil
-
+// service implementa la interfaz ProductRepository
+// service implements the ProductRepository interface
+type service struct {
+	db *sql.DB
 }
 
-// Create adds a new product to storage after validating it doesn't already exist
-// Create agrega un nuevo producto al almacenamiento después de validar que no exista ya
-func (pr *productRepository) Create(newProduct models.Product) (models.Product, error) {
-
-	// Check if product already exists by ID
-	// Verificar si el producto ya existe por ID
-	if pr.ExistById(newProduct.Id) {
-		return models.Product{}, error_message.ErrAlreadyExists
-	}
-
-	// Check if product already exists by product code
-	// Verificar si el producto ya existe por código de producto
-	if pr.ExistByProductCode(newProduct.ProductCode) {
-		return models.Product{}, errors.Join(error_message.ErrAlreadyExists, errors.New("error: product with the same product_code exists"))
-
-	}
-
-	// Read all products from storage
-	// Leer todos los productos del almacenamiento
-	productsMap, err := pr.Storage.ReadAll()
+// GetAll obtiene todos los productos de la base de datos
+// GetAll retrieves all products from the database
+func (pr *service) GetAll(ctx context.Context) ([]models.Product, error) {
+	rows, err := pr.db.QueryContext(ctx, queryGetAllProducts)
 
 	if err != nil {
-		return models.Product{}, err
+		return nil, fmt.Errorf("failed to query products: %w", err)
 	}
+	defer rows.Close()
 
-	// Get the new ID for the product
-	// Obtener el nuevo ID para el producto
-	idCount := len(productsMap) + 1
-	newProduct.Id = idCount
+	var products []models.Product
+	for rows.Next() {
+		var p models.Product
 
-	// Add the new product to the map
-	// Agregar el nuevo producto al mapa
-	productsMap[newProduct.Id] = newProduct
-
-	// Convert the map to a slice
-	// Convertir el mapa a un slice
-	productSlice := pr.Storage.MapToSlice(productsMap)
-
-	err = pr.Storage.WriteAll(productSlice)
-
-	if err != nil {
-		return models.Product{}, err
-	}
-
-	return newProduct, nil
-
-}
-
-// CreateByBatch creates multiple products in a single batch operation
-// CreateByBatch crea múltiples productos en una sola operación por lotes
-func (pr *productRepository) CreateByBatch(products []models.Product) ([]models.Product, error) {
-	// Create each product individually
-	// Crear cada producto individualmente
-	for _, currentProduct := range products {
-		_, err := pr.Create(currentProduct)
-		if err != nil {
-			return nil, err
+		if err := rows.Scan(&p.Id, &p.Description, &p.ExpirationRate, &p.FreezingRate, &p.Height,
+			&p.Length, &p.NetWeight, &p.ProductCode, &p.RecommendedFreezingTemperature,
+			&p.Width, &p.ProductTypeID, &p.SellerID); err != nil {
+			return nil, fmt.Errorf("failed to scan product row: %w", err)
 		}
+		products = append(products, p)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating product rows: %w", err)
 	}
 
 	return products, nil
 }
 
-// UpdateById updates an existing product by its ID
-// UpdateById actualiza un producto existente por su ID
-func (pr *productRepository) UpdateById(id int, productToUpdate models.Product) (models.Product, error) {
-	if !pr.ExistById(id) {
+// GetByID obtiene un producto específico por su ID
+// GetByID retrieves a specific product by its ID
+func (pr *service) GetByID(ctx context.Context, id int64) (models.Product, error) {
+	var p models.Product
+	err := pr.db.QueryRowContext(ctx, queryGetProductByID, id).Scan(
+		&p.Id, &p.Description, &p.ExpirationRate, &p.FreezingRate, &p.Height,
+		&p.Length, &p.NetWeight, &p.ProductCode, &p.RecommendedFreezingTemperature,
+		&p.Width, &p.ProductTypeID, &p.SellerID,
+	)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return models.Product{}, error_message.ErrNotFound
+		}
+		return models.Product{}, fmt.Errorf("failed to scan product with id %d: %w", id, err)
+	}
+
+	return p, nil
+}
+
+// Create crea un nuevo producto en la base de datos y retorna el producto con su ID asignado
+// Create creates a new product in the database and returns the product with its assigned ID
+func (pr *service) Create(ctx context.Context, newProduct models.Product) (models.Product, error) {
+	result, err := pr.db.ExecContext(ctx, queryCreateProduct, newProduct.Description, newProduct.ExpirationRate,
+		newProduct.FreezingRate, newProduct.Height, newProduct.Length, newProduct.NetWeight,
+		newProduct.ProductCode, newProduct.RecommendedFreezingTemperature, newProduct.Width,
+		newProduct.ProductTypeID, newProduct.SellerID)
+
+	if err != nil {
+		return models.Product{}, fmt.Errorf("failed to create product: %w", err)
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return models.Product{}, fmt.Errorf("failed to get last insert id for product: %w", err)
+	}
+
+	newProduct.Id = id
+	return newProduct, nil
+}
+
+// CreateByBatch crea múltiples productos en una sola transacción para mejorar el rendimiento
+// CreateByBatch creates multiple products in a single transaction to improve performance
+func (pr *service) CreateByBatch(ctx context.Context, products []models.Product) ([]models.Product, error) {
+	// Inicia una transacción para asegurar atomicidad
+	// Start a transaction to ensure atomicity
+	tx, err := pr.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to begin transaction: %w", err)
+	}
+
+	defer tx.Rollback()
+
+	// Prepara la declaración SQL para reutilizar
+	// Prepare the SQL statement for reuse
+	stmt, err := tx.PrepareContext(ctx, queryCreateProduct)
+	if err != nil {
+		return nil, fmt.Errorf("failed to prepare statement: %w", err)
+	}
+	defer stmt.Close()
+
+	// Ejecuta la inserción para cada producto
+	// Execute the insertion for each product
+	for i := range products {
+		product := &products[i]
+		result, err := stmt.ExecContext(ctx, product.Description, product.ExpirationRate,
+			product.FreezingRate, product.Height, product.Length, product.NetWeight,
+			product.ProductCode, product.RecommendedFreezingTemperature, product.Width,
+			product.ProductTypeID, product.SellerID)
+
+		if err != nil {
+
+			return nil, fmt.Errorf("failed to execute statement for product %s: %w", product.ProductCode, err)
+		}
+
+		id, err := result.LastInsertId()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get last insert id for product %s: %w", product.ProductCode, err)
+		}
+		product.Id = id
+	}
+
+	// Confirma la transacción
+	// Commit the transaction
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return products, nil
+}
+
+// Update actualiza un producto existente en la base de datos
+// Update updates an existing product in the database
+func (pr *service) Update(ctx context.Context, id int64, product models.Product) (models.Product, error) {
+	result, err := pr.db.ExecContext(ctx, queryUpdateProduct,
+		product.Description, product.ExpirationRate, product.FreezingRate, product.Height,
+		product.Length, product.NetWeight, product.ProductCode, product.RecommendedFreezingTemperature,
+		product.Width, product.ProductTypeID, product.SellerID, id)
+
+	if err != nil {
+		return models.Product{}, fmt.Errorf("failed to update product %d: %w", id, err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return models.Product{}, fmt.Errorf("failed to get rows affected for product %d: %w", id, err)
+	}
+
+	// Verifica si el producto existe
+	// Check if the product exists
+	if rowsAffected == 0 {
 		return models.Product{}, error_message.ErrNotFound
 	}
 
-	productsMap, err := pr.Storage.ReadAll()
-
-	if err != nil {
-		return models.Product{}, err
-	}
-
-	// Ensure the product maintains the correct ID
-	// Asegurar que el producto mantenga el ID correcto
-	productToUpdate.Id = id
-
-	// Update the product in the map
-	// Actualizar el producto en el mapa
-	productsMap[id] = productToUpdate
-	productsSlice := pr.Storage.MapToSlice(productsMap)
-
-	err = pr.Storage.WriteAll(productsSlice)
-
-	if err != nil {
-		return models.Product{}, err
-	}
-
-	return productToUpdate, nil
-
+	product.Id = id
+	return product, nil
 }
 
-// DeleteById removes a product from storage by its ID
-// DeleteById elimina un producto del almacenamiento por su ID
-func (pr *productRepository) DeleteById(id int) error {
-	if !pr.ExistById(id) {
+// Delete elimina un producto de la base de datos por su ID
+// Delete removes a product from the database by its ID
+func (pr *service) Delete(ctx context.Context, id int64) error {
+	result, err := pr.db.ExecContext(ctx, queryDeleteProduct, id)
+	if err != nil {
+		return fmt.Errorf("failed to delete product %d: %w", id, err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get rows affected on delete for product %d: %w", id, err)
+	}
+
+	// Verifica si el producto existía
+	// Check if the product existed
+	if rowsAffected == 0 {
 		return error_message.ErrNotFound
 	}
 
-	productsMap, _ := pr.Storage.ReadAll()
-
-	// Remove product from map
-	// Eliminar producto del mapa
-	delete(productsMap, id)
-
-	productsSlice := pr.Storage.MapToSlice(productsMap)
-
-	err := pr.Storage.WriteAll(productsSlice)
-
-	return err
+	return nil
 }
 
-// ExistById checks if a product exists in storage by its ID
-// ExistById verifica si un producto existe en el almacenamiento por su ID
-func (pr *productRepository) ExistById(id int) bool {
-	products, err := pr.Storage.ReadAll()
-
+// Exists verifica si un producto existe en la base de datos por su ID
+// Exists checks if a product exists in the database by its ID
+func (pr *service) Exists(ctx context.Context, id int64) (bool, error) {
+	var exists int
+	err := pr.db.QueryRowContext(ctx, queryExistProductID, id).Scan(&exists)
 	if err != nil {
-		return false
-	}
-
-	if len(products) == 0 {
-		return false
-	}
-
-	// Check if the product exists in the map
-	// Verificar si el producto existe en el mapa
-	_, exist := products[id]
-
-	return exist
-
-}
-
-// ExistByProductCode checks if a product exists in storage by its product code (case-insensitive)
-// ExistByProductCode verifica si un producto existe en el almacenamiento por su código de producto (insensible a mayúsculas)
-func (pr *productRepository) ExistByProductCode(productCode string) bool {
-	products, err := pr.Storage.ReadAll()
-
-	if err != nil {
-		return false
-	}
-
-	// Check if there are no products
-	// Verificar si no hay productos
-	if len(products) == 0 {
-		return false
-	}
-
-	// Compare product codes case-insensitively using EqualFold for better performance
-	// Comparar códigos de productos sin distinguir mayúsculas usando EqualFold para mejor rendimiento
-	for _, currentProduct := range products {
-		if strings.EqualFold(currentProduct.ProductCode, productCode) {
-			return true
+		if errors.Is(err, sql.ErrNoRows) {
+			return false, nil
 		}
+		return false, fmt.Errorf("error checking existence of product %d: %w", id, err)
 	}
+	return true, nil
+}
 
-	return false
+// ExistsByProductCode verifica si existe un producto con el código de producto dado
+// ExistsByProductCode checks if a product exists with the given product code
+func (pr *service) ExistsByProductCode(ctx context.Context, productCode string) (bool, error) {
+	var exists int
+	err := pr.db.QueryRowContext(ctx, queryExistProductCode, productCode).Scan(&exists)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return false, nil
+		}
+		return false, fmt.Errorf("error checking existence of product code %s: %w", productCode, err)
+	}
+	return true, nil
 }
