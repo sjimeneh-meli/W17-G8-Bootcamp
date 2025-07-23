@@ -1,0 +1,67 @@
+1. Dummies (Objetos Ficticios/Bobos)
+¿Qué son?
+Los Dummies son los objetos más simples. Son placeholders (marcadores de posición) que se pasan como argumentos a una función o método, pero nunca se utilizan realmente. Sirven para satisfacer los requisitos de la firma de un método, pero no tienen ningún comportamiento ni datos importantes para la prueba en sí.
+¿Cuándo se usan?
+Cuando un método o función requiere un objeto como parámetro, pero ese objeto no es relevante para el comportamiento que estás probando en ese momento.
+Analogía simple:
+Imagina que estás probando una receta de cocina y la receta dice que necesitas un "ingrediente secreto especial". Pero para la parte de la receta que estás probando (digamos, cortar las verduras), el "ingrediente secreto" no se usa para nada. Así que pones una papa en la mesa y dices: "Ahí está mi ingrediente secreto", pero nunca la tocas. La papa es el "dummy".
+
+Ejemplo en Go:
+Imagina que tienes una función que procesa un pedido, y aunque el pedido tiene un campo para "notificaciones", la función que estás probando solo se encarga del cálculo del total y no envía notificaciones.
+
+
+
+2. Stubs (Dobles de Comportamiento Fijo)
+¿Qué son?
+Los Stubs son objetos que proporcionan respuestas predefinidas a llamadas específicas durante una prueba. No tienen lógica de negocio real, simplemente devuelven los valores que tú le indicas para que la parte de tu código que estás probando pueda continuar su ejecución.
+¿Cuándo se usan?
+Cuando necesitas que una dependencia devuelva un valor específico para que tu código bajo prueba pueda tomar decisiones o procesar datos basándose en esos valores. Te permiten aislar la unidad de código que estás probando de las dependencias externas.
+Analogía simple:
+Piensa en un operador de teléfono automático que siempre te da la misma información, sin importar lo que le preguntes. Si le preguntas "¿Cuál es la hora?", siempre te dice "Son las 10:00 AM". Si le preguntas "¿Qué tiempo hace?", también te dice "Son las 10:00 AM". Él es un "stub": siempre responde lo mismo, o respuestas predefinidas.
+
+Ejemplo en Go:
+Imagina que tienes una función que obtiene el precio de un producto de un "servicio de inventario". Para tu prueba, no quieres ir a la base de datos real, solo quieres simular que el servicio devuelve un precio específico.
+
+
+
+
+3. Fakes (Implementaciones Ligeras)
+¿Qué son?
+Los Fakes son objetos que tienen una implementación funcional pero simplificada de la funcionalidad real. A diferencia de los stubs que solo devuelven respuestas predefinidas, los fakes pueden tener algo de lógica interna, pero no están pensados para ser usados en producción. Son más rápidos y ligeros que la implementación real.
+¿Cuándo se usan?
+Cuando necesitas una implementación que se comporte de manera similar a la real, pero que sea más rápida, más sencilla o que no tenga las dependencias pesadas de la implementación verdadera. Un buen ejemplo es un "repositorio en memoria" en lugar de uno que interactúa con una base de datos real.
+Analogía simple:
+Imagina que estás probando un videojuego y necesitas un "enemigo". En lugar de programar la inteligencia artificial completa de un enemigo que reaccione al jugador, dispare, etc., creas un "enemigo falso" que solo camina en línea recta y no hace nada más. Es funcional como enemigo (ocupa un espacio, se mueve), pero es una versión muy simplificada.
+
+Ejemplo en Go:
+Imagina que tienes un servicio de usuarios que interactúa con una base de datos. Para las pruebas, quieres una base de datos más rápida que una real, pero que aún te permita almacenar y recuperar usuarios.
+
+
+
+
+
+4. Mocks (Dobles de Interacción Esperada)
+¿Qué son?
+Los Mocks son los dobles más sofisticados. Son objetos que no solo proporcionan respuestas predefinidas (como los stubs), sino que también registran las interacciones que se hicieron con ellos. Esto te permite verificar si tu código bajo prueba interactuó con la dependencia de la manera esperada (por ejemplo, si se llamó a un método específico con ciertos argumentos, o si se llamó un número determinado de veces).
+¿Cuándo se usan?
+Cuando necesitas verificar que una interacción específica ocurrió entre tu código y una dependencia. Por ejemplo, si tu código debe llamar a un servicio de correo electrónico para enviar una notificación, puedes usar un mock para asegurarte de que el método SendEmail fue llamado exactamente una vez con el asunto y el cuerpo correctos.
+Analogía simple:
+Imagina que eres un detective y estás investigando si alguien le envió una carta a otra persona. No te importa el contenido de la carta (eso sería un stub), sino si la carta fue enviada y a quién y cuándo. Los Mocks son como el cartero que lleva un registro de todas las cartas que entrega. Al final del día, le preguntas al cartero si entregó una carta a "Juan Pérez" y él te dice: "Sí, entregué una carta a Juan Pérez a las 3 PM".
+
+Ejemplo en Go:
+Imagina que tienes una función para procesar pedidos que, además de calcular el total, debe enviar un correo electrónico al cliente. Quieres asegurarte de que el correo se envíe correctamente.
+
+
+
+
+
+5. Spies (Espías)
+¿Qué son?
+Los Spies son un tipo especial de doble que envuelven a un objeto real y registran las interacciones con ese objeto, sin modificar su comportamiento original. Permiten observar cómo se comporta un objeto real sin cambiar su implementación.
+¿Cuándo se usan?
+Cuando quieres asegurarte de que un método específico de un objeto real fue llamado, o con qué argumentos, pero aún necesitas que ese método ejecute su lógica real. Son útiles para verificar efectos secundarios o llamadas a otras partes del sistema, sin necesidad de reemplazar completamente el objeto.
+Analogía simple:
+Imagina que eres un padre y quieres saber si tu hijo (el objeto real) se comió las verduras. No quieres que el plato de verduras sea falso o que el niño finja comerlas (eso sería un stub o mock). Quieres que el niño coma las verduras de verdad, pero tú estás "espiando" para ver si lo hizo. El "espía" registra si se comió las verduras.
+
+Ejemplo en Go:
+Imagina que tienes un servicio de logging que realmente escribe en un archivo o consola. Quieres asegurarte de que tu código llama al logger, pero también quieres que el logger funcione normalmente (escriba en algún lugar), y no reemplazarlo completamente como un mock.
