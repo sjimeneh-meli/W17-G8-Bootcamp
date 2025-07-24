@@ -15,6 +15,9 @@ var buyerServiceInstance BuyerServiceI
 // GetBuyerService - Creates and returns a new instance of BuyerService with the required repository using singleton pattern
 // GetBuyerService - Crea y retorna una nueva instancia de BuyerService con el repositorio requerido usando patrón singleton
 func GetBuyerService(repo repositories.BuyerRepositoryI) BuyerServiceI {
+	if repo == nil {
+		panic("GetBuyerService needs a repository as parameter")
+	}
 	if buyerServiceInstance != nil {
 		return buyerServiceInstance
 	}
