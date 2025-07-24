@@ -29,3 +29,10 @@ tests:
 
 clean:
 	rm -f $(COVERAGE_FILE) $(COVERAGE_HTML)
+
+
+coverage-html: clean
+	@echo -e "$(YELLOW)Generando coverage HTML para todo el proyecto...$(RESET)"
+	@go test $(PKG)/... -coverprofile=coverage-out.out -covermode=atomic > /dev/null 2>&1
+	@go tool cover -html=coverage-out.out -o coverage-out.html
+	@echo -e "$(GREEN)Coverage HTML generado: coverage-out.html$(RESET)"

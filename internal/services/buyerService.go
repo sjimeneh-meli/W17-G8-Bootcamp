@@ -15,15 +15,12 @@ var buyerServiceInstance BuyerServiceI
 // GetBuyerService - Creates and returns a new instance of BuyerService with the required repository using singleton pattern
 // GetBuyerService - Crea y retorna una nueva instancia de BuyerService con el repositorio requerido usando patrón singleton
 func GetBuyerService(repo repositories.BuyerRepositoryI) BuyerServiceI {
-	if repo == nil {
-		panic("GetBuyerService needs a repository as parameter")
-	}
 	if buyerServiceInstance != nil {
 		return buyerServiceInstance
 	}
 
 	buyerServiceInstance = &BuyerService{
-		repository: repo,
+		Repository: repo,
 	}
 	return buyerServiceInstance
 }
@@ -55,25 +52,25 @@ type BuyerServiceI interface {
 // BuyerService - Implementation of BuyerServiceI containing business logic for buyer operations
 // BuyerService - Implementación de BuyerServiceI que contiene la lógica de negocio para operaciones de compradores
 type BuyerService struct {
-	repository repositories.BuyerRepositoryI // Repository dependency for data access / Dependencia del repositorio para acceso a datos
+	Repository repositories.BuyerRepositoryI // Repository dependency for data access / Dependencia del repositorio para acceso a datos
 }
 
 // GetAll - Delegates retrieving all buyers to the repository
 // GetAll - Delega la obtención de todos los compradores al repositorio
 func (s *BuyerService) GetAll(ctx context.Context) (map[int]models.Buyer, error) {
-	return s.repository.GetAll(ctx)
+	return s.Repository.GetAll(ctx)
 }
 
 // GetById - Delegates retrieving a buyer by their ID to the repository
 // GetById - Delega la obtención de un comprador por su ID al repositorio
 func (s *BuyerService) GetById(ctx context.Context, id int) (models.Buyer, error) {
-	return s.repository.GetById(ctx, id)
+	return s.Repository.GetById(ctx, id)
 }
 
 // DeleteById - Delegates removing a buyer from the repository by their ID
 // DeleteById - Delega la eliminación de un comprador del repositorio por su ID
 func (s *BuyerService) DeleteById(ctx context.Context, id int) error {
-	return s.repository.DeleteById(ctx, id)
+	return s.Repository.DeleteById(ctx, id)
 }
 
 // Create - Creates a new buyer with business validation to ensure card number uniqueness
@@ -81,7 +78,7 @@ func (s *BuyerService) DeleteById(ctx context.Context, id int) error {
 func (s *BuyerService) Create(ctx context.Context, buyer models.Buyer) (models.Buyer, error) {
 	// Business validation: Get all existing card numbers to check for duplicates
 	// Validación de negocio: Obtener todos los números de tarjeta existentes para verificar duplicados
-	existingCardNumbers, err := s.repository.GetCardNumberIds()
+	existingCardNumbers, err := s.Repository.GetCardNumberIds()
 	if err != nil {
 		return models.Buyer{}, err
 	}
@@ -94,7 +91,7 @@ func (s *BuyerService) Create(ctx context.Context, buyer models.Buyer) (models.B
 
 	// If validation passes, delegate to repository for persistence
 	// Si la validación pasa, delegar al repositorio para la persistencia
-	return s.repository.Create(ctx, buyer)
+	return s.Repository.Create(ctx, buyer)
 }
 
 // Update - Updates an existing buyer with business validation to ensure card number uniqueness
@@ -102,7 +99,7 @@ func (s *BuyerService) Create(ctx context.Context, buyer models.Buyer) (models.B
 func (s *BuyerService) Update(ctx context.Context, id int, buyer models.Buyer) (models.Buyer, error) {
 	// Business validation: Get all existing card numbers to check for duplicates
 	// Validación de negocio: Obtener todos los números de tarjeta existentes para verificar duplicados
-	existingCardNumbers, err := s.repository.GetCardNumberIds()
+	existingCardNumbers, err := s.Repository.GetCardNumberIds()
 	if err != nil {
 		return models.Buyer{}, err
 	}
@@ -115,5 +112,5 @@ func (s *BuyerService) Update(ctx context.Context, id int, buyer models.Buyer) (
 
 	// If validation passes, delegate to repository for persistence
 	// Si la validación pasa, delegar al repositorio para la persistencia
-	return s.repository.Update(ctx, id, buyer)
+	return s.Repository.Update(ctx, id, buyer)
 }
