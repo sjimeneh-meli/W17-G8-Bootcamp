@@ -111,7 +111,7 @@
 				
 				<option value="file27">github.com/sajimenezher_meli/meli-frescos-8/internal/repositories/InboundOrderRepository.go (0.0%)</option>
 				
-				<option value="file28">github.com/sajimenezher_meli/meli-frescos-8/internal/repositories/buyerRepository.go (0.0%)</option>
+				<option value="file28">github.com/sajimenezher_meli/meli-frescos-8/internal/repositories/buyerRepository.go (15.6%)</option>
 				
 				<option value="file29">github.com/sajimenezher_meli/meli-frescos-8/internal/repositories/carry_repository.go (0.0%)</option>
 				
@@ -3678,7 +3678,7 @@ func GetNewBuyerMySQLRepository(db *sql.DB) BuyerRepositoryI <span class="cov0" 
         }</span>
 
         <span class="cov0" title="0">buyerRepositoryInstance = &amp;MySqlBuyerRepository{
-                db: db,
+                Db: db,
         }
         return buyerRepositoryInstance</span>
 }
@@ -3718,35 +3718,35 @@ type BuyerRepositoryI interface {
 // MySqlBuyerRepository - MySQL implementation of the BuyerRepositoryI interface
 // MySqlBuyerRepository - Implementación MySQL de la interfaz BuyerRepositoryI
 type MySqlBuyerRepository struct {
-        db *sql.DB // Database connection / Conexión a la base de datos
+        Db *sql.DB // Database connection / Conexión a la base de datos
 }
 
 // GetAll - Retrieves all buyers from the MySQL database and returns them as a map with buyer ID as key
 // GetAll - Obtiene todos los compradores de la base de datos MySQL y los retorna como un mapa con el ID del comprador como clave
-func (r *MySqlBuyerRepository) GetAll(ctx context.Context) (map[int]models.Buyer, error) <span class="cov0" title="0">{
+func (r *MySqlBuyerRepository) GetAll(ctx context.Context) (map[int]models.Buyer, error) <span class="cov10" title="4">{
         buyers := make(map[int]models.Buyer)
 
         // SQL query to select all buyer fields / Consulta SQL para seleccionar todos los campos del comprador
         query := "select id, id_card_number, first_name, last_name from buyers"
-        rows, err := r.db.QueryContext(ctx, query)
-        if err != nil </span><span class="cov0" title="0">{
+        rows, err := r.Db.QueryContext(ctx, query)
+        if err != nil </span><span class="cov1" title="1">{
                 return buyers, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
         }</span>
-        <span class="cov0" title="0">defer rows.Close()
+        <span class="cov8" title="3">defer rows.Close()
 
         // Create temporary map to store buyers before returning / Crear mapa temporal para almacenar compradores antes de retornar
         tempBuyersMap := make(map[int]models.Buyer)
         // Iterate through all rows and map each buyer to the result map / Itera a través de todas las filas y mapea cada comprador al mapa de resultados
-        for rows.Next() </span><span class="cov0" title="0">{
+        for rows.Next() </span><span class="cov10" title="4">{
                 buyer := models.Buyer{}
                 err = rows.Scan(&amp;buyer.Id, &amp;buyer.CardNumberId, &amp;buyer.FirstName, &amp;buyer.LastName)
-                if err != nil </span><span class="cov0" title="0">{
+                if err != nil </span><span class="cov1" title="1">{
                         return buyers, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
                 }</span>
-                <span class="cov0" title="0">tempBuyersMap[buyer.Id] = buyer</span>
+                <span class="cov8" title="3">tempBuyersMap[buyer.Id] = buyer</span>
         }
 
-        <span class="cov0" title="0">buyers = tempBuyersMap
+        <span class="cov5" title="2">buyers = tempBuyersMap
         return buyers, nil</span>
 }
 
@@ -3757,7 +3757,7 @@ func (r *MySqlBuyerRepository) GetById(ctx context.Context, id int) (models.Buye
 
         // SQL query to select buyer by specific ID / Consulta SQL para seleccionar comprador por ID específico
         query := "select id, id_card_number, first_name, last_name from buyers where id = ?"
-        row := r.db.QueryRowContext(ctx, query, id)
+        row := r.Db.QueryRowContext(ctx, query, id)
         err := row.Err()
         if err != nil </span><span class="cov0" title="0">{
                 return buyer, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
@@ -3781,7 +3781,7 @@ func (r *MySqlBuyerRepository) DeleteById(ctx context.Context, id int) error <sp
         // SQL query to delete buyer by ID / Consulta SQL para eliminar comprador por ID
         query := "delete from buyers where id = ?"
 
-        result, err := r.db.ExecContext(ctx, query, id)
+        result, err := r.Db.ExecContext(ctx, query, id)
         if err != nil </span><span class="cov0" title="0">{
                 return fmt.Errorf("%w. %s", error_message.ErrInternalServerError, err)
         }</span>
@@ -3806,7 +3806,7 @@ func (r *MySqlBuyerRepository) Create(ctx context.Context, buyer models.Buyer) (
         // SQL query to insert new buyer / Consulta SQL para insertar nuevo comprador
         query := `insert into buyers (id_card_number, first_name, last_name) values (?, ?, ?)`
 
-        result, err := r.db.ExecContext(ctx, query, buyer.CardNumberId, buyer.FirstName, buyer.LastName)
+        result, err := r.Db.ExecContext(ctx, query, buyer.CardNumberId, buyer.FirstName, buyer.LastName)
 
         if err != nil </span><span class="cov0" title="0">{
                 return models.Buyer{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
@@ -3846,7 +3846,7 @@ func (r *MySqlBuyerRepository) Update(ctx context.Context, buyerId int, buyer mo
         <span class="cov0" title="0">query := "UPDATE buyers SET " + strings.Join(updates, ", ") + " WHERE id = ?"
         values = append(values, buyerId)
 
-        result, err := r.db.ExecContext(ctx, query, values...)
+        result, err := r.Db.ExecContext(ctx, query, values...)
         if err != nil </span><span class="cov0" title="0">{
                 return models.Buyer{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
         }</span>
@@ -3877,7 +3877,7 @@ func (r *MySqlBuyerRepository) GetCardNumberIds() ([]string, error) <span class=
 
         // SQL query to select all card number IDs / Consulta SQL para seleccionar todos los IDs de números de tarjeta
         query := "select id_card_number from buyers"
-        rows, err := r.db.Query(query)
+        rows, err := r.Db.Query(query)
         if err != nil </span><span class="cov0" title="0">{
                 return []string{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
         }</span>
@@ -3904,7 +3904,7 @@ func (r *MySqlBuyerRepository) ExistBuyerById(ctx context.Context, buyerId int) 
         query := "SELECT 1 FROM buyers WHERE id = ? LIMIT 1"
 
         var exists int64
-        err := r.db.QueryRowContext(ctx, query, buyerId).Scan(&amp;exists)
+        err := r.Db.QueryRowContext(ctx, query, buyerId).Scan(&amp;exists)
 
         if err != nil </span><span class="cov0" title="0">{
                 // If no rows found, buyer doesn't exist (not an error) / Si no se encuentran filas, el comprador no existe (no es un error)

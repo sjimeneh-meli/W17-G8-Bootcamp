@@ -21,7 +21,7 @@ func GetNewBuyerMySQLRepository(db *sql.DB) BuyerRepositoryI {
 	}
 
 	buyerRepositoryInstance = &MySqlBuyerRepository{
-		db: db,
+		Db: db,
 	}
 	return buyerRepositoryInstance
 }
@@ -61,7 +61,7 @@ type BuyerRepositoryI interface {
 // MySqlBuyerRepository - MySQL implementation of the BuyerRepositoryI interface
 // MySqlBuyerRepository - Implementación MySQL de la interfaz BuyerRepositoryI
 type MySqlBuyerRepository struct {
-	db *sql.DB // Database connection / Conexión a la base de datos
+	Db *sql.DB // Database connection / Conexión a la base de datos
 }
 
 // GetAll - Retrieves all buyers from the MySQL database and returns them as a map with buyer ID as key
@@ -71,7 +71,7 @@ func (r *MySqlBuyerRepository) GetAll(ctx context.Context) (map[int]models.Buyer
 
 	// SQL query to select all buyer fields / Consulta SQL para seleccionar todos los campos del comprador
 	query := "select id, id_card_number, first_name, last_name from buyers"
-	rows, err := r.db.QueryContext(ctx, query)
+	rows, err := r.Db.QueryContext(ctx, query)
 	if err != nil {
 		return buyers, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
 	}
@@ -100,7 +100,7 @@ func (r *MySqlBuyerRepository) GetById(ctx context.Context, id int) (models.Buye
 
 	// SQL query to select buyer by specific ID / Consulta SQL para seleccionar comprador por ID específico
 	query := "select id, id_card_number, first_name, last_name from buyers where id = ?"
-	row := r.db.QueryRowContext(ctx, query, id)
+	row := r.Db.QueryRowContext(ctx, query, id)
 	err := row.Err()
 	if err != nil {
 		return buyer, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
@@ -112,7 +112,7 @@ func (r *MySqlBuyerRepository) GetById(ctx context.Context, id int) (models.Buye
 		if errors.Is(err, sql.ErrNoRows) {
 			return models.Buyer{}, fmt.Errorf("%w. %s %d %s", error_message.ErrNotFound, "Buyer with Id", id, "doesn't exists.")
 		}
-		return models.Buyer{}, err
+		return models.Buyer{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
 	}
 
 	return buyer, nil
@@ -124,7 +124,7 @@ func (r *MySqlBuyerRepository) DeleteById(ctx context.Context, id int) error {
 	// SQL query to delete buyer by ID / Consulta SQL para eliminar comprador por ID
 	query := "delete from buyers where id = ?"
 
-	result, err := r.db.ExecContext(ctx, query, id)
+	result, err := r.Db.ExecContext(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("%w. %s", error_message.ErrInternalServerError, err)
 	}
@@ -149,7 +149,7 @@ func (r *MySqlBuyerRepository) Create(ctx context.Context, buyer models.Buyer) (
 	// SQL query to insert new buyer / Consulta SQL para insertar nuevo comprador
 	query := `insert into buyers (id_card_number, first_name, last_name) values (?, ?, ?)`
 
-	result, err := r.db.ExecContext(ctx, query, buyer.CardNumberId, buyer.FirstName, buyer.LastName)
+	result, err := r.Db.ExecContext(ctx, query, buyer.CardNumberId, buyer.FirstName, buyer.LastName)
 
 	if err != nil {
 		return models.Buyer{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
@@ -189,7 +189,7 @@ func (r *MySqlBuyerRepository) Update(ctx context.Context, buyerId int, buyer mo
 	query := "UPDATE buyers SET " + strings.Join(updates, ", ") + " WHERE id = ?"
 	values = append(values, buyerId)
 
-	result, err := r.db.ExecContext(ctx, query, values...)
+	result, err := r.Db.ExecContext(ctx, query, values...)
 	if err != nil {
 		return models.Buyer{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
 	}
@@ -220,7 +220,7 @@ func (r *MySqlBuyerRepository) GetCardNumberIds() ([]string, error) {
 
 	// SQL query to select all card number IDs / Consulta SQL para seleccionar todos los IDs de números de tarjeta
 	query := "select id_card_number from buyers"
-	rows, err := r.db.Query(query)
+	rows, err := r.Db.Query(query)
 	if err != nil {
 		return []string{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
 	}
@@ -247,7 +247,7 @@ func (r *MySqlBuyerRepository) ExistBuyerById(ctx context.Context, buyerId int) 
 	query := "SELECT 1 FROM buyers WHERE id = ? LIMIT 1"
 
 	var exists int64
-	err := r.db.QueryRowContext(ctx, query, buyerId).Scan(&exists)
+	err := r.Db.QueryRowContext(ctx, query, buyerId).Scan(&exists)
 
 	if err != nil {
 		// If no rows found, buyer doesn't exist (not an error) / Si no se encuentran filas, el comprador no existe (no es un error)
