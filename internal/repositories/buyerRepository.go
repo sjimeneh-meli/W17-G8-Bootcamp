@@ -254,7 +254,7 @@ func (r *MySqlBuyerRepository) ExistBuyerById(ctx context.Context, buyerId int) 
 		if errors.Is(err, sql.ErrNoRows) {
 			return false, nil
 		}
-		return false, fmt.Errorf("error al verificar la existencia del producto: %w", err)
+		return false, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
 	}
 	return true, nil
 }
