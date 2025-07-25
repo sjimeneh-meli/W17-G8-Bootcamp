@@ -202,6 +202,148 @@ func TestBuyerService_DeleteById(t *testing.T) {
 	})
 }
 
+func TestCreate(t *testing.T) {
+	t.Run("Create fails because new buyer CardNumberId already exists", func(t *testing.T) {
+		expectedError := error_message.ErrAlreadyExists
+		expectedBuyer := models.Buyer{}
+
+		newBuyer := models.Buyer{
+			Id:           0,
+			CardNumberId: "CARD-001",
+			FirstName:    "Ignacio",
+			LastName:     "Garcia",
+		}
+		mockRepository := tests.GetNewBuyerRepositoryMock()
+		mockRepository.On("GetCardNumberIds").Return([]string{"CARD-001", "CARD-0002"}, nil).Once()
+		service := services.BuyerService{
+			Repository: mockRepository,
+		}
+
+		result, err := service.Create(context.Background(), newBuyer)
+
+		assert.Equal(t, expectedBuyer, result, "result should be an empty buyer")
+		assert.NotNil(t, err, "err should not be nil")
+		assert.ErrorIs(t, err, expectedError, "err should be of ErrAlreadyExists type")
+
+	})
+
+	t.Run("Create fails because of a repository issue obtaining existing CardNumberIds return Internal Server Error", func(t *testing.T) {
+		expectedError := error_message.ErrInternalServerError
+		expectedBuyer := models.Buyer{}
+
+		newBuyer := models.Buyer{
+			Id:           0,
+			CardNumberId: "CARD-001",
+			FirstName:    "Ignacio",
+			LastName:     "Garcia",
+		}
+		mockRepository := tests.GetNewBuyerRepositoryMock()
+		mockRepository.On("GetCardNumberIds").Return([]string{}, error_message.ErrInternalServerError).Once()
+
+		service := services.BuyerService{
+			Repository: mockRepository,
+		}
+
+		result, err := service.Create(context.Background(), newBuyer)
+
+		assert.Equal(t, expectedBuyer, result, "result should be an empty buyer")
+		assert.NotNil(t, err, "err should not be nil")
+		assert.ErrorIs(t, err, expectedError, "err should be of ErrInternalServerError type")
+	})
+
+	t.Run("Create successfully creates a new Buyer on repository", func(t *testing.T) {
+
+		newBuyer := models.Buyer{
+			Id:           0,
+			CardNumberId: "CARD-0011",
+			FirstName:    "Ignacio",
+			LastName:     "Garcia",
+		}
+		mockRepository := tests.GetNewBuyerRepositoryMock()
+		mockRepository.On("GetCardNumberIds").Return([]string{"CARD-001", "CARD-0002"}, nil).Once()
+		mockRepository.On("Create", context.Background(), newBuyer).Return(newBuyer, nil).Once()
+
+		service := services.BuyerService{
+			Repository: mockRepository,
+		}
+
+		_, err := service.Create(context.Background(), newBuyer)
+
+		assert.Nil(t, err, "err should be nil")
+
+	})
+}
+
+func TestUpdate(t *testing.T) {
+	t.Run("Update fails because of a repository issue obtaining existing CardNumberIds return Internal Server Error", func(t *testing.T) {
+		expectedError := error_message.ErrInternalServerError
+		expectedBuyer := models.Buyer{}
+
+		newBuyer := models.Buyer{
+			Id:           10,
+			CardNumberId: "CARD-001",
+			FirstName:    "Ignacio",
+		}
+		mockRepository := tests.GetNewBuyerRepositoryMock()
+		mockRepository.On("GetCardNumberIds").Return([]string{}, error_message.ErrInternalServerError).Once()
+
+		service := services.BuyerService{
+			Repository: mockRepository,
+		}
+
+		result, err := service.Update(context.Background(), newBuyer.Id, newBuyer)
+
+		assert.Equal(t, expectedBuyer, result, "result should be an empty buyer")
+		assert.NotNil(t, err, "err should not be nil")
+		assert.ErrorIs(t, err, expectedError, "err should be of ErrInternalServerError type")
+
+	})
+
+	t.Run("Update fails because new buyer CardNumberId already exists", func(t *testing.T) {
+		expectedError := error_message.ErrAlreadyExists
+		expectedBuyer := models.Buyer{}
+
+		newBuyer := models.Buyer{
+			Id:           10,
+			CardNumberId: "CARD-001",
+		}
+		mockRepository := tests.GetNewBuyerRepositoryMock()
+		mockRepository.On("GetCardNumberIds").Return([]string{"CARD-001", "CARD-0002"}, nil).Once()
+		service := services.BuyerService{
+			Repository: mockRepository,
+		}
+
+		result, err := service.Update(context.Background(), newBuyer.Id, newBuyer)
+
+		assert.Equal(t, expectedBuyer, result, "result should be an empty buyer")
+		assert.NotNil(t, err, "err should not be nil")
+		assert.ErrorIs(t, err, expectedError, "err should be of ErrAlreadyExists type")
+
+	})
+
+	t.Run("Update successfully updates a Buyer on repository", func(t *testing.T) {
+
+		newBuyer := models.Buyer{
+			Id:           0,
+			CardNumberId: "CARD-0011",
+			FirstName:    "Ignacio",
+			LastName:     "Garcia",
+		}
+		mockRepository := tests.GetNewBuyerRepositoryMock()
+		mockRepository.On("GetCardNumberIds").Return([]string{"CARD-001", "CARD-0002"}, nil).Once()
+		mockRepository.On("Update", context.Background(), newBuyer.Id, newBuyer).Return(newBuyer, nil).Once()
+
+		service := services.BuyerService{
+			Repository: mockRepository,
+		}
+
+		_, err := service.Update(context.Background(), newBuyer.Id, newBuyer)
+
+		assert.Nil(t, err, "err should be nil")
+
+	})
+}
+
 func TestGetBuyerService(t *testing.T) {
 	t.Run("GetBuyerService returns same instance when called multiple times", func(t *testing.T) {
 		mockRepository := tests.GetNewBuyerRepositoryMock()

@@ -220,7 +220,7 @@ func TestGetById(t *testing.T) {
 								 }`
 
 		serviceMock := services_test.GetNewBuyerServiceMock()
-		serviceMock.On("GetById", mock.AnythingOfType("*context.timerCtx"), numberId).Return(models.Buyer{}, error_message.ErrNotFound)
+		serviceMock.On("GetById", mock.AnythingOfType("*context.timerCtx"), numberId).Return(models.Buyer{}, error_message.ErrNotFound).Once()
 
 		handler := handlers.GetBuyerHandler(serviceMock)
 
