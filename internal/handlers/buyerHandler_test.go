@@ -51,7 +51,7 @@ func TestPost(t *testing.T) {
 			LastName:     "Pérez",
 		}
 
-		request := httptest.NewRequest("POST", "http://localhost:8080/api/v1/buyers", validBuyerRequest)
+		request := httptest.NewRequest("POST", "/api/v1/buyers", validBuyerRequest)
 		request.Header.Set("Content-Type", "application/json")
 		response := httptest.NewRecorder()
 		response.Header().Set("Content-type", "application/json")
@@ -80,7 +80,7 @@ func TestPost(t *testing.T) {
 			"lastname": "Pérez"
 		}`)
 
-		request := httptest.NewRequest("POST", "http://localhost:8080/api/v1/buyers", invalidBuyerRequest)
+		request := httptest.NewRequest("POST", "/api/v1/buyers", invalidBuyerRequest)
 		request.Header.Set("Content-Type", "application/json")
 		response := httptest.NewRecorder()
 		response.Header().Set("Content-type", "application/json")
@@ -118,7 +118,7 @@ func TestPost(t *testing.T) {
 		serviceMock.On("Create", mock.AnythingOfType("*context.timerCtx"), mockRequestBuyer).Return(models.Buyer{}, error_message.ErrAlreadyExists)
 		handler := handlers.GetBuyerHandler(serviceMock)
 
-		request := httptest.NewRequest("POST", "http://localhost:8080/api/v1/buyers", repeatedCardNumberBuyerRequest)
+		request := httptest.NewRequest("POST", "/api/v1/buyers", repeatedCardNumberBuyerRequest)
 		request.Header.Set("Content-Type", "application/json")
 		response := httptest.NewRecorder()
 		response.Header().Set("Content-type", "application/json")
@@ -152,7 +152,7 @@ func TestPost(t *testing.T) {
 		serviceMock.On("Create", mock.AnythingOfType("*context.timerCtx"), mockRequestBuyer).Return(models.Buyer{}, error_message.ErrInternalServerError)
 		handler := handlers.GetBuyerHandler(serviceMock)
 
-		request := httptest.NewRequest("POST", "http://localhost:8080/api/v1/buyers", internalServerErrorBuyerRequest)
+		request := httptest.NewRequest("POST", "/api/v1/buyers", internalServerErrorBuyerRequest)
 		request.Header.Set("Content-Type", "application/json")
 		response := httptest.NewRecorder()
 		response.Header().Set("Content-type", "application/json")
@@ -177,7 +177,7 @@ func TestGetAll(t *testing.T) {
 		service.On("GetAll", mock.AnythingOfType("*context.timerCtx")).Return(map[int]models.Buyer{}, error_message.ErrInternalServerError)
 		handler := handlers.GetBuyerHandler(service)
 
-		request := httptest.NewRequest("GET", "http://localhost:8080/api/v1/buyers", nil)
+		request := httptest.NewRequest("GET", "/api/v1/buyers", nil)
 		response := httptest.NewRecorder()
 		response.Header().Set("Content-type", "application/json")
 
@@ -199,7 +199,7 @@ func TestGetAll(t *testing.T) {
 		service.On("GetAll", mock.AnythingOfType("*context.timerCtx")).Return(mockBuyers, nil)
 		handler := handlers.GetBuyerHandler(service)
 
-		request := httptest.NewRequest("GET", "http://localhost:8080/api/v1/buyers", nil)
+		request := httptest.NewRequest("GET", "/api/v1/buyers", nil)
 		response := httptest.NewRecorder()
 		response.Header().Set("Content-type", "application/json")
 
@@ -224,7 +224,7 @@ func TestGetById(t *testing.T) {
 
 		handler := handlers.GetBuyerHandler(serviceMock)
 
-		request, err := newTestRequestWithIDParam("GET", "/buyers", id, nil)
+		request, err := newTestRequestWithIDParam("GET", "/api/v1/buyers", id, nil)
 		if err != nil {
 			t.Fatalf("failed to create request: %v", err)
 		}
@@ -250,7 +250,7 @@ func TestGetById(t *testing.T) {
 		serviceMock := services_test.GetNewBuyerServiceMock()
 		handler := handlers.GetBuyerHandler(serviceMock)
 
-		request, err := newTestRequestWithIDParam("GET", "/buyers", id, nil)
+		request, err := newTestRequestWithIDParam("GET", "/api/v1/buyers", id, nil)
 		if err != nil {
 			t.Fatalf("failed to create request: %v", err)
 		}
@@ -277,7 +277,7 @@ func TestGetById(t *testing.T) {
 
 		handler := handlers.GetBuyerHandler(serviceMock)
 
-		request, err := newTestRequestWithIDParam("GET", "/buyers", id, nil)
+		request, err := newTestRequestWithIDParam("GET", "/api/v1/buyers", id, nil)
 		if err != nil {
 			t.Fatalf("failed to create request: %v", err)
 		}
@@ -316,7 +316,7 @@ func TestGetById(t *testing.T) {
 
 		handler := handlers.GetBuyerHandler(serviceMock)
 
-		request, err := newTestRequestWithIDParam("GET", "/buyers", id, nil)
+		request, err := newTestRequestWithIDParam("GET", "/api/v1/buyers", id, nil)
 		if err != nil {
 			t.Fatalf("failed to create request: %v", err)
 		}
@@ -344,7 +344,7 @@ func TestPatch(t *testing.T) {
 		serviceMock := services_test.GetNewBuyerServiceMock()
 		handler := handlers.GetBuyerHandler(serviceMock)
 
-		request, err := newTestRequestWithIDParam("PATCH", "/buyers", id, nil)
+		request, err := newTestRequestWithIDParam("PATCH", "/api/v1/buyers", id, nil)
 		if err != nil {
 			t.Fatalf("failed to create request: %v", err)
 		}
@@ -371,7 +371,7 @@ func TestPatch(t *testing.T) {
 			"lastname": "Pérez"
 		}`)
 
-		request, err := newTestRequestWithIDParam("PATCH", "/buyers", id, invalidBuyerRequest)
+		request, err := newTestRequestWithIDParam("PATCH", "/api/v1/buyers", id, invalidBuyerRequest)
 		if err != nil {
 			t.Fatalf("failed to create request: %v", err)
 		}
@@ -404,7 +404,7 @@ func TestPatch(t *testing.T) {
 			CardNumberId: "CARD-10012",
 		}
 
-		request, err := newTestRequestWithIDParam("PATCH", "/buyers", id, PatchBuyerRequest)
+		request, err := newTestRequestWithIDParam("PATCH", "/api/v1/buyers", id, PatchBuyerRequest)
 		if err != nil {
 			t.Fatalf("failed to create request: %v", err)
 		}
@@ -438,7 +438,7 @@ func TestPatch(t *testing.T) {
 			CardNumberId: "CARD-1001",
 		}
 
-		request, err := newTestRequestWithIDParam("PATCH", "/buyers", id, PatchBuyerRequest)
+		request, err := newTestRequestWithIDParam("PATCH", "/api/v1/buyers", id, PatchBuyerRequest)
 		if err != nil {
 			t.Fatalf("failed to create request: %v", err)
 		}
@@ -473,7 +473,7 @@ func TestPatch(t *testing.T) {
 			CardNumberId: "CARD-1001",
 		}
 
-		request, err := newTestRequestWithIDParam("PATCH", "/buyers", id, PatchBuyerRequest)
+		request, err := newTestRequestWithIDParam("PATCH", "/api/v1/buyers", id, PatchBuyerRequest)
 		if err != nil {
 			t.Fatalf("failed to create request: %v", err)
 		}
@@ -517,7 +517,7 @@ func TestPatch(t *testing.T) {
 			LastName:     "Garcia",
 		}
 
-		request, err := newTestRequestWithIDParam("PATCH", "/buyers", id, PatchBuyerRequest)
+		request, err := newTestRequestWithIDParam("PATCH", "/api/v1/buyers", id, PatchBuyerRequest)
 		if err != nil {
 			t.Fatalf("failed to create request: %v", err)
 		}
@@ -548,7 +548,7 @@ func TestDeleteById(t *testing.T) {
 		serviceMock := services_test.GetNewBuyerServiceMock()
 		handler := handlers.GetBuyerHandler(serviceMock)
 
-		request, err := newTestRequestWithIDParam("DELETE", "/buyers", id, nil)
+		request, err := newTestRequestWithIDParam("DELETE", "/api/v1/buyers", id, nil)
 		if err != nil {
 			t.Fatalf("failed to create request: %v", err)
 		}
@@ -571,7 +571,7 @@ func TestDeleteById(t *testing.T) {
 		"status":"Not Found"
 		}`
 
-		request, err := newTestRequestWithIDParam("DELETE", "/buyers", id, nil)
+		request, err := newTestRequestWithIDParam("DELETE", "/api/v1/buyers", id, nil)
 		if err != nil {
 			t.Fatalf("failed to create request: %v", err)
 		}
@@ -598,7 +598,7 @@ func TestDeleteById(t *testing.T) {
 		"status":"Internal Server Error"
 		}`
 
-		request, err := newTestRequestWithIDParam("DELETE", "/buyers", id, nil)
+		request, err := newTestRequestWithIDParam("DELETE", "/api/v1/buyers", id, nil)
 		if err != nil {
 			t.Fatalf("failed to create request: %v", err)
 		}
@@ -621,7 +621,7 @@ func TestDeleteById(t *testing.T) {
 
 		expectedCode := 204
 
-		request, err := newTestRequestWithIDParam("DELETE", "/buyers", id, nil)
+		request, err := newTestRequestWithIDParam("DELETE", "/api/v1/buyers", id, nil)
 		if err != nil {
 			t.Fatalf("failed to create request: %v", err)
 		}

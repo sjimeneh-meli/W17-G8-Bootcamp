@@ -111,7 +111,7 @@
 				
 				<option value="file27">github.com/sajimenezher_meli/meli-frescos-8/internal/repositories/InboundOrderRepository.go (0.0%)</option>
 				
-				<option value="file28">github.com/sajimenezher_meli/meli-frescos-8/internal/repositories/buyerRepository.go (15.6%)</option>
+				<option value="file28">github.com/sajimenezher_meli/meli-frescos-8/internal/repositories/buyerRepository.go (47.9%)</option>
 				
 				<option value="file29">github.com/sajimenezher_meli/meli-frescos-8/internal/repositories/carry_repository.go (0.0%)</option>
 				
@@ -3752,73 +3752,73 @@ func (r *MySqlBuyerRepository) GetAll(ctx context.Context) (map[int]models.Buyer
 
 // GetById - Retrieves a specific buyer by their ID from the MySQL database
 // GetById - Obtiene un comprador específico por su ID de la base de datos MySQL
-func (r *MySqlBuyerRepository) GetById(ctx context.Context, id int) (models.Buyer, error) <span class="cov0" title="0">{
+func (r *MySqlBuyerRepository) GetById(ctx context.Context, id int) (models.Buyer, error) <span class="cov10" title="4">{
         buyer := models.Buyer{}
 
         // SQL query to select buyer by specific ID / Consulta SQL para seleccionar comprador por ID específico
         query := "select id, id_card_number, first_name, last_name from buyers where id = ?"
         row := r.Db.QueryRowContext(ctx, query, id)
         err := row.Err()
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov1" title="1">{
                 return buyer, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
         }</span>
 
-        <span class="cov0" title="0">err = row.Scan(&amp;buyer.Id, &amp;buyer.CardNumberId, &amp;buyer.FirstName, &amp;buyer.LastName)
-        if err != nil </span><span class="cov0" title="0">{
+        <span class="cov8" title="3">err = row.Scan(&amp;buyer.Id, &amp;buyer.CardNumberId, &amp;buyer.FirstName, &amp;buyer.LastName)
+        if err != nil </span><span class="cov5" title="2">{
                 // Handle case when no buyer is found / Maneja el caso cuando no se encuentra ningún comprador
-                if errors.Is(err, sql.ErrNoRows) </span><span class="cov0" title="0">{
+                if errors.Is(err, sql.ErrNoRows) </span><span class="cov1" title="1">{
                         return models.Buyer{}, fmt.Errorf("%w. %s %d %s", error_message.ErrNotFound, "Buyer with Id", id, "doesn't exists.")
                 }</span>
-                <span class="cov0" title="0">return models.Buyer{}, err</span>
+                <span class="cov1" title="1">return models.Buyer{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())</span>
         }
 
-        <span class="cov0" title="0">return buyer, nil</span>
+        <span class="cov1" title="1">return buyer, nil</span>
 }
 
 // DeleteById - Removes a buyer from the MySQL database by their ID
 // DeleteById - Elimina un comprador de la base de datos MySQL por su ID
-func (r *MySqlBuyerRepository) DeleteById(ctx context.Context, id int) error <span class="cov0" title="0">{
+func (r *MySqlBuyerRepository) DeleteById(ctx context.Context, id int) error <span class="cov10" title="4">{
         // SQL query to delete buyer by ID / Consulta SQL para eliminar comprador por ID
         query := "delete from buyers where id = ?"
 
         result, err := r.Db.ExecContext(ctx, query, id)
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov1" title="1">{
                 return fmt.Errorf("%w. %s", error_message.ErrInternalServerError, err)
         }</span>
 
         // Check if any rows were affected to confirm deletion / Verifica si alguna fila fue afectada para confirmar la eliminación
-        <span class="cov0" title="0">rowsAffected, err := result.RowsAffected()
-        if err != nil </span><span class="cov0" title="0">{
+        <span class="cov8" title="3">rowsAffected, err := result.RowsAffected()
+        if err != nil </span><span class="cov1" title="1">{
                 return fmt.Errorf("%w. %s", error_message.ErrInternalServerError, err)
         }</span>
 
         // If no rows affected, buyer doesn't exist / Si ninguna fila fue afectada, el comprador no existe
-        <span class="cov0" title="0">if rowsAffected == 0 </span><span class="cov0" title="0">{
+        <span class="cov5" title="2">if rowsAffected == 0 </span><span class="cov1" title="1">{
                 return fmt.Errorf("%w. %s %d %s", error_message.ErrNotFound, "Buyer with Id", id, "doesn't exists.")
         }</span>
 
-        <span class="cov0" title="0">return nil</span>
+        <span class="cov1" title="1">return nil</span>
 }
 
 // Create - Inserts a new buyer into the MySQL database and returns the created buyer with its generated ID
 // Create - Inserta un nuevo comprador en la base de datos MySQL y retorna el comprador creado con su ID generado
-func (r *MySqlBuyerRepository) Create(ctx context.Context, buyer models.Buyer) (models.Buyer, error) <span class="cov0" title="0">{
+func (r *MySqlBuyerRepository) Create(ctx context.Context, buyer models.Buyer) (models.Buyer, error) <span class="cov8" title="3">{
         // SQL query to insert new buyer / Consulta SQL para insertar nuevo comprador
         query := `insert into buyers (id_card_number, first_name, last_name) values (?, ?, ?)`
 
         result, err := r.Db.ExecContext(ctx, query, buyer.CardNumberId, buyer.FirstName, buyer.LastName)
 
-        if err != nil </span><span class="cov0" title="0">{
+        if err != nil </span><span class="cov1" title="1">{
                 return models.Buyer{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
         }</span>
 
         // Get the auto-generated ID from the database / Obtiene el ID autogenerado de la base de datos
-        <span class="cov0" title="0">lastId, err := result.LastInsertId()
-        if err != nil </span><span class="cov0" title="0">{
+        <span class="cov5" title="2">lastId, err := result.LastInsertId()
+        if err != nil </span><span class="cov1" title="1">{
                 return models.Buyer{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
         }</span>
 
-        <span class="cov0" title="0">buyer.Id = int(lastId)
+        <span class="cov1" title="1">buyer.Id = int(lastId)
         return buyer, nil</span>
 }
 
