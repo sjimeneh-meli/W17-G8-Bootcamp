@@ -14,7 +14,7 @@ const (
 	warehouseTable = "warehouse"
 
 	// Field groups for better maintainability / Grupos de campos para mejor mantenibilidad
-	warehouseFields       = "`id`, `address`, `telephone`, `warehouse_code`, `minimum_capacity`, `minimum_temperature`"
+	warehouseFields       = "`id`, `address`, `telephone`, `warehouse_code`, `minimum_capacity`, `minimum_temperature`, `locality_id`"
 	warehouseInsertFields = "`address`, `telephone`, `warehouse_code`, `minimum_capacity`, `minimum_temperature`, `locality_id`"
 	warehouseUpdateFields = "`address` = ?, `telephone` = ?, `warehouse_code` = ?, `minimum_capacity` = ?, `minimum_temperature` = ?"
 )
@@ -97,7 +97,7 @@ func (r *WarehouseRepositoryImpl) GetAll(ctx context.Context) ([]models.Warehous
 	warehouses := []models.Warehouse{}
 	for rows.Next() {
 		var w models.Warehouse
-		err := rows.Scan(&w.Id, &w.Address, &w.Telephone, &w.WareHouseCode, &w.MinimumCapacity, &w.MinimumTemperature)
+		err := rows.Scan(&w.Id, &w.Address, &w.Telephone, &w.WareHouseCode, &w.MinimumCapacity, &w.MinimumTemperature, &w.LocalityId)
 		if err != nil {
 			return nil, fmt.Errorf("%w: %v", error_message.ErrInternalServerError, err)
 		}
@@ -151,7 +151,7 @@ func (r *WarehouseRepositoryImpl) GetById(ctx context.Context, id int) (models.W
 	row := r.db.QueryRowContext(ctx, queryGetWarehouseById, id)
 
 	var warehouse models.Warehouse
-	err := row.Scan(&warehouse.Id, &warehouse.Address, &warehouse.Telephone, &warehouse.WareHouseCode, &warehouse.MinimumCapacity, &warehouse.MinimumTemperature)
+	err := row.Scan(&warehouse.Id, &warehouse.Address, &warehouse.Telephone, &warehouse.WareHouseCode, &warehouse.MinimumCapacity, &warehouse.MinimumTemperature, &warehouse.LocalityId)
 	if err != nil {
 		// Handle case when no warehouse is found / Manejar el caso cuando no se encuentra ningún almacén
 		if err == sql.ErrNoRows {

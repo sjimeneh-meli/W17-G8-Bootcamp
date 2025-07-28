@@ -15,7 +15,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Helper para nuevo mock+handler por test
 func newWarehouseHandlerMock() (*tests.WarehouseServiceMock, *handlers.WarehouseHandler) {
 	mock := &tests.WarehouseServiceMock{}
 	h := handlers.NewWarehouseHandler(mock)
