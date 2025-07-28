@@ -137,3 +137,51 @@ func TestWarehouseHandler_Read(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, response.Code)
 	})
 }
+
+func TestWarehouseHandler_Update(t *testing.T) {
+	t.Run("Update Success", func(t *testing.T) {
+		mock, handler := newWarehouseHandlerMock()
+		mock.UpdateFunc = func(ctx context.Context, id int, warehouse models.Warehouse) (models.Warehouse, error) {
+			return warehouse, nil
+		}
+		mock.GetWarehouseByIDFunc = func(ctx context.Context, id int) (models.Warehouse, error) {
+			return models.Warehouse{
+				Id:                 id,
+				Address:            "Dirección Original",
+				Telephone:          "123456789",
+				WareHouseCode:      "WH001",
+				MinimumCapacity:    100,
+				MinimumTemperature: 5.0,
+				LocalityId:         1,
+			}, nil
+		}
+		mock.ValidateCodeUniquenessFunc = func(ctx context.Context, code string) error {
+			return nil
+		}
+		body := `{"address":"Dirección","telephone":"1234","warehouse_code":"XX1","minimum_capacity":10,"minimum_temperature":5.0,"locality_id":2}`
+		req := httptest.NewRequest("PATCH", "/warehouses/{id}", bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		ctx := chi.NewRouteContext()
+		ctx.URLParams.Add("id", "1")
+		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, ctx))
+		rr := httptest.NewRecorder()
+		handler.Update(rr, req)
+		assert.Equal(t, http.StatusOK, rr.Code)
+	})
+	t.Run("Update Fail not found", func(t *testing.T) {
+		mock, handler := newWarehouseHandlerMock()
+		mock.UpdateFunc = func(ctx context.Context, id int, warehouse models.Warehouse) (models.Warehouse, error) {
+			return models.Warehouse{}, error_message.ErrNotFound
+		}
+		mock.GetWarehouseByIDFunc = func(ctx context.Context, id int) (models.Warehouse, error) {
+			return models.Warehouse{}, error_message.ErrNotFound
+		}
+		request := httptest.NewRequest("PATCH", "/warehouses/{id}", nil)
+		ctx := chi.NewRouteContext()
+		ctx.URLParams.Add("id", "1")
+		request = request.WithContext(context.WithValue(request.Context(), chi.RouteCtxKey, ctx))
+		response := httptest.NewRecorder()
+		handler.Update(response, request)
+		assert.Equal(t, http.StatusNotFound, response.Code)
+	})
+}
