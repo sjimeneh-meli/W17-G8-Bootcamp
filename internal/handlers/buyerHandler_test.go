@@ -68,16 +68,16 @@ func TestPost(t *testing.T) {
 		assert.JSONEq(t, expectedResponseBody, response.Body.String())
 	})
 
-	t.Run("Post Buyer fails because request Buyer isn't valid returns 400", func(t *testing.T) {
-		expectedCode := 400
+	t.Run("Post Buyer fails because request Buyer isn't valid returns 422", func(t *testing.T) {
+		expectedCode := 422
 		expectedResponseBody := `{
 		"message":"first_name: cannot be blank; id_card_number: cannot be blank; last_name: cannot be blank.", 
-		"status":"Bad Request"
+		"status":"Unprocessable Entity"
 		}`
 
 		expectedErrorResponse := tests.ErrorResponse{
 			Message: "first_name: cannot be blank; id_card_number: cannot be blank; last_name: cannot be blank.",
-			Status:  "Bad Request",
+			Status:  "Unprocessable Entity",
 		}
 
 		invalidBuyerRequest := strings.NewReader(`{
