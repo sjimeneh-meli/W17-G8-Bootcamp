@@ -53,7 +53,7 @@ func TestGetResponseBuyerFromModel(t *testing.T) {
 	})
 }
 
-func TestTestGetListBuyerResponseFromListModel(t *testing.T) {
+func TestGetListBuyerResponseFromListModel(t *testing.T) {
 	t.Run("Successfully maps a list of Buyer to a list of BuyerResponse", func(t *testing.T) {
 		buyersList := []*models.Buyer{{
 			Id:           10,

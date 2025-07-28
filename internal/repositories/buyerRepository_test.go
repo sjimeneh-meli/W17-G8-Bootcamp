@@ -606,6 +606,28 @@ func TestUpdate(t *testing.T) {
 		assert.ErrorIs(t, err, expectedError, "err should be of type internal server error")
 		assert.Equal(t, expectedBuyer, buyerDb)
 	})
+
+	t.Run("Fails because no fields are provided for update", func(t *testing.T) {
+		expectedBuyer := models.Buyer{}
+
+		searchId := 20
+		buyerToUpdate := models.Buyer{} // Todos los campos vacíos
+
+		db, _, err := sqlmock.New()
+		if err != nil {
+			fmt.Println("failed to open sqlmock database:", err)
+		}
+		defer db.Close()
+
+		repository := repositories.MySqlBuyerRepository{
+			Db: db,
+		}
+
+		buyerDb, err := repository.Update(context.Background(), searchId, buyerToUpdate)
+
+		assert.NotNil(t, err, "err should not be nil")
+		assert.Equal(t, expectedBuyer, buyerDb)
+	})
 }
 
 func TestGetCardNumberIds(t *testing.T) {

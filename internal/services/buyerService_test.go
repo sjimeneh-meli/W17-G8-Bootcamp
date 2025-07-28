@@ -223,7 +223,7 @@ func TestCreate(t *testing.T) {
 
 		assert.Equal(t, expectedBuyer, result, "result should be an empty buyer")
 		assert.NotNil(t, err, "err should not be nil")
-		assert.ErrorIs(t, err, expectedError, "err should be of ErrAlreadyExists type")
+		assert.ErrorIs(t, err, expectedError, "err should be of type ErrAlreadyExists")
 
 	})
 
@@ -248,7 +248,7 @@ func TestCreate(t *testing.T) {
 
 		assert.Equal(t, expectedBuyer, result, "result should be an empty buyer")
 		assert.NotNil(t, err, "err should not be nil")
-		assert.ErrorIs(t, err, expectedError, "err should be of ErrInternalServerError type")
+		assert.ErrorIs(t, err, expectedError, "err should be of type ErrInternalServerError")
 	})
 
 	t.Run("Create successfully creates a new Buyer on repository", func(t *testing.T) {
@@ -295,7 +295,7 @@ func TestUpdate(t *testing.T) {
 
 		assert.Equal(t, expectedBuyer, result, "result should be an empty buyer")
 		assert.NotNil(t, err, "err should not be nil")
-		assert.ErrorIs(t, err, expectedError, "err should be of ErrInternalServerError type")
+		assert.ErrorIs(t, err, expectedError, "err should be of type ErrInternalServerError")
 
 	})
 
@@ -317,7 +317,7 @@ func TestUpdate(t *testing.T) {
 
 		assert.Equal(t, expectedBuyer, result, "result should be an empty buyer")
 		assert.NotNil(t, err, "err should not be nil")
-		assert.ErrorIs(t, err, expectedError, "err should be of ErrAlreadyExists type")
+		assert.ErrorIs(t, err, expectedError, "err should be of type ErrAlreadyExists")
 
 	})
 
