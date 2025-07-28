@@ -14,16 +14,11 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/error_message"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
-	services_test "github.com/sajimenezher_meli/meli-frescos-8/internal/tests"
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/tests"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
-
-type errorResponse struct {
-	Message string `json:"message"`
-	Status  string `json:"status"`
-}
 
 func TestPost(t *testing.T) {
 	t.Run("Post Buyer successfully returns 201", func(t *testing.T) {
@@ -62,7 +57,7 @@ func TestPost(t *testing.T) {
 		response := httptest.NewRecorder()
 		response.Header().Set("Content-type", "application/json")
 
-		service := services_test.GetNewBuyerServiceMock()
+		service := tests.GetNewBuyerServiceMock()
 		service.On("Create", mock.AnythingOfType("*context.timerCtx"), mockRequestBuyer).Return(validBuyer, nil)
 
 		handler := handlers.GetBuyerHandler(service)
@@ -80,7 +75,7 @@ func TestPost(t *testing.T) {
 		"status":"Bad Request"
 		}`
 
-		expectedErrorResponse := errorResponse{
+		expectedErrorResponse := tests.ErrorResponse{
 			Message: "first_name: cannot be blank; id_card_number: cannot be blank; last_name: cannot be blank.",
 			Status:  "Bad Request",
 		}
@@ -96,12 +91,12 @@ func TestPost(t *testing.T) {
 		response := httptest.NewRecorder()
 		response.Header().Set("Content-type", "application/json")
 
-		service := services_test.GetNewBuyerServiceMock()
+		service := tests.GetNewBuyerServiceMock()
 		handler := handlers.GetBuyerHandler(service)
 
 		handler.PostBuyer()(response, request)
 
-		var actualErrorResponse errorResponse
+		var actualErrorResponse tests.ErrorResponse
 		err := json.Unmarshal(response.Body.Bytes(), &actualErrorResponse)
 		require.NoError(t, err, "failed to unmarshal response body")
 
@@ -119,7 +114,7 @@ func TestPost(t *testing.T) {
 		"status":"Conflict"
 		}`
 
-		expectedErrorResponse := errorResponse{
+		expectedErrorResponse := tests.ErrorResponse{
 			Message: "error: resource with the provided identifier already exists",
 			Status:  "Conflict",
 		}
@@ -137,7 +132,7 @@ func TestPost(t *testing.T) {
 			LastName:     "Pérez",
 		}
 
-		serviceMock := services_test.GetNewBuyerServiceMock()
+		serviceMock := tests.GetNewBuyerServiceMock()
 		serviceMock.On("Create", mock.AnythingOfType("*context.timerCtx"), mockRequestBuyer).Return(models.Buyer{}, error_message.ErrAlreadyExists)
 		handler := handlers.GetBuyerHandler(serviceMock)
 
@@ -148,7 +143,7 @@ func TestPost(t *testing.T) {
 
 		handler.PostBuyer()(response, request)
 
-		var actualErrorResponse errorResponse
+		var actualErrorResponse tests.ErrorResponse
 		err := json.Unmarshal(response.Body.Bytes(), &actualErrorResponse)
 		require.NoError(t, err, "failed to unmarshal response body")
 
@@ -165,7 +160,7 @@ func TestPost(t *testing.T) {
 		"status":"Internal Server Error"
 		}`
 
-		expectedErrorResponse := errorResponse{
+		expectedErrorResponse := tests.ErrorResponse{
 			Message: "error: an unexpected internal server error occurred",
 			Status:  "Internal Server Error",
 		}
@@ -183,7 +178,7 @@ func TestPost(t *testing.T) {
 			LastName:     "Pérez",
 		}
 
-		serviceMock := services_test.GetNewBuyerServiceMock()
+		serviceMock := tests.GetNewBuyerServiceMock()
 		serviceMock.On("Create", mock.AnythingOfType("*context.timerCtx"), mockRequestBuyer).Return(models.Buyer{}, error_message.ErrInternalServerError)
 		handler := handlers.GetBuyerHandler(serviceMock)
 
@@ -194,7 +189,7 @@ func TestPost(t *testing.T) {
 
 		handler.PostBuyer()(response, request)
 
-		var actualErrorResponse errorResponse
+		var actualErrorResponse tests.ErrorResponse
 		err := json.Unmarshal(response.Body.Bytes(), &actualErrorResponse)
 		require.NoError(t, err, "failed to unmarshal response body")
 
@@ -214,12 +209,12 @@ func TestGetAll(t *testing.T) {
 									"status":"Internal Server Error"
 								 }`
 
-		expectedErrorResponse := errorResponse{
+		expectedErrorResponse := tests.ErrorResponse{
 			Message: "error: an unexpected internal server error occurred",
 			Status:  "Internal Server Error",
 		}
 
-		service := services_test.GetNewBuyerServiceMock()
+		service := tests.GetNewBuyerServiceMock()
 		service.On("GetAll", mock.AnythingOfType("*context.timerCtx")).Return(map[int]models.Buyer{}, error_message.ErrInternalServerError)
 		handler := handlers.GetBuyerHandler(service)
 
@@ -229,7 +224,7 @@ func TestGetAll(t *testing.T) {
 
 		handler.GetAll()(response, request)
 
-		var actualErrorResponse errorResponse
+		var actualErrorResponse tests.ErrorResponse
 		err := json.Unmarshal(response.Body.Bytes(), &actualErrorResponse)
 		require.NoError(t, err, "failed to unmarshal response body")
 
@@ -247,7 +242,7 @@ func TestGetAll(t *testing.T) {
 			2: {Id: 2, CardNumberId: "CARD-1002", FirstName: "María", LastName: "Gómez"},
 			3: {Id: 3, CardNumberId: "CARD-1003", FirstName: "Carlos", LastName: "López"},
 		}
-		service := services_test.GetNewBuyerServiceMock()
+		service := tests.GetNewBuyerServiceMock()
 		service.On("GetAll", mock.AnythingOfType("*context.timerCtx")).Return(mockBuyers, nil)
 		handler := handlers.GetBuyerHandler(service)
 
@@ -271,12 +266,12 @@ func TestGetById(t *testing.T) {
 									"status":"Not Found"
 								 }`
 
-		expectedErrorResponse := errorResponse{
+		expectedErrorResponse := tests.ErrorResponse{
 			Message: "error: the requested resource was not found",
 			Status:  "Not Found",
 		}
 
-		serviceMock := services_test.GetNewBuyerServiceMock()
+		serviceMock := tests.GetNewBuyerServiceMock()
 		serviceMock.On("GetById", mock.AnythingOfType("*context.timerCtx"), numberId).Return(models.Buyer{}, error_message.ErrNotFound).Once()
 
 		handler := handlers.GetBuyerHandler(serviceMock)
@@ -291,7 +286,7 @@ func TestGetById(t *testing.T) {
 
 		handler.GetById()(response, request)
 
-		var actualErrorResponse errorResponse
+		var actualErrorResponse tests.ErrorResponse
 		err = json.Unmarshal(response.Body.Bytes(), &actualErrorResponse)
 		require.NoError(t, err, "failed to unmarshal response body")
 
@@ -310,12 +305,12 @@ func TestGetById(t *testing.T) {
 									"status":"Bad Request"
 								 }`
 
-		expectedErrorResponse := errorResponse{
+		expectedErrorResponse := tests.ErrorResponse{
 			Message: "error: the provided input is invalid or missing required fields",
 			Status:  "Bad Request",
 		}
 
-		serviceMock := services_test.GetNewBuyerServiceMock()
+		serviceMock := tests.GetNewBuyerServiceMock()
 		handler := handlers.GetBuyerHandler(serviceMock)
 
 		request, err := newTestRequestWithIDParam("GET", "/api/v1/buyers", id, nil)
@@ -327,7 +322,7 @@ func TestGetById(t *testing.T) {
 
 		handler.GetById()(response, request)
 
-		var actualErrorResponse errorResponse
+		var actualErrorResponse tests.ErrorResponse
 		err = json.Unmarshal(response.Body.Bytes(), &actualErrorResponse)
 		require.NoError(t, err, "failed to unmarshal response body")
 
@@ -346,12 +341,12 @@ func TestGetById(t *testing.T) {
 									"status":"Internal Server Error"
 								 }`
 
-		expectedErrorResponse := errorResponse{
+		expectedErrorResponse := tests.ErrorResponse{
 			Message: "error: an unexpected internal server error occurred",
 			Status:  "Internal Server Error",
 		}
 
-		serviceMock := services_test.GetNewBuyerServiceMock()
+		serviceMock := tests.GetNewBuyerServiceMock()
 		serviceMock.On("GetById", mock.AnythingOfType("*context.timerCtx"), numberId).Return(models.Buyer{}, error_message.ErrInternalServerError)
 
 		handler := handlers.GetBuyerHandler(serviceMock)
@@ -366,7 +361,7 @@ func TestGetById(t *testing.T) {
 
 		handler.GetById()(response, request)
 
-		var actualErrorResponse errorResponse
+		var actualErrorResponse tests.ErrorResponse
 		err = json.Unmarshal(response.Body.Bytes(), &actualErrorResponse)
 		require.NoError(t, err, "failed to unmarshal response body")
 
@@ -396,7 +391,7 @@ func TestGetById(t *testing.T) {
 			LastName:     "Pérez",
 		}
 
-		serviceMock := services_test.GetNewBuyerServiceMock()
+		serviceMock := tests.GetNewBuyerServiceMock()
 		serviceMock.On("GetById", mock.AnythingOfType("*context.timerCtx"), numberId).Return(mockBuyer, nil)
 
 		handler := handlers.GetBuyerHandler(serviceMock)
@@ -426,12 +421,12 @@ func TestPatch(t *testing.T) {
 								"status":"Bad Request"
 								}`
 
-		expectedErrorResponse := errorResponse{
+		expectedErrorResponse := tests.ErrorResponse{
 			Message: "error: the provided input is invalid or missing required fields",
 			Status:  "Bad Request",
 		}
 
-		serviceMock := services_test.GetNewBuyerServiceMock()
+		serviceMock := tests.GetNewBuyerServiceMock()
 		handler := handlers.GetBuyerHandler(serviceMock)
 
 		request, err := newTestRequestWithIDParam("PATCH", "/api/v1/buyers", id, nil)
@@ -443,7 +438,7 @@ func TestPatch(t *testing.T) {
 
 		handler.PatchBuyer()(response, request)
 
-		var actualErrorResponse errorResponse
+		var actualErrorResponse tests.ErrorResponse
 		err = json.Unmarshal(response.Body.Bytes(), &actualErrorResponse)
 		require.NoError(t, err, "failed to unmarshal response body")
 
@@ -462,7 +457,7 @@ func TestPatch(t *testing.T) {
 		"status":"Bad Request"
 		}`
 
-		expectedErrorResponse := errorResponse{
+		expectedErrorResponse := tests.ErrorResponse{
 			Message: "at least one of id_card_number, first_name, or last_name is required",
 			Status:  "Bad Request",
 		}
@@ -480,12 +475,12 @@ func TestPatch(t *testing.T) {
 		response := httptest.NewRecorder()
 		response.Header().Set("Content-type", "application/json")
 
-		service := services_test.GetNewBuyerServiceMock()
+		service := tests.GetNewBuyerServiceMock()
 		handler := handlers.GetBuyerHandler(service)
 
 		handler.PatchBuyer()(response, request)
 
-		var actualErrorResponse errorResponse
+		var actualErrorResponse tests.ErrorResponse
 		err = json.Unmarshal(response.Body.Bytes(), &actualErrorResponse)
 		require.NoError(t, err, "failed to unmarshal response body")
 
@@ -505,7 +500,7 @@ func TestPatch(t *testing.T) {
 		"status":"Not Found"
 		}`
 
-		expectedErrorResponse := errorResponse{
+		expectedErrorResponse := tests.ErrorResponse{
 			Message: "error: the requested resource was not found",
 			Status:  "Not Found",
 		}
@@ -524,13 +519,13 @@ func TestPatch(t *testing.T) {
 		response := httptest.NewRecorder()
 		response.Header().Set("Content-type", "application/json")
 
-		service := services_test.GetNewBuyerServiceMock()
+		service := tests.GetNewBuyerServiceMock()
 		service.On("Update", mock.AnythingOfType("*context.timerCtx"), idNumber, mockPatchBuyerRequest).Return(models.Buyer{}, error_message.ErrNotFound)
 		handler := handlers.GetBuyerHandler(service)
 
 		handler.PatchBuyer()(response, request)
 
-		var actualErrorResponse errorResponse
+		var actualErrorResponse tests.ErrorResponse
 		err = json.Unmarshal(response.Body.Bytes(), &actualErrorResponse)
 		require.NoError(t, err, "failed to unmarshal response body")
 
@@ -550,7 +545,7 @@ func TestPatch(t *testing.T) {
 		"status":"Conflict"
 		}`
 
-		expectedErrorResponse := errorResponse{
+		expectedErrorResponse := tests.ErrorResponse{
 			Message: "error: resource with the provided identifier already exists",
 			Status:  "Conflict",
 		}
@@ -569,13 +564,13 @@ func TestPatch(t *testing.T) {
 		response := httptest.NewRecorder()
 		response.Header().Set("Content-type", "application/json")
 
-		service := services_test.GetNewBuyerServiceMock()
+		service := tests.GetNewBuyerServiceMock()
 		service.On("Update", mock.AnythingOfType("*context.timerCtx"), idNumber, mockPatchBuyerRequest).Return(models.Buyer{}, error_message.ErrAlreadyExists)
 		handler := handlers.GetBuyerHandler(service)
 
 		handler.PatchBuyer()(response, request)
 
-		var actualErrorResponse errorResponse
+		var actualErrorResponse tests.ErrorResponse
 		err = json.Unmarshal(response.Body.Bytes(), &actualErrorResponse)
 		require.NoError(t, err, "failed to unmarshal response body")
 
@@ -596,7 +591,7 @@ func TestPatch(t *testing.T) {
 		"status":"Internal Server Error"
 		}`
 
-		expectedErrorResponse := errorResponse{
+		expectedErrorResponse := tests.ErrorResponse{
 			Message: "error: an unexpected internal server error occurred",
 			Status:  "Internal Server Error",
 		}
@@ -615,13 +610,13 @@ func TestPatch(t *testing.T) {
 		response := httptest.NewRecorder()
 		response.Header().Set("Content-type", "application/json")
 
-		service := services_test.GetNewBuyerServiceMock()
+		service := tests.GetNewBuyerServiceMock()
 		service.On("Update", mock.AnythingOfType("*context.timerCtx"), idNumber, mockPatchBuyerRequest).Return(models.Buyer{}, error_message.ErrInternalServerError)
 		handler := handlers.GetBuyerHandler(service)
 
 		handler.PatchBuyer()(response, request)
 
-		var actualErrorResponse errorResponse
+		var actualErrorResponse tests.ErrorResponse
 		err = json.Unmarshal(response.Body.Bytes(), &actualErrorResponse)
 		require.NoError(t, err, "failed to unmarshal response body")
 
@@ -669,7 +664,7 @@ func TestPatch(t *testing.T) {
 		response := httptest.NewRecorder()
 		response.Header().Set("Content-type", "application/json")
 
-		service := services_test.GetNewBuyerServiceMock()
+		service := tests.GetNewBuyerServiceMock()
 		service.On("Update", mock.AnythingOfType("*context.timerCtx"), idNumber, mockPatchBuyerRequest).Return(mockReturnBuyer, nil)
 		handler := handlers.GetBuyerHandler(service)
 
@@ -713,7 +708,7 @@ func TestPatch(t *testing.T) {
 		response := httptest.NewRecorder()
 		response.Header().Set("Content-type", "application/json")
 
-		service := services_test.GetNewBuyerServiceMock()
+		service := tests.GetNewBuyerServiceMock()
 		service.On("Update", mock.AnythingOfType("*context.timerCtx"), idNumber, mockPatchBuyerRequest).Return(mockReturnBuyer, nil)
 		handler := handlers.GetBuyerHandler(service)
 
@@ -734,7 +729,7 @@ func TestDeleteById(t *testing.T) {
 									"status":"Bad Request"
 								 }`
 
-		serviceMock := services_test.GetNewBuyerServiceMock()
+		serviceMock := tests.GetNewBuyerServiceMock()
 		handler := handlers.GetBuyerHandler(serviceMock)
 
 		request, err := newTestRequestWithIDParam("DELETE", "/api/v1/buyers", id, nil)
@@ -767,7 +762,7 @@ func TestDeleteById(t *testing.T) {
 		response := httptest.NewRecorder()
 		response.Header().Set("Content-type", "application/json")
 
-		service := services_test.GetNewBuyerServiceMock()
+		service := tests.GetNewBuyerServiceMock()
 		service.On("DeleteById", mock.AnythingOfType("*context.timerCtx"), idNumber).Return(error_message.ErrNotFound)
 		handler := handlers.GetBuyerHandler(service)
 
@@ -787,7 +782,7 @@ func TestDeleteById(t *testing.T) {
 		"status":"Internal Server Error"
 		}`
 
-		expectedErrorResponse := errorResponse{
+		expectedErrorResponse := tests.ErrorResponse{
 			Message: "error: an unexpected internal server error occurred",
 			Status:  "Internal Server Error",
 		}
@@ -799,13 +794,13 @@ func TestDeleteById(t *testing.T) {
 		response := httptest.NewRecorder()
 		response.Header().Set("Content-type", "application/json")
 
-		service := services_test.GetNewBuyerServiceMock()
+		service := tests.GetNewBuyerServiceMock()
 		service.On("DeleteById", mock.AnythingOfType("*context.timerCtx"), idNumber).Return(error_message.ErrInternalServerError)
 		handler := handlers.GetBuyerHandler(service)
 
 		handler.DeleteById()(response, request)
 
-		var actualErrorResponse errorResponse
+		var actualErrorResponse tests.ErrorResponse
 		err = json.Unmarshal(response.Body.Bytes(), &actualErrorResponse)
 		require.NoError(t, err, "failed to unmarshal response body")
 
@@ -828,7 +823,7 @@ func TestDeleteById(t *testing.T) {
 		response := httptest.NewRecorder()
 		response.Header().Set("Content-type", "application/json")
 
-		service := services_test.GetNewBuyerServiceMock()
+		service := tests.GetNewBuyerServiceMock()
 		service.On("DeleteById", mock.AnythingOfType("*context.timerCtx"), idNumber).Return(nil)
 
 		handler := handlers.GetBuyerHandler(service)
