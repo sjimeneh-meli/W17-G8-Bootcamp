@@ -38,14 +38,10 @@ var (
 	warehouseRepositoryInstance WarehouseRepository
 )
 
-// NewWarehouseRepository - Creates and returns a new instance of WarehouseRepositoryImpl using singleton pattern
-// NewWarehouseRepository - Crea y retorna una nueva instancia de WarehouseRepositoryImpl usando patrón singleton
+// NewWarehouseRepository - Creates and returns a new instance of WarehouseRepositoryImpl
+// NewWarehouseRepository - Crea y retorna una nueva instancia de WarehouseRepositoryImpl
 func NewWarehouseRepository(db *sql.DB) WarehouseRepository {
-	if warehouseRepositoryInstance != nil {
-		return warehouseRepositoryInstance
-	}
-	warehouseRepositoryInstance = &WarehouseRepositoryImpl{db: db}
-	return warehouseRepositoryInstance
+	return &WarehouseRepositoryImpl{db: db}
 }
 
 // WarehouseRepository - Interface defining the contract for warehouse repository operations
