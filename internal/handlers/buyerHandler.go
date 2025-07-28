@@ -169,7 +169,7 @@ func (h *BuyerHandler) PostBuyer() http.HandlerFunc {
 
 		err := validations.ValidateBuyerRequestStruct(requestBuyer)
 		if err != nil {
-			response.Error(w, http.StatusBadRequest, err.Error())
+			response.Error(w, http.StatusUnprocessableEntity, err.Error())
 			return
 		}
 
