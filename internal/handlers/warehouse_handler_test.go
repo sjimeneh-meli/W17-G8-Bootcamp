@@ -109,7 +109,7 @@ func TestWarehouseHandler_Create(t *testing.T) {
 func TestWarehouseHandler_Read(t *testing.T) {
 	t.Run("Find By Id Success", func(t *testing.T) {
 		warehouseService := &tests.WarehouseServiceMock{}
-		warehouseService.GetWarehouseByIDFunc = func(ctx context.Context, id int) (models.Warehouse, error) {
+		warehouseService.GetByIdFunc = func(ctx context.Context, id int) (models.Warehouse, error) {
 			return models.Warehouse{
 				Id:                 id,
 				Address:            "Dirección de Prueba",

@@ -8,6 +8,7 @@ import (
 
 type WarehouseServiceMock struct {
 	GetWarehouseByIDFunc       func(ctx context.Context, id int) (models.Warehouse, error)
+	GetByIdFunc                func(ctx context.Context, id int) (models.Warehouse, error)
 	GetAllFunc                 func(ctx context.Context) ([]models.Warehouse, error)
 	CreateFunc                 func(ctx context.Context, warehouse models.Warehouse) (models.Warehouse, error)
 	ValidateCodeUniquenessFunc func(ctx context.Context, code string) error
@@ -16,6 +17,9 @@ type WarehouseServiceMock struct {
 }
 
 func (m *WarehouseServiceMock) GetById(ctx context.Context, id int) (models.Warehouse, error) {
+	if m.GetByIdFunc != nil {
+		return m.GetByIdFunc(ctx, id)
+	}
 	return m.GetWarehouseByIDFunc(ctx, id)
 }
 
