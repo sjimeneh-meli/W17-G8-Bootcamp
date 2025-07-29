@@ -7,7 +7,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"regexp"
 	"testing"
 
@@ -18,10 +17,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestMySqlBuyerRepositoryGetAll - Tests for GetAll method / Tests para método GetAll
+// Test_Buyer_MySqlBuyerRepositoryGetAll - Tests for GetAll method / Tests para método GetAll
 // Cases: successful retrieval with data, empty result, database query error, row scanning error
 // Casos: recuperación exitosa con datos, resultado vacío, error de consulta de base de datos, error de escaneo de filas
-func TestMySqlBuyerRepositoryGetAll(t *testing.T) {
+func Test_Buyer_MySqlBuyerRepositoryGetAll(t *testing.T) {
 	t.Run("Successfully returns filled buyers map when there is data on db response", func(t *testing.T) {
 		// Test: Database with buyers returns complete map / Base de datos con compradores retorna mapa completo
 		expectedBuyers := map[int]models.Buyer{
@@ -41,7 +40,7 @@ func TestMySqlBuyerRepositoryGetAll(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Fatalf("failed to open sqlmock database: %v", err)
 		}
 		defer db.Close()
 
@@ -67,7 +66,7 @@ func TestMySqlBuyerRepositoryGetAll(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Fatalf("failed to open sqlmock database: %v", err)
 		}
 		defer db.Close()
 
@@ -92,7 +91,7 @@ func TestMySqlBuyerRepositoryGetAll(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Fatalf("failed to open sqlmock database: %v", err)
 		}
 		defer db.Close()
 
@@ -116,7 +115,7 @@ func TestMySqlBuyerRepositoryGetAll(t *testing.T) {
 		expectedError := error_message.ErrInternalServerError
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Fatalf("failed to open sqlmock database: %v", err)
 		}
 		defer db.Close()
 
@@ -138,10 +137,10 @@ func TestMySqlBuyerRepositoryGetAll(t *testing.T) {
 	})
 }
 
-// TestGetById - Tests for GetById method / Tests para método GetById
+// Test_Buyer_GetById - Tests for GetById method / Tests para método GetById
 // Cases: successful retrieval, internal server error during query, scanning error, buyer not found
 // Casos: recuperación exitosa, error interno del servidor durante consulta, error de escaneo, comprador no encontrado
-func TestGetById(t *testing.T) {
+func Test_Buyer_GetById(t *testing.T) {
 	t.Run("Successfully return searched buyer from db", func(t *testing.T) {
 		// Test: Valid buyer ID returns complete buyer data / ID de comprador válido retorna datos completos del comprador
 		expectedBuyer := models.Buyer{
@@ -153,7 +152,7 @@ func TestGetById(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Fatalf("failed to open sqlmock database: %v", err)
 		}
 		defer db.Close()
 
@@ -183,7 +182,7 @@ func TestGetById(t *testing.T) {
 		searchId := 1
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Fatalf("failed to open sqlmock database: %v", err)
 		}
 		defer db.Close()
 
@@ -209,7 +208,7 @@ func TestGetById(t *testing.T) {
 		searchId := 1
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Fatalf("failed to open sqlmock database: %v", err)
 		}
 		defer db.Close()
 
@@ -240,7 +239,7 @@ func TestGetById(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Fatalf("failed to open sqlmock database: %v", err)
 		}
 		defer db.Close()
 		row := mock.NewRows([]string{"id", "id_card_number", "first_name", "last_name"})
@@ -262,17 +261,17 @@ func TestGetById(t *testing.T) {
 
 }
 
-// TestDeleteById - Tests for DeleteById method / Tests para método DeleteById
+// Test_Buyer_DeleteById - Tests for DeleteById method / Tests para método DeleteById
 // Cases: successful deletion, internal server error during query, RowsAffected error, buyer not found
 // Casos: eliminación exitosa, error interno del servidor durante consulta, error de RowsAffected, comprador no encontrado
-func TestDeleteById(t *testing.T) {
+func Test_Buyer_DeleteById(t *testing.T) {
 	t.Run("Successfully delete buyer from db", func(t *testing.T) {
 		// Test: Valid buyer ID deletes buyer successfully / ID de comprador válido elimina comprador exitosamente
 		searchId := 10
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Fatalf("failed to open sqlmock database: %v", err)
 		}
 		defer db.Close()
 
@@ -296,7 +295,7 @@ func TestDeleteById(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Fatalf("failed to open sqlmock database: %v", err)
 		}
 		defer db.Close()
 
@@ -320,7 +319,7 @@ func TestDeleteById(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Fatalf("failed to open sqlmock database: %v", err)
 		}
 		defer db.Close()
 
@@ -345,7 +344,7 @@ func TestDeleteById(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Fatalf("failed to open sqlmock database: %v", err)
 		}
 		defer db.Close()
 
@@ -363,10 +362,10 @@ func TestDeleteById(t *testing.T) {
 	})
 }
 
-// TestCreate - Tests for Create method / Tests para método Create
+// Test_Buyer_Create - Tests for Create method / Tests para método Create
 // Cases: successful creation, internal server error executing insert, LastInsertId error
 // Casos: creación exitosa, error interno del servidor ejecutando inserción, error de LastInsertId
-func TestCreate(t *testing.T) {
+func Test_Buyer_Create(t *testing.T) {
 	t.Run("Successfully create a new buyer record on db", func(t *testing.T) {
 		// Test: Valid buyer data creates new buyer with generated ID / Datos válidos de comprador crean nuevo comprador con ID generado
 		expectedBuyer := models.Buyer{
@@ -385,7 +384,7 @@ func TestCreate(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Fatalf("failed to open sqlmock database: %v", err)
 		}
 		defer db.Close()
 
@@ -417,7 +416,7 @@ func TestCreate(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Fatalf("failed to open sqlmock database: %v", err)
 		}
 		defer db.Close()
 
@@ -450,7 +449,7 @@ func TestCreate(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Fatalf("failed to open sqlmock database: %v", err)
 		}
 		defer db.Close()
 
@@ -471,10 +470,10 @@ func TestCreate(t *testing.T) {
 
 }
 
-// TestUpdate - Tests for Update method / Tests para método Update
+// Test_Buyer_Update - Tests for Update method / Tests para método Update
 // Cases: successful update, internal server error executing update, RowsAffected error, buyer not found, GetById error after update, no fields provided
 // Casos: actualización exitosa, error interno del servidor ejecutando actualización, error de RowsAffected, comprador no encontrado, error de GetById después de actualización, sin campos proporcionados
-func TestUpdate(t *testing.T) {
+func Test_Buyer_Update(t *testing.T) {
 	t.Run("Successfully updates a buyer", func(t *testing.T) {
 		// Test: Valid buyer data updates existing buyer / Datos válidos de comprador actualizan comprador existente
 		expectedBuyer := models.Buyer{
@@ -491,7 +490,7 @@ func TestUpdate(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Fatalf("failed to open sqlmock database: %v", err)
 		}
 		defer db.Close()
 
@@ -529,7 +528,7 @@ func TestUpdate(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Fatalf("failed to open sqlmock database: %v", err)
 		}
 		defer db.Close()
 
@@ -560,7 +559,7 @@ func TestUpdate(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Fatalf("failed to open sqlmock database: %v", err)
 		}
 		defer db.Close()
 
@@ -591,7 +590,7 @@ func TestUpdate(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Fatalf("failed to open sqlmock database: %v", err)
 		}
 		defer db.Close()
 
@@ -622,7 +621,7 @@ func TestUpdate(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Fatalf("failed to open sqlmock database: %v", err)
 		}
 		defer db.Close()
 
@@ -654,7 +653,7 @@ func TestUpdate(t *testing.T) {
 
 		db, _, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Fatalf("failed to open sqlmock database: %v", err)
 		}
 		defer db.Close()
 
@@ -669,10 +668,10 @@ func TestUpdate(t *testing.T) {
 	})
 }
 
-// TestGetCardNumberIds - Tests for GetCardNumberIds method / Tests para método GetCardNumberIds
+// Test_Buyer_GetCardNumberIds - Tests for GetCardNumberIds method / Tests para método GetCardNumberIds
 // Cases: successful retrieval, internal server error
 // Casos: recuperación exitosa, error interno del servidor
-func TestGetCardNumberIds(t *testing.T) {
+func Test_Buyer_GetCardNumberIds(t *testing.T) {
 	t.Run("Fails because of an internal server error on the query", func(t *testing.T) {
 		// Test: Database connection error during card number retrieval / Error de conexión de base de datos durante recuperación de números de tarjeta
 		expectedCardNumberIdList := []string{}
@@ -680,7 +679,7 @@ func TestGetCardNumberIds(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Fatalf("failed to open sqlmock database: %v", err)
 		}
 		defer db.Close()
 
@@ -706,7 +705,7 @@ func TestGetCardNumberIds(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Fatalf("failed to open sqlmock database: %v", err)
 		}
 		defer db.Close()
 
@@ -726,10 +725,10 @@ func TestGetCardNumberIds(t *testing.T) {
 	})
 }
 
-// TestExistBuyerById - Tests for ExistBuyerById method / Tests para método ExistBuyerById
+// Test_Buyer_ExistBuyerById - Tests for ExistBuyerById method / Tests para método ExistBuyerById
 // Cases: buyer exists, buyer doesn't exist, internal server error
 // Casos: comprador existe, comprador no existe, error interno del servidor
-func TestExistBuyerById(t *testing.T) {
+func Test_Buyer_ExistBuyerById(t *testing.T) {
 	t.Run("Successfully returns true when buyer exists", func(t *testing.T) {
 		// Test: Existing buyer ID returns true / ID de comprador existente retorna true
 		expectedExists := true
@@ -737,7 +736,7 @@ func TestExistBuyerById(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Fatalf("failed to open sqlmock database: %v", err)
 		}
 		defer db.Close()
 
@@ -763,7 +762,7 @@ func TestExistBuyerById(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Fatalf("failed to open sqlmock database: %v", err)
 		}
 		defer db.Close()
 
@@ -788,7 +787,7 @@ func TestExistBuyerById(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Fatalf("failed to open sqlmock database: %v", err)
 		}
 		defer db.Close()
 
@@ -808,15 +807,15 @@ func TestExistBuyerById(t *testing.T) {
 	})
 }
 
-// TestGetNewBuyerMySQLRepository - Tests for repository constructor / Tests para constructor del repositorio
+// Test_Buyer_GetNewBuyerMySQLRepository - Tests for repository constructor / Tests para constructor del repositorio
 // Cases: successful creation, singleton pattern validation
 // Casos: creación exitosa, validación de patrón singleton
-func TestGetNewBuyerMySQLRepository(t *testing.T) {
+func Test_Buyer_GetNewBuyerMySQLRepository(t *testing.T) {
 	t.Run("Successfully returns a new buyer repository", func(t *testing.T) {
 		// Test: Constructor creates valid repository instance / Constructor crea instancia válida del repositorio
 		db, _, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Fatalf("failed to open sqlmock database: %v", err)
 		}
 		defer db.Close()
 
@@ -829,7 +828,7 @@ func TestGetNewBuyerMySQLRepository(t *testing.T) {
 		// Test: Singleton pattern ensures same instance is returned / Patrón singleton asegura que se retorna la misma instancia
 		db, _, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Fatalf("failed to open sqlmock database: %v", err)
 		}
 		defer db.Close()
 

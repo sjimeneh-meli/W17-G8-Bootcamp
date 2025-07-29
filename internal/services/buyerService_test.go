@@ -227,7 +227,7 @@ func TestBuyerService_DeleteById(t *testing.T) {
 // Tests para método Create con validación de unicidad de CardNumberId
 // Cases: duplicate CardNumberId, repository error, successful creation
 // Casos: CardNumberId duplicado, error de repositorio, creación exitosa
-func TestCreate(t *testing.T) {
+func TestBuyerService_Create(t *testing.T) {
 	t.Run("Create fails because new buyer CardNumberId already exists", func(t *testing.T) {
 		// Test: Duplicate CardNumberId validation / Validación de CardNumberId duplicado
 		expectedError := error_message.ErrAlreadyExists
@@ -306,7 +306,7 @@ func TestCreate(t *testing.T) {
 // Tests para método Update con validación de unicidad de CardNumberId
 // Cases: repository error, duplicate CardNumberId, successful update
 // Casos: error de repositorio, CardNumberId duplicado, actualización exitosa
-func TestUpdate(t *testing.T) {
+func TestBuyerService_Update(t *testing.T) {
 	t.Run("Update fails because of a repository issue obtaining existing CardNumberIds return Internal Server Error", func(t *testing.T) {
 		// Test: Repository error when fetching CardNumberIds for update / Error de repositorio al obtener CardNumberIds para actualizar
 		expectedError := error_message.ErrInternalServerError
@@ -380,7 +380,7 @@ func TestUpdate(t *testing.T) {
 }
 
 // TestGetBuyerService - Tests for service singleton pattern / Tests para patrón singleton del servicio
-func TestGetBuyerService(t *testing.T) {
+func TestBuyerService_GetBuyerService(t *testing.T) {
 	t.Run("GetBuyerService returns same instance when called multiple times", func(t *testing.T) {
 		// Test: Singleton pattern validation / Validación de patrón singleton
 		mockRepository := tests.GetNewBuyerRepositoryMock()

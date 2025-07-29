@@ -34,8 +34,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestPost - Comprehensive testing suite for POST /api/v1/buyers endpoint
-// TestPost - Suite de pruebas comprehensiva para el endpoint POST /api/v1/buyers
+// Test_Buyer_Post - Comprehensive testing suite for POST /api/v1/buyers endpoint
+// Test_Buyer_Post - Suite de pruebas comprehensiva para el endpoint POST /api/v1/buyers
 //
 // Test Coverage / Cobertura de Pruebas:
 // ✓ 201: Successful buyer creation / Creación exitosa de comprador
@@ -47,7 +47,7 @@ import (
 // - JSON payload validation / Validación de payload JSON
 // - Business logic error mapping / Mapeo de errores de lógica de negocio
 // - Service layer mock interaction / Interacción con mocks de capa de servicio
-func TestPost(t *testing.T) {
+func Test_Buyer_Post(t *testing.T) {
 	// Test Case 1: Success scenario - validates complete happy path flow
 	// Caso de Prueba 1: Escenario exitoso - valida flujo completo de caso feliz
 	t.Run("Post Buyer successfully returns 201", func(t *testing.T) {
@@ -229,8 +229,8 @@ func TestPost(t *testing.T) {
 	})
 }
 
-// TestGetAll - Complete testing for GET /api/v1/buyers endpoint (retrieve all buyers)
-// TestGetAll - Pruebas completas para endpoint GET /api/v1/buyers (obtener todos los compradores)
+// Test_Buyer_GetAll - Complete testing for GET /api/v1/buyers endpoint (retrieve all buyers)
+// Test_Buyer_GetAll - Pruebas completas para endpoint GET /api/v1/buyers (obtener todos los compradores)
 //
 // Test Scenarios / Escenarios de Prueba:
 // ✓ 500: Service layer error handling / Manejo de errores de capa de servicio
@@ -240,7 +240,7 @@ func TestPost(t *testing.T) {
 // - Error propagation from service to handler / Propagación de errores de servicio a handler
 // - Response format consistency / Consistencia de formato de respuesta
 // - Mock service behavior verification / Verificación de comportamiento de servicio mock
-func TestGetAll(t *testing.T) {
+func Test_Buyer_GetAll(t *testing.T) {
 
 	t.Run("error on service returns 500", func(t *testing.T) {
 		expectedCode := 500
@@ -296,8 +296,8 @@ func TestGetAll(t *testing.T) {
 	})
 }
 
-// TestGetById - Comprehensive testing for GET /api/v1/buyers/{id} endpoint
-// TestGetById - Pruebas comprehensivas para endpoint GET /api/v1/buyers/{id}
+// Test_Buyer_GetById - Comprehensive testing for GET /api/v1/buyers/{id} endpoint
+// Test_Buyer_GetById - Pruebas comprehensivas para endpoint GET /api/v1/buyers/{id}
 //
 // URL Parameter Testing / Pruebas de Parámetros URL:
 // - Valid numeric ID handling / Manejo de ID numérico válido
@@ -314,7 +314,7 @@ func TestGetAll(t *testing.T) {
 // - Chi router context simulation / Simulación de contexto de router Chi
 // - URL parameter injection / Inyección de parámetros URL
 // - Helper function usage (newTestRequestWithIDParam) / Uso de funciones helper
-func TestGetById(t *testing.T) {
+func Test_Buyer_GetById(t *testing.T) {
 	t.Run("Get By Id fails because request buyer id doesn't exists returns 404", func(t *testing.T) {
 		id := "100"
 		numberId := 100
@@ -469,8 +469,8 @@ func TestGetById(t *testing.T) {
 	})
 }
 
-// TestPatch - Extensive testing suite for PATCH /api/v1/buyers/{id} endpoint
-// TestPatch - Suite de pruebas extensiva para endpoint PATCH /api/v1/buyers/{id}
+// Test_Buyer_Patch - Extensive testing suite for PATCH /api/v1/buyers/{id} endpoint
+// Test_Buyer_Patch - Suite de pruebas extensiva para endpoint PATCH /api/v1/buyers/{id}
 //
 // PATCH Operation Testing / Pruebas de Operación PATCH:
 // - Partial update validation / Validación de actualización parcial
@@ -488,7 +488,7 @@ func TestGetById(t *testing.T) {
 // HTTP Response Testing / Pruebas de Respuesta HTTP:
 // - Error message format consistency / Consistencia de formato de mensajes de error
 // - Success response structure validation / Validación de estructura de respuesta exitosa
-func TestPatch(t *testing.T) {
+func Test_Buyer_Patch(t *testing.T) {
 	t.Run("Patch Buyer fails because request id parameter isn't a number returns 400", func(t *testing.T) {
 		id := "100a"
 
@@ -796,8 +796,8 @@ func TestPatch(t *testing.T) {
 	})
 }
 
-// TestDeleteById - Complete testing coverage for DELETE /api/v1/buyers/{id} endpoint
-// TestDeleteById - Cobertura completa de pruebas para endpoint DELETE /api/v1/buyers/{id}
+// Test_Buyer_DeleteById - Complete testing coverage for DELETE /api/v1/buyers/{id} endpoint
+// Test_Buyer_DeleteById - Cobertura completa de pruebas para endpoint DELETE /api/v1/buyers/{id}
 //
 // Delete Operation Scenarios / Escenarios de Operación DELETE:
 // ✓ 400: Invalid ID parameter format / Formato de parámetro ID inválido
@@ -810,7 +810,7 @@ func TestPatch(t *testing.T) {
 // - Service layer error propagation / Propagación de errores de capa de servicio
 // - HTTP status code accuracy / Precisión de códigos de estado HTTP
 // - Empty response body validation for 204 / Validación de cuerpo de respuesta vacío para 204
-func TestDeleteById(t *testing.T) {
+func Test_Buyer_DeleteById(t *testing.T) {
 	t.Run("Delete By Id fails because request buyer id parameter isn't a number returns 400", func(t *testing.T) {
 		id := "100a"
 
