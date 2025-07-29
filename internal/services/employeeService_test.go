@@ -70,6 +70,30 @@ func TestEmployeeService_Create(t *testing.T) {
 		assert.Equal(t, models.Employee{}, result)
 		repositoryMock.AssertExpectations(t)
 	})
+
+	// create_get_card_numbers_error: Error al obtener card numbers existentes durante creación
+	t.Run("create_get_card_numbers_error", func(t *testing.T) {
+		ResetEmployeeServiceInstance()
+
+		repositoryMock := tests.GetNewEmployeeRepositoryMock()
+		service := GetEmployeeService(repositoryMock)
+
+		employee := models.Employee{
+			CardNumberID: "CARD-001",
+			FirstName:    "Carlos",
+			LastName:     "Ruiz",
+			WarehouseID:  1,
+		}
+
+		repositoryMock.On("GetCardNumberIds").Return([]string{}, error_message.ErrInternalServerError)
+
+		result, err := service.Create(context.Background(), employee)
+
+		assert.Error(t, err)
+		assert.True(t, errors.Is(err, error_message.ErrInternalServerError))
+		assert.Equal(t, models.Employee{}, result)
+		repositoryMock.AssertExpectations(t)
+	})
 }
 
 // TestEmployeeService_GetAll - Tests del método GetAll de EmployeeService
@@ -197,6 +221,27 @@ func TestEmployeeService_Update(t *testing.T) {
 		assert.Equal(t, models.Employee{}, result)
 		repositoryMock.AssertExpectations(t)
 	})
+
+	// update_get_card_numbers_error: Error al obtener card numbers existentes
+	t.Run("update_get_card_numbers_error", func(t *testing.T) {
+		ResetEmployeeServiceInstance()
+
+		repositoryMock := tests.GetNewEmployeeRepositoryMock()
+		service := GetEmployeeService(repositoryMock)
+
+		updateEmployee := models.Employee{
+			FirstName: "Updated Name",
+		}
+
+		repositoryMock.On("GetCardNumberIds").Return([]string{}, error_message.ErrInternalServerError)
+
+		result, err := service.Update(context.Background(), 1, updateEmployee)
+
+		assert.Error(t, err)
+		assert.True(t, errors.Is(err, error_message.ErrInternalServerError))
+		assert.Equal(t, models.Employee{}, result)
+		repositoryMock.AssertExpectations(t)
+	})
 }
 
 // TestEmployeeService_DeleteById - Tests del método DeleteById de EmployeeService
@@ -231,5 +276,24 @@ func TestEmployeeService_DeleteById(t *testing.T) {
 		assert.Error(t, err)
 		assert.True(t, errors.Is(err, error_message.ErrNotFound))
 		repositoryMock.AssertExpectations(t)
+	})
+}
+
+// TestGetEmployeeService_Singleton - Test del patrón singleton para mejorar coverage
+func TestGetEmployeeService_Singleton(t *testing.T) {
+	t.Run("GetEmployeeService_returns_same_instance_when_already_exists", func(t *testing.T) {
+		ResetEmployeeServiceInstance()
+
+		mockRepository1 := tests.GetNewEmployeeRepositoryMock()
+		mockRepository2 := tests.GetNewEmployeeRepositoryMock()
+
+		// Primera llamada - crea nueva instancia
+		service1 := GetEmployeeService(mockRepository1)
+
+		// Segunda llamada - debe retornar la misma instancia (ignora nuevo repository)
+		service2 := GetEmployeeService(mockRepository2)
+
+		// Verifica que son la misma instancia
+		assert.Equal(t, service1, service2)
 	})
 }
