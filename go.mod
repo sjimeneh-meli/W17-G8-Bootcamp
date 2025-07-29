@@ -3,6 +3,7 @@ module github.com/sajimenezher_meli/meli-frescos-8
 go 1.24.3
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/bootcamp-go/web v1.0.0
 	github.com/go-chi/chi/v5 v5.2.2
 	github.com/go-ozzo/ozzo-validation v3.6.0+incompatible
@@ -10,12 +11,18 @@ require (
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/joho/godotenv v1.5.1
 	github.com/stretchr/testify v1.8.4
+<<<<<<< HEAD
 
+=======
+>>>>>>> develop-sprint3
 )
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
+<<<<<<< HEAD
 	github.com/DATA-DOG/go-sqlmock v1.5.2 // indirect
+=======
+>>>>>>> develop-sprint3
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect

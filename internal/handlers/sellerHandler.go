@@ -2,11 +2,13 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 
 	"github.com/bootcamp-go/web/response"
 	"github.com/go-chi/chi/v5"
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/error_message"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/requests"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/responses"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/mappers"
@@ -94,14 +96,25 @@ func (h *SellerHandler) Save(w http.ResponseWriter, r *http.Request) {
 	// Create seller through service layer / Crear vendedor a través de la capa de servicio
 	sellerCreated, err := h.service.Save(sellerParced)
 	if err != nil {
-		response.Error(w, http.StatusConflict, err.Error())
+		// Handle specific error types / Manejar tipos de error específicos
+		if errors.Is(err, error_message.ErrAlreadyExists) {
+			response.Error(w, http.StatusConflict, err.Error())
+			return
+		}
+
+		if errors.Is(err, error_message.ErrDependencyNotFound) {
+			response.Error(w, http.StatusUnprocessableEntity, err.Error())
+			return
+		}
+
+		response.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	// Map model to response format / Mapear modelo a formato de respuesta
 	sellerResponse := mappers.ToSellerStructToResponse(sellerCreated[0])
 
-	response.JSON(w, http.StatusOK, responses.DataResponse{Data: sellerResponse})
+	response.JSON(w, http.StatusCreated, responses.DataResponse{Data: sellerResponse})
 }
 
 // Update handles HTTP PUT requests to update an existing seller
@@ -136,7 +149,13 @@ func (h *SellerHandler) Update(w http.ResponseWriter, r *http.Request) {
 	sellerToUpdate := mappers.ToRequestToSellerStruct(bodyFormated)
 	sellerUpdated, errUpdate := h.service.Update(idFormated, sellerToUpdate)
 	if errUpdate != nil {
-		response.Error(w, http.StatusNotFound, errUpdate.Error())
+
+		if errors.Is(errUpdate, error_message.ErrNotFound) {
+			response.Error(w, http.StatusNotFound, errUpdate.Error())
+			return
+		}
+
+		response.Error(w, http.StatusInternalServerError, errUpdate.Error())
 		return
 	}
 
@@ -165,7 +184,13 @@ func (h *SellerHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	// Delete seller through service layer / Eliminar vendedor a través de la capa de servicio
 	errDelete := h.service.Delete(idFormated)
 	if errDelete != nil {
-		response.Error(w, http.StatusNotFound, errDelete.Error())
+		// Handle specific error types / Manejar tipos de error específicos
+		if errors.Is(errDelete, error_message.ErrNotFound) {
+			response.Error(w, http.StatusNotFound, errDelete.Error())
+			return
+		}
+
+		response.Error(w, http.StatusInternalServerError, errDelete.Error())
 		return
 	}
 
