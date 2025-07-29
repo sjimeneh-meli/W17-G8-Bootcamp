@@ -1,15 +1,10 @@
 package handlers_test
 
 import (
-	"context"
-	"fmt"
-	"io"
-	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/error_message"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
@@ -23,31 +18,6 @@ import (
 // Tests comprehensivos de integración para handlers HTTP de Employee
 // Validan flujo completo request-response con HTTP real (métodos, JSON, status codes)
 // Ejercitan el stack completo del handler a diferencia de unit tests con mocks
-
-// newTestRequestWithIDParam - Helper para crear requests HTTP con parámetros URL
-func newTestRequestWithIDParam(method, pathBase, id string, body io.Reader) (*http.Request, error) {
-	if method == "" {
-		return nil, fmt.Errorf("HTTP method cannot be empty")
-	}
-
-	if pathBase == "" {
-		return nil, fmt.Errorf("pathBase cannot be empty")
-	}
-
-	if id == "" {
-		return nil, fmt.Errorf("id cannot be empty")
-	}
-
-	fullPath := pathBase + "/" + id
-	req := httptest.NewRequest(method, fullPath, body)
-	req.Header.Set("Content-Type", "application/json")
-
-	routeCtx := chi.NewRouteContext()
-	routeCtx.URLParams.Add("id", id)
-
-	ctx := context.WithValue(req.Context(), chi.RouteCtxKey, routeCtx)
-	return req.WithContext(ctx), nil
-}
 
 // TestPostEmployee - Tests comprehensivos del endpoint POST /employees
 func TestPostEmployee(t *testing.T) {
