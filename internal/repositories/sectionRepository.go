@@ -26,6 +26,10 @@ func GetSectionRepository(db *sql.DB) SectionRepositoryI {
 	return sectionRepositoryInstance
 }
 
+func ResetSectionRepositoryInstance() {
+	sectionRepositoryInstance = nil
+}
+
 // SectionRepositoryI - Interface defining the contract for section repository operations
 // SectionRepositoryI - Interfaz que define el contrato para las operaciones del repositorio de secciones
 type SectionRepositoryI interface {

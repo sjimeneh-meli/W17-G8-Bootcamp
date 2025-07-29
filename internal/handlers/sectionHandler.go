@@ -125,12 +125,13 @@ func (h *SectionHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//ERROR
 	// Validate that warehouse exists / Validar que el almacén exista
-	_, srvErr := h.warehouseService.GetById(ctx, request.WarehouseID)
+	/*_, srvErr := h.warehouseService.GetById(ctx, request.WarehouseID)
 	if srvErr != nil {
 		response.Error(w, http.StatusNotFound, srvErr.Error())
 		return
-	}
+	}*/
 
 	// Map request to section model / Mapear solicitud a modelo de sección
 	section = mappers.GetSectionModelFromRequest(request)
