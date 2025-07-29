@@ -13,6 +13,12 @@ import (
 
 var employeeRepositoryInstance EmployeeRepositoryI
 
+// ResetEmployeeRepositoryInstance - Resets the singleton instance for testing purposes
+// ResetEmployeeRepositoryInstance - Resetea la instancia singleton para propósitos de testing
+func ResetEmployeeRepositoryInstance() {
+	employeeRepositoryInstance = nil
+}
+
 // GetNewEmployeeMySQLRepository - Creates and returns a new instance of MySqlEmployeeRepository using singleton pattern
 // GetNewEmployeeMySQLRepository - Crea y retorna una nueva instancia de MySqlEmployeeRepository usando patrón singleton
 func GetNewEmployeeMySQLRepository(db *sql.DB) EmployeeRepositoryI {
