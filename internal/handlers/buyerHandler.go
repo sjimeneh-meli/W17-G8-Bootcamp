@@ -94,7 +94,7 @@ func (h *BuyerHandler) GetById() http.HandlerFunc {
 		// Extract and validate ID parameter from URL / Extraer y validar parámetro ID de la URL
 		id, err := strconv.Atoi(chi.URLParam(r, "id"))
 		if err != nil {
-			response.Error(w, http.StatusBadRequest, err.Error())
+			response.Error(w, http.StatusBadRequest, error_message.ErrInvalidInput.Error())
 			return
 		}
 
@@ -131,7 +131,7 @@ func (h *BuyerHandler) DeleteById() http.HandlerFunc {
 		// Extract and validate ID parameter from URL / Extraer y validar parámetro ID de la URL
 		id, err := strconv.Atoi(chi.URLParam(r, "id"))
 		if err != nil {
-			response.Error(w, http.StatusBadRequest, err.Error())
+			response.Error(w, http.StatusBadRequest, error_message.ErrInvalidInput.Error())
 			return
 		}
 
@@ -169,7 +169,7 @@ func (h *BuyerHandler) PostBuyer() http.HandlerFunc {
 
 		err := validations.ValidateBuyerRequestStruct(requestBuyer)
 		if err != nil {
-			response.Error(w, http.StatusBadRequest, err.Error())
+			response.Error(w, http.StatusUnprocessableEntity, err.Error())
 			return
 		}
 
@@ -210,7 +210,7 @@ func (h *BuyerHandler) PatchBuyer() http.HandlerFunc {
 		// Extract and validate ID parameter from URL / Extraer y validar parámetro ID de la URL
 		id, err := strconv.Atoi(chi.URLParam(r, "id"))
 		if err != nil {
-			response.Error(w, http.StatusBadRequest, err.Error())
+			response.Error(w, http.StatusBadRequest, error_message.ErrInvalidInput.Error())
 			return
 		}
 
