@@ -6,6 +6,8 @@ import (
 	"strings"
 	"testing"
 
+	"errors"
+
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/error_message"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
@@ -28,7 +30,6 @@ func TestPostSeller(t *testing.T) {
 		}`
 		expectedCode := 201
 
-		// Valid seller request JSON
 		validSellerRequest := strings.NewReader(`{
 			"cid": "12345678",
 			"company_name": "Test Company",
@@ -37,7 +38,6 @@ func TestPostSeller(t *testing.T) {
 			"locality_id": 1
 		}`)
 
-		// Valid seller with ID (as returned by service)
 		validSeller := models.Seller{
 			Id:          1000,
 			CID:         "12345678",
@@ -68,7 +68,7 @@ func TestPostSeller(t *testing.T) {
 		expectedResponseBody := `{
 			"status": "Bad Request",
     		"message": "json: cannot unmarshal string into Go struct field SellerRequest.locality_id of type int"
-		}` //necesario?
+		}`
 
 		invalidSellerRequest := strings.NewReader(`{
 			"cid": "12345678",
@@ -90,7 +90,7 @@ func TestPostSeller(t *testing.T) {
 		handler.Save(response, request)
 
 		assert.Equal(t, expectedCode, response.Code)
-		assert.JSONEq(t, expectedResponseBody, response.Body.String()) //necesario?
+		assert.JSONEq(t, expectedResponseBody, response.Body.String())
 
 	})
 
@@ -99,8 +99,7 @@ func TestPostSeller(t *testing.T) {
 		expectedResponseBody := `{
 			"status": "Unprocessable Entity",
     		"message": "cid: cannot be blank."
-		}` //necesario?
-		// Invalid seller request JSON missing required field "cid"
+		}`
 		invalidSellerRequest := strings.NewReader(`{
 			"company_name": "Test Company",
 			"address": "Test Address 123",
@@ -115,13 +114,12 @@ func TestPostSeller(t *testing.T) {
 		response.Header().Set("Content-Type", "application/json")
 
 		service := tests.NewMockSellerService()
-		// No need to configure mock expectations since the handler should return early with 422
 
 		handler := handlers.NewSellerHandler(service)
 		handler.Save(response, request)
 
 		assert.Equal(t, expectedCode, response.Code)
-		assert.JSONEq(t, expectedResponseBody, response.Body.String()) //necesario?
+		assert.JSONEq(t, expectedResponseBody, response.Body.String())
 
 	})
 
@@ -130,9 +128,8 @@ func TestPostSeller(t *testing.T) {
 		expectedResponseBody := `{
 			"status": "Conflict",
 			"message": "error: resource with the provided identifier already exists"
-		}` //necesario?
+		}`
 
-		// Valid seller request JSON but with existing CID
 		existingCIDRequest := strings.NewReader(`{
 			"cid": "SEL-001",
 			"company_name": "Test Company",
@@ -148,14 +145,13 @@ func TestPostSeller(t *testing.T) {
 		response.Header().Set("Content-Type", "application/json")
 
 		service := tests.NewMockSellerService()
-		// Configure mock to return conflict error when trying to save
 		service.On("Save", mock.AnythingOfType("models.Seller")).Return([]models.Seller{}, error_message.ErrAlreadyExists)
 
 		handler := handlers.NewSellerHandler(service)
 		handler.Save(response, request)
 
 		assert.Equal(t, expectedCode, response.Code)
-		assert.JSONEq(t, expectedResponseBody, response.Body.String()) //necesario?
+		assert.JSONEq(t, expectedResponseBody, response.Body.String())
 	})
 
 }
@@ -184,7 +180,6 @@ func TestGet(t *testing.T) {
 			]
 		}`
 
-		// Mock sellers list
 		mockSellers := []models.Seller{
 			{
 				Id:          1,
@@ -263,7 +258,6 @@ func TestGet(t *testing.T) {
 				}
 			}`
 
-		// Mock seller response
 		expectedSeller := models.Seller{
 			Id:          1,
 			CID:         "SEL-001",
@@ -311,7 +305,6 @@ func TestPut(t *testing.T) {
 			]
 		}`
 
-		// Request body with updated seller data
 		requestBody := strings.NewReader(`{
 			"cid": "SEL-001",
 			"company_name": "Alkemy V2",
@@ -320,7 +313,6 @@ func TestPut(t *testing.T) {
 			"locality_id": 1
 		}`)
 
-		// Expected updated seller
 		updatedSeller := models.Seller{
 			Id:          1,
 			CID:         "SEL-001",
@@ -357,7 +349,6 @@ func TestPut(t *testing.T) {
 			"message": "error: the requested resource was not found"
 		}`
 
-		// Request body for update attempt
 		requestBody := strings.NewReader(`{
 			"cid": "SEL-100",
 			"company_name": "Test Company",
@@ -435,5 +426,316 @@ func TestDelete(t *testing.T) {
 		handler.Delete(response, request)
 
 		assert.Equal(t, expectedCode, response.Code)
+	})
+}
+
+func TestGetAllError(t *testing.T) {
+	t.Run("should return 404 when service returns error", func(t *testing.T) {
+		expectedCode := 404
+		expectedResponseBody := `{
+			"status": "Not Found",
+			"message": "error: the requested resource was not found"
+		}`
+
+		request := httptest.NewRequest(http.MethodGet, "/sellers", nil)
+		request.Header.Set("Content-Type", "application/json")
+
+		response := httptest.NewRecorder()
+		response.Header().Set("Content-Type", "application/json")
+
+		service := tests.NewMockSellerService()
+		service.On("GetAll").Return([]models.Seller{}, error_message.ErrNotFound)
+
+		handler := handlers.NewSellerHandler(service)
+		handler.GetAll(response, request)
+
+		assert.Equal(t, expectedCode, response.Code)
+		assert.JSONEq(t, expectedResponseBody, response.Body.String())
+	})
+}
+
+func TestGetByIdInvalidID(t *testing.T) {
+	t.Run("should return 400 when ID is not a valid number", func(t *testing.T) {
+		expectedCode := 400
+		id := "invalid_id"
+
+		serviceMock := tests.NewMockSellerService()
+
+		handler := handlers.NewSellerHandler(serviceMock)
+
+		request, err := newTestRequestWithIDParam(http.MethodGet, "/sellers", id, nil)
+		if err != nil {
+			t.Fatalf("failed to create request: %v", err)
+		}
+
+		response := httptest.NewRecorder()
+		response.Header().Set("Content-type", "application/json")
+
+		handler.GetById(response, request)
+
+		assert.Equal(t, expectedCode, response.Code)
+		assert.Contains(t, response.Body.String(), "strconv.Atoi")
+	})
+}
+
+func TestSaveAdditionalErrors(t *testing.T) {
+	t.Run("should return 422 when dependency not found", func(t *testing.T) {
+		expectedCode := 422
+		expectedResponseBody := `{
+			"status": "Unprocessable Entity",
+			"message": "error: a required dependent entity was not found"
+		}`
+
+		validSellerRequest := strings.NewReader(`{
+			"cid": "12345678",
+			"company_name": "Test Company",
+			"address": "Test Address 123",
+			"telephone": "555-1234",
+			"locality_id": 999
+		}`)
+
+		request := httptest.NewRequest(http.MethodPost, "/sellers", validSellerRequest)
+		request.Header.Set("Content-Type", "application/json")
+
+		response := httptest.NewRecorder()
+		response.Header().Set("Content-Type", "application/json")
+
+		service := tests.NewMockSellerService()
+		service.On("Save", mock.AnythingOfType("models.Seller")).Return([]models.Seller{}, error_message.ErrDependencyNotFound)
+
+		handler := handlers.NewSellerHandler(service)
+		handler.Save(response, request)
+
+		assert.Equal(t, expectedCode, response.Code)
+		assert.JSONEq(t, expectedResponseBody, response.Body.String())
+	})
+
+	t.Run("should return 500 when internal server error occurs", func(t *testing.T) {
+		expectedCode := 500
+		expectedResponseBody := `{
+			"status": "Internal Server Error",
+			"message": "internal server error"
+		}`
+
+		validSellerRequest := strings.NewReader(`{
+			"cid": "12345678",
+			"company_name": "Test Company",
+			"address": "Test Address 123",
+			"telephone": "555-1234",
+			"locality_id": 1
+		}`)
+
+		request := httptest.NewRequest(http.MethodPost, "/sellers", validSellerRequest)
+		request.Header.Set("Content-Type", "application/json")
+
+		response := httptest.NewRecorder()
+		response.Header().Set("Content-Type", "application/json")
+
+		service := tests.NewMockSellerService()
+		service.On("Save", mock.AnythingOfType("models.Seller")).Return([]models.Seller{}, errors.New("internal server error"))
+
+		handler := handlers.NewSellerHandler(service)
+		handler.Save(response, request)
+
+		assert.Equal(t, expectedCode, response.Code)
+		assert.JSONEq(t, expectedResponseBody, response.Body.String())
+	})
+}
+
+func TestUpdateAdditionalErrors(t *testing.T) {
+	t.Run("should return 400 when ID is empty", func(t *testing.T) {
+		expectedCode := 400
+		expectedResponseBody := `{
+			"status": "Bad Request",
+			"message": "id is required"
+		}`
+
+		requestBody := strings.NewReader(`{
+			"cid": "SEL-001",
+			"company_name": "Test Company",
+			"address": "Test Address",
+			"telephone": "555-0000",
+			"locality_id": 1
+		}`)
+
+		request := httptest.NewRequest(http.MethodPatch, "/sellers/", requestBody)
+		request.Header.Set("Content-Type", "application/json")
+
+		response := httptest.NewRecorder()
+		response.Header().Set("Content-Type", "application/json")
+
+		serviceMock := tests.NewMockSellerService()
+		handler := handlers.NewSellerHandler(serviceMock)
+
+		handler.Update(response, request)
+
+		assert.Equal(t, expectedCode, response.Code)
+		assert.JSONEq(t, expectedResponseBody, response.Body.String())
+	})
+
+	t.Run("should return 400 when ID is not a valid number", func(t *testing.T) {
+		expectedCode := 400
+		id := "invalid_id"
+
+		requestBody := strings.NewReader(`{
+			"cid": "SEL-001",
+			"company_name": "Test Company",
+			"address": "Test Address",
+			"telephone": "555-0000",
+			"locality_id": 1
+		}`)
+
+		serviceMock := tests.NewMockSellerService()
+		handler := handlers.NewSellerHandler(serviceMock)
+
+		request, err := newTestRequestWithIDParam(http.MethodPatch, "/sellers", id, requestBody)
+		if err != nil {
+			t.Fatalf("failed to create request: %v", err)
+		}
+
+		response := httptest.NewRecorder()
+		response.Header().Set("Content-Type", "application/json")
+
+		handler.Update(response, request)
+
+		assert.Equal(t, expectedCode, response.Code)
+		assert.Contains(t, response.Body.String(), "strconv.Atoi")
+	})
+
+	t.Run("should return 400 when JSON body is invalid", func(t *testing.T) {
+		expectedCode := 400
+		id := "1"
+
+		invalidJsonBody := strings.NewReader(`{
+			"cid": "SEL-001",
+			"company_name": "Test Company",
+			"address": "Test Address",
+			"telephone": "555-0000",
+			"locality_id": "invalid_id_type"
+		}`)
+
+		serviceMock := tests.NewMockSellerService()
+		handler := handlers.NewSellerHandler(serviceMock)
+
+		request, err := newTestRequestWithIDParam(http.MethodPatch, "/sellers", id, invalidJsonBody)
+		if err != nil {
+			t.Fatalf("failed to create request: %v", err)
+		}
+
+		response := httptest.NewRecorder()
+		response.Header().Set("Content-Type", "application/json")
+
+		handler.Update(response, request)
+
+		assert.Equal(t, expectedCode, response.Code)
+		assert.Contains(t, response.Body.String(), "cannot unmarshal")
+	})
+
+	t.Run("should return 500 when internal server error occurs", func(t *testing.T) {
+		expectedCode := 500
+		expectedResponseBody := `{
+			"status": "Internal Server Error",
+			"message": "internal server error"
+		}`
+		id := "1"
+		numberId := 1
+
+		requestBody := strings.NewReader(`{
+			"cid": "SEL-001",
+			"company_name": "Test Company",
+			"address": "Test Address",
+			"telephone": "555-0000",
+			"locality_id": 1
+		}`)
+
+		serviceMock := tests.NewMockSellerService()
+		serviceMock.On("Update", numberId, mock.AnythingOfType("models.Seller")).Return([]models.Seller{}, errors.New("internal server error"))
+
+		handler := handlers.NewSellerHandler(serviceMock)
+		request, err := newTestRequestWithIDParam(http.MethodPatch, "/sellers", id, requestBody)
+		if err != nil {
+			t.Fatalf("failed to create request: %v", err)
+		}
+
+		response := httptest.NewRecorder()
+		response.Header().Set("Content-Type", "application/json")
+
+		handler.Update(response, request)
+
+		assert.Equal(t, expectedCode, response.Code)
+		assert.JSONEq(t, expectedResponseBody, response.Body.String())
+	})
+}
+
+func TestDeleteAdditionalErrors(t *testing.T) {
+	t.Run("should return 400 when ID is empty", func(t *testing.T) {
+		expectedCode := 400
+		expectedResponseBody := `{
+			"status": "Bad Request",
+			"message": "id is required"
+		}`
+
+		request := httptest.NewRequest(http.MethodDelete, "/sellers/", nil)
+		request.Header.Set("Content-Type", "application/json")
+
+		response := httptest.NewRecorder()
+		response.Header().Set("Content-Type", "application/json")
+
+		serviceMock := tests.NewMockSellerService()
+		handler := handlers.NewSellerHandler(serviceMock)
+
+		handler.Delete(response, request)
+
+		assert.Equal(t, expectedCode, response.Code)
+		assert.JSONEq(t, expectedResponseBody, response.Body.String())
+	})
+
+	t.Run("should return 400 when ID is not a valid number", func(t *testing.T) {
+		expectedCode := 400
+		id := "invalid_id"
+
+		serviceMock := tests.NewMockSellerService()
+		handler := handlers.NewSellerHandler(serviceMock)
+
+		request, err := newTestRequestWithIDParam(http.MethodDelete, "/sellers", id, nil)
+		if err != nil {
+			t.Fatalf("failed to create request: %v", err)
+		}
+
+		response := httptest.NewRecorder()
+		response.Header().Set("Content-Type", "application/json")
+
+		handler.Delete(response, request)
+
+		assert.Equal(t, expectedCode, response.Code)
+		assert.Contains(t, response.Body.String(), "strconv.Atoi")
+	})
+
+	t.Run("should return 500 when internal server error occurs", func(t *testing.T) {
+		expectedCode := 500
+		expectedResponseBody := `{
+			"status": "Internal Server Error",
+			"message": "internal server error"
+		}`
+		id := "1"
+		numberId := 1
+
+		serviceMock := tests.NewMockSellerService()
+		serviceMock.On("Delete", numberId).Return(errors.New("internal server error"))
+
+		handler := handlers.NewSellerHandler(serviceMock)
+
+		request, err := newTestRequestWithIDParam(http.MethodDelete, "/sellers", id, nil)
+		if err != nil {
+			t.Fatalf("failed to create request: %v", err)
+		}
+
+		response := httptest.NewRecorder()
+		response.Header().Set("Content-Type", "application/json")
+
+		handler.Delete(response, request)
+
+		assert.Equal(t, expectedCode, response.Code)
+		assert.JSONEq(t, expectedResponseBody, response.Body.String())
 	})
 }

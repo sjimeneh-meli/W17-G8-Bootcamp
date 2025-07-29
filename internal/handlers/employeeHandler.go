@@ -138,7 +138,7 @@ func (h *EmployeeHandler) PostEmployee() http.HandlerFunc {
 
 		err := validations.ValidateEmployeeRequestStruct(requestEmployee)
 		if err != nil {
-			response.Error(w, http.StatusBadRequest, err.Error())
+			response.Error(w, http.StatusUnprocessableEntity, err.Error())
 			return
 		}
 
@@ -189,7 +189,7 @@ func (h *EmployeeHandler) PatchEmployee() http.HandlerFunc {
 
 		err = validations.IsNotAnEmptyEmployee(requestEmployee)
 		if err != nil {
-			response.Error(w, http.StatusBadRequest, err.Error())
+			response.Error(w, http.StatusUnprocessableEntity, err.Error())
 			return
 		}
 
