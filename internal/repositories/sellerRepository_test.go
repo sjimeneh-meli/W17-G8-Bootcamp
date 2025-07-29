@@ -451,7 +451,7 @@ func TestGet(t *testing.T) {
 
 }
 
-func TestUpdate(t *testing.T) {
+func TestUpdateSeller(t *testing.T) {
 	t.Run("update ok", func(t *testing.T) {
 
 		sellerId := 1

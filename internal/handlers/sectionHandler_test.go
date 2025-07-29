@@ -20,7 +20,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestPost(t *testing.T) {
+func TestPostSection(t *testing.T) {
 	t.Run("Entity: Section, Method: POST, Code: 201", func(t *testing.T) {
 		expectedResponseCode := 201
 		expectedResponseBody := `{
@@ -205,7 +205,7 @@ func TestPost(t *testing.T) {
 	})
 }
 
-func TestGetAll(t *testing.T) {
+func TestGetAllSections(t *testing.T) {
 	t.Run("Entity: Section, Method: Get, Code: 200", func(t *testing.T) {
 		expectedCode := 200
 
@@ -254,7 +254,7 @@ func TestGetAll(t *testing.T) {
 
 }
 
-func TestGetById(t *testing.T) {
+func TestGetByIdSection(t *testing.T) {
 
 	t.Run("Entity: Section, Method: Get, Code: 200", func(t *testing.T) {
 		expectedCode := 200
@@ -664,7 +664,7 @@ func TestUpdate(t *testing.T) {
 	})
 }
 
-func TestDeleteById(t *testing.T) {
+func TestDeleteByIdSection(t *testing.T) {
 	t.Run("Entity: Section, Method: Delete, Code: 200", func(t *testing.T) {
 		id := "1"
 		sectionId := 1

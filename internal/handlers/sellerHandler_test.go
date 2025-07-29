@@ -18,7 +18,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func TestPost(t *testing.T) {
+func TestPostSeller(t *testing.T) {
 	t.Run("should return 201 and a seller", func(t *testing.T) {
 		expectedResponseBody := `{
 			"data": {
@@ -442,7 +442,7 @@ func TestDelete(t *testing.T) {
 	})
 }
 
-func newTestRequestWithIDParam(method, pathBase, id string, body io.Reader) (*http.Request, error) {
+func newTestRequestWithIDParamSeller(method, pathBase, id string, body io.Reader) (*http.Request, error) {
 	if method == "" {
 		return nil, fmt.Errorf("HTTP method cannot be empty")
 	}
