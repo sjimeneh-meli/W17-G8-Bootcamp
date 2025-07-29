@@ -26,7 +26,7 @@ func GetSectionRepository(db *sql.DB) SectionRepositoryI {
 	return sectionRepositoryInstance
 }
 
-func ResetsectionRepositoryInstance() {
+func ResetSectionRepositoryInstance() {
 	sectionRepositoryInstance = nil
 }
 

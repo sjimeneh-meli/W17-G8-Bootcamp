@@ -47,7 +47,7 @@ func TestGetByIdSection(t *testing.T) {
 
 		assert.Nil(t, err, "err should be nil")
 		assert.Equal(t, section, sectionDB)
-		repositories.ResetsectionRepositoryInstance()
+		repositories.ResetSectionRepositoryInstance()
 	})
 }
 
@@ -98,6 +98,29 @@ func TestGetAllSections(t *testing.T) {
 
 		assert.Nil(t, err, "err should be nil")
 		assert.Equal(t, sections, sectionDB, "ok")
-		repositories.ResetsectionRepositoryInstance()
+		repositories.ResetSectionRepositoryInstance()
+	})
+}
+
+func TestDeleteByIdSections(t *testing.T) {
+	t.Run("Successfully delete section from db", func(t *testing.T) {
+		sectionID := 10
+
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			fmt.Println("failed to open sqlmock database:", err)
+		}
+		defer db.Close()
+
+		mock.ExpectExec("DELETE FROM sections WHERE Id = ?").
+			WithArgs(sectionID).
+			WillReturnResult(sqlmock.NewResult(0, 1))
+
+		repository := repositories.GetSectionRepository(db)
+
+		err = repository.DeleteByID(context.Background(), sectionID)
+
+		assert.Nil(t, err)
+		repositories.ResetSectionRepositoryInstance()
 	})
 }
