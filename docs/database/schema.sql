@@ -308,17 +308,18 @@ INSERT INTO `buyers` (`id`, `id_card_number`, `first_name`, `last_name`) VALUES
 (6, '60606060', 'Juan', 'Regino');
 
 -- Insertando datos en 'warehouse' (10 registros solicitados)
-INSERT INTO `warehouse` (`id`, `address`, `telephone`, `warehouse_code`, `locality_id`) VALUES
-(1, 'Zona Franca, Bodega 10', '555-0201', 'BOG-ZF-01', 1), -- Ubicado en localities.id 1 (Bogotá)
-(2, 'Parque Industrial, Nave 5', '555-0202', 'MED-PI-01', 2), -- Ubicado en localities.id 2 (Medellín)
-(3, 'Central de Abastos, Bodega A2', '555-0203', 'CAL-CA-01', 3), -- Ubicado en localities.id 3 (Cali)
-(4, 'Polígono Industrial Sur, Módulo 8', '555-0204', 'BUE-PIS-01', 4), -- Ubicado en localities.id 4 (La Plata)
-(5, 'Centro Logístico Norte, Dock 15', '555-0205', 'COR-CLN-01', 5), -- Ubicado en localities.id 5 (Córdoba Capital)
-(6, 'Puerto Norte, Bodega 3', '555-0206', 'ROS-PN-01', 6), -- Ubicado en localities.id 6 (Rosario)
-(7, 'Parque Logístico Jalisco, Bodega 20', '555-0207', 'GDL-PLJ-01', 7), -- Ubicado en localities.id 7 (Guadalajara)
-(8, 'Parque Industrial, Nave 8', '555-0208', 'MTY-PI-01', 8), -- Ubicado en localities.id 8 (Monterrey)
-(9, 'Almacén Central, Sector 3', '555-0209', 'CDMX-AC-01', 9), -- Ubicado en localities.id 9 (CDMX)
-(10, 'Bodegas del Teusaquillo', '555-0210', 'BOG-TE-02', 1); -- Ubicado en localities.id 1 (Bogotá)
+-- Insertando datos en 'warehouse' (10 registros solicitados)
+INSERT INTO `warehouse` (`id`, `address`, `telephone`, `warehouse_code`, `minimum_capacity`, `minimum_temperature`, `locality_id`) VALUES
+(1, 'Zona Franca, Bodega 10', '555-0201', 'BOG-ZF-01', 100, 5.0, 1), -- Ubicado en localities.id 1 (Bogotá)
+(2, 'Parque Industrial, Nave 5', '555-0202', 'MED-PI-01', 150, 3.0, 2), -- Ubicado en localities.id 2 (Medellín)
+(3, 'Central de Abastos, Bodega A2', '555-0203', 'CAL-CA-01', 200, 7.0, 3), -- Ubicado en localities.id 3 (Cali)
+(4, 'Polígono Industrial Sur, Módulo 8', '555-0204', 'BUE-PIS-01', 120, 4.0, 4), -- Ubicado en localities.id 4 (La Plata)
+(5, 'Centro Logístico Norte, Dock 15', '555-0205', 'COR-CLN-01', 180, 6.0, 5), -- Ubicado en localities.id 5 (Córdoba Capital)
+(6, 'Puerto Norte, Bodega 3', '555-0206', 'ROS-PN-01', 90, 2.0, 6), -- Ubicado en localities.id 6 (Rosario)
+(7, 'Parque Logístico Jalisco, Bodega 20', '555-0207', 'GDL-PLJ-01', 250, 8.0, 7), -- Ubicado en localities.id 7 (Guadalajara)
+(8, 'Parque Industrial, Nave 8', '555-0208', 'MTY-PI-01', 160, 5.5, 8), -- Ubicado en localities.id 8 (Monterrey)
+(9, 'Almacén Central, Sector 3', '555-0209', 'CDMX-AC-01', 300, 9.0, 9), -- Ubicado en localities.id 9 (CDMX)
+(10, 'Bodegas del Teusaquillo', '555-0210', 'BOG-TE-02', 110, 4.5, 1); -- Ubicado en localities.id 
 
 -- Insertando datos en 'employees'
 INSERT INTO `employees` (`id`, `id_card_number`, `first_name`, `last_name`, `warehouse_id`) VALUES
