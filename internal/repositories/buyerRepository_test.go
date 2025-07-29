@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"regexp"
 	"testing"
 
@@ -34,7 +33,7 @@ func TestMySqlBuyerRepositoryGetAll(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Error("failed to open sqlmock database:", err)
 		}
 		defer db.Close()
 
@@ -59,7 +58,7 @@ func TestMySqlBuyerRepositoryGetAll(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Error("failed to open sqlmock database:", err)
 		}
 		defer db.Close()
 
@@ -83,7 +82,7 @@ func TestMySqlBuyerRepositoryGetAll(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Error("failed to open sqlmock database:", err)
 		}
 		defer db.Close()
 
@@ -106,7 +105,7 @@ func TestMySqlBuyerRepositoryGetAll(t *testing.T) {
 		expectedError := error_message.ErrInternalServerError
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Error("failed to open sqlmock database:", err)
 		}
 		defer db.Close()
 
@@ -139,7 +138,7 @@ func TestGetById(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Error("failed to open sqlmock database:", err)
 		}
 		defer db.Close()
 
@@ -168,7 +167,7 @@ func TestGetById(t *testing.T) {
 		searchId := 1
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Error("failed to open sqlmock database:", err)
 		}
 		defer db.Close()
 
@@ -193,7 +192,7 @@ func TestGetById(t *testing.T) {
 		searchId := 1
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Error("failed to open sqlmock database:", err)
 		}
 		defer db.Close()
 
@@ -223,7 +222,7 @@ func TestGetById(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Error("failed to open sqlmock database:", err)
 		}
 		defer db.Close()
 		row := mock.NewRows([]string{"id", "id_card_number", "first_name", "last_name"})
@@ -251,7 +250,7 @@ func TestDeleteById(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Error("failed to open sqlmock database:", err)
 		}
 		defer db.Close()
 
@@ -274,7 +273,7 @@ func TestDeleteById(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Error("failed to open sqlmock database:", err)
 		}
 		defer db.Close()
 
@@ -297,7 +296,7 @@ func TestDeleteById(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Error("failed to open sqlmock database:", err)
 		}
 		defer db.Close()
 
@@ -321,7 +320,7 @@ func TestDeleteById(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Error("failed to open sqlmock database:", err)
 		}
 		defer db.Close()
 
@@ -357,7 +356,7 @@ func TestCreate(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Error("failed to open sqlmock database:", err)
 		}
 		defer db.Close()
 
@@ -388,7 +387,7 @@ func TestCreate(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Error("failed to open sqlmock database:", err)
 		}
 		defer db.Close()
 
@@ -420,7 +419,7 @@ func TestCreate(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Error("failed to open sqlmock database:", err)
 		}
 		defer db.Close()
 
@@ -457,7 +456,7 @@ func TestUpdate(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Error("failed to open sqlmock database:", err)
 		}
 		defer db.Close()
 
@@ -494,7 +493,7 @@ func TestUpdate(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Error("failed to open sqlmock database:", err)
 		}
 		defer db.Close()
 
@@ -524,7 +523,7 @@ func TestUpdate(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Error("failed to open sqlmock database:", err)
 		}
 		defer db.Close()
 
@@ -554,7 +553,7 @@ func TestUpdate(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Error("failed to open sqlmock database:", err)
 		}
 		defer db.Close()
 
@@ -584,7 +583,7 @@ func TestUpdate(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Error("failed to open sqlmock database:", err)
 		}
 		defer db.Close()
 
@@ -615,7 +614,7 @@ func TestUpdate(t *testing.T) {
 
 		db, _, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Error("failed to open sqlmock database:", err)
 		}
 		defer db.Close()
 
@@ -637,7 +636,7 @@ func TestGetCardNumberIds(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Error("failed to open sqlmock database:", err)
 		}
 		defer db.Close()
 
@@ -662,7 +661,7 @@ func TestGetCardNumberIds(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Error("failed to open sqlmock database:", err)
 		}
 		defer db.Close()
 
@@ -689,7 +688,7 @@ func TestExistBuyerById(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Error("failed to open sqlmock database:", err)
 		}
 		defer db.Close()
 
@@ -714,7 +713,7 @@ func TestExistBuyerById(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Error("failed to open sqlmock database:", err)
 		}
 		defer db.Close()
 
@@ -738,7 +737,7 @@ func TestExistBuyerById(t *testing.T) {
 
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Error("failed to open sqlmock database:", err)
 		}
 		defer db.Close()
 
@@ -762,7 +761,7 @@ func TestGetNewBuyerMySQLRepository(t *testing.T) {
 	t.Run("Successfully returns a new buyer repository", func(t *testing.T) {
 		db, _, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Error("failed to open sqlmock database:", err)
 		}
 		defer db.Close()
 
@@ -774,7 +773,7 @@ func TestGetNewBuyerMySQLRepository(t *testing.T) {
 	t.Run("Multiple calls to GetNewBuyerMySQLRepository should return the same instance", func(t *testing.T) {
 		db, _, err := sqlmock.New()
 		if err != nil {
-			fmt.Println("failed to open sqlmock database:", err)
+			t.Error("failed to open sqlmock database:", err)
 		}
 		defer db.Close()
 
