@@ -12,6 +12,12 @@ import (
 
 var employeeServiceInstance EmployeeServiceI
 
+// ResetEmployeeServiceInstance - Resets the singleton instance for testing purposes
+// ResetEmployeeServiceInstance - Resetea la instancia singleton para propósitos de testing
+func ResetEmployeeServiceInstance() {
+	employeeServiceInstance = nil
+}
+
 // GetEmployeeService - Creates and returns a new instance of EmployeeService with the required repository using singleton pattern
 // GetEmployeeService - Crea y retorna una nueva instancia de EmployeeService con el repositorio requerido usando patrón singleton
 func GetEmployeeService(repository repositories.EmployeeRepositoryI) EmployeeServiceI {

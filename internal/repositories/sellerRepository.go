@@ -52,17 +52,17 @@ func (r *SQLSellerRepository) GetAll() ([]models.Seller, error) {
 	// Execute query to select all seller fields / Ejecutar consulta para seleccionar todos los campos del vendedor
 	rows, err := r.db.Query("SELECT id, cid, company_name, address, telephone, locality_id FROM sellers")
 	if err != nil {
-		return nil, err
+		return nil, error_message.ErrQuery
 	}
 	defer rows.Close()
 
 	// Iterate through all rows and scan each seller into the results slice
 	// Itera a través de todas las filas y escanea cada vendedor en el slice de resultados
-	var sellers []models.Seller
+	sellers := make([]models.Seller, 0)
 	for rows.Next() {
 		var s models.Seller
 		if err := rows.Scan(&s.Id, &s.CID, &s.CompanyName, &s.Address, &s.Telephone, &s.LocalityID); err != nil {
-			return nil, err
+			return nil, error_message.ErrFailedToScan
 		}
 		sellers = append(sellers, s)
 	}
@@ -76,7 +76,7 @@ func (r *SQLSellerRepository) Save(seller models.Seller) ([]models.Seller, error
 	var exists bool
 	err := r.db.QueryRow("SELECT EXISTS(SELECT 1 FROM sellers WHERE cid = ?)", seller.CID).Scan(&exists)
 	if err != nil {
-		return nil, err
+		return nil, error_message.ErrFailedCheckingExistence
 	}
 	if exists {
 		return nil, error_message.ErrAlreadyExists
@@ -86,7 +86,7 @@ func (r *SQLSellerRepository) Save(seller models.Seller) ([]models.Seller, error
 	var existsLocality bool
 	err = r.db.QueryRow("SELECT EXISTS(SELECT 1 FROM localities WHERE id = ?)", seller.LocalityID).Scan(&existsLocality)
 	if err != nil {
-		return nil, err
+		return nil, error_message.ErrFailedCheckingExistence
 	}
 	if !existsLocality {
 		return nil, error_message.ErrDependencyNotFound
@@ -96,13 +96,13 @@ func (r *SQLSellerRepository) Save(seller models.Seller) ([]models.Seller, error
 	res, err := r.db.Exec("INSERT INTO sellers (cid, company_name, address, telephone, locality_id) VALUES (?, ?, ?, ?, ?)",
 		seller.CID, seller.CompanyName, seller.Address, seller.Telephone, seller.LocalityID)
 	if err != nil {
-		return nil, err
+		return nil, error_message.ErrQuery
 	}
 
 	// Get the auto-generated ID and assign it to the seller / Obtener el ID autogenerado y asignarlo al vendedor
 	lastID, err := res.LastInsertId()
 	if err != nil {
-		return nil, err
+		return nil, error_message.ErrQuery
 	}
 	seller.Id = int(lastID)
 	return []models.Seller{seller}, nil
@@ -121,7 +121,7 @@ func (r *SQLSellerRepository) Update(id int, seller models.Seller) ([]models.Sel
 		return nil, error_message.ErrNotFound
 	}
 	if err != nil {
-		return nil, err
+		return nil, error_message.ErrQuery
 	}
 
 	// Update only the provided fields (partial update logic) / Actualizar solo los campos proporcionados (lógica de actualización parcial)
@@ -147,7 +147,7 @@ func (r *SQLSellerRepository) Update(id int, seller models.Seller) ([]models.Sel
 		existing.CID, existing.CompanyName, existing.Address, existing.Telephone, existing.LocalityID, id)
 
 	if err != nil {
-		return nil, err
+		return nil, error_message.ErrQuery
 	}
 
 	return []models.Seller{existing}, nil
@@ -159,17 +159,21 @@ func (r *SQLSellerRepository) Delete(id int) error {
 	// Execute delete statement for the specified seller ID / Ejecutar declaración de eliminación para el ID del vendedor especificado
 	res, err := r.db.Exec("DELETE FROM sellers WHERE id = ?", id)
 	if err != nil {
-		return err
+		return error_message.ErrQuery
 	}
 
 	// Check if any rows were affected to confirm deletion / Verificar si alguna fila fue afectada para confirmar la eliminación
 	count, err := res.RowsAffected()
 	if err != nil {
-		return err
+		return error_message.ErrQuery
 	}
 	// If no rows affected, seller doesn't exist / Si ninguna fila fue afectada, el vendedor no existe
 	if count == 0 {
 		return error_message.ErrNotFound
 	}
 	return nil
+}
+
+func ResetSellerRepositorySingleton() {
+	sellerRepositoryInstance = nil
 }
