@@ -25,7 +25,7 @@ import (
 // Ejercitan el stack completo del handler a diferencia de unit tests con mocks
 
 // newTestRequestWithIDParam - Helper para crear requests HTTP con parámetros URL
-func newTestRequestWithIDParam(method, pathBase, id string, body io.Reader) (*http.Request, error) {
+func newTestRequestWithIDParam_employee(method, pathBase, id string, body io.Reader) (*http.Request, error) {
 	if method == "" {
 		return nil, fmt.Errorf("HTTP method cannot be empty")
 	}
