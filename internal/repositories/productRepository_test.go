@@ -164,6 +164,40 @@ func TestProductRepository_GetAll(t *testing.T) {
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 
+	// Test case: Rows iteration error
+	// Caso de prueba: Error durante la iteración de filas
+	t.Run("Error_RowsIterationError", func(t *testing.T) {
+		// Arrange - Configurar mock con error de iteración
+		// Arrange - Set up mock with iteration error
+		db, mock, err := sqlmock.New()
+		require.NoError(t, err)
+		defer db.Close()
+
+		repo := newTestProductRepository(db)
+
+		rows := sqlmock.NewRows([]string{
+			"id", "description", "expiration_rate", "freezing_rate", "height",
+			"length", "net_weight", "product_code", "recommended_freezing_temperature",
+			"width", "product_type_id", "seller_id",
+		}).AddRow(1, "desc", 0.1, 0.8, 10.5, 15.7, 5.2, "PROD001", -18.0, 10.5, 1, nil).
+			RowError(0, errors.New("rows iteration error"))
+
+		mock.ExpectQuery(regexp.QuoteMeta("SELECT id, description, expiration_rate, freezing_rate, height, length, net_weight, product_code, recommended_freezing_temperature, width, product_type_id, seller_id FROM products")).
+			WillReturnRows(rows)
+
+		// Act - Ejecutar el método bajo prueba
+		// Act - Execute the method under test
+		products, err := repo.GetAll(context.Background())
+
+		// Assert - Verificar que retorna error de iteración
+		// Assert - Verify that it returns iteration error
+		assert.Error(t, err)
+		assert.Nil(t, products)
+		assert.Contains(t, err.Error(), "error iterating product rows")
+
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+
 	// Test case: Empty result set
 	// Caso de prueba: Conjunto de resultados vacío
 	t.Run("Success_EmptyResultSet", func(t *testing.T) {
@@ -589,6 +623,80 @@ func TestProductRepository_CreateByBatch(t *testing.T) {
 
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
+
+	// Test case: LastInsertId error during batch
+	// Caso de prueba: Error en LastInsertId durante el lote
+	t.Run("Error_LastInsertIdFailedDuringBatch", func(t *testing.T) {
+		// Arrange - Configurar mock con error en LastInsertId
+		// Arrange - Set up mock with LastInsertId error
+		db, mock, err := sqlmock.New()
+		require.NoError(t, err)
+		defer db.Close()
+
+		repo := newTestProductRepository(db)
+
+		products := []models.Product{{ProductCode: "PROD001"}}
+
+		mock.ExpectBegin()
+		mock.ExpectPrepare(regexp.QuoteMeta("INSERT INTO products (description, expiration_rate, freezing_rate, height, length, net_weight, product_code, recommended_freezing_temperature, width, product_type_id, seller_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"))
+
+		mock.ExpectExec(regexp.QuoteMeta("INSERT INTO products (description, expiration_rate, freezing_rate, height, length, net_weight, product_code, recommended_freezing_temperature, width, product_type_id, seller_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")).
+			WithArgs(products[0].Description, products[0].ExpirationRate, products[0].FreezingRate, products[0].Height,
+				products[0].Length, products[0].NetWeight, products[0].ProductCode, products[0].RecommendedFreezingTemperature,
+				products[0].Width, products[0].ProductTypeID, products[0].SellerID).
+			WillReturnResult(sqlmock.NewErrorResult(errors.New("last insert id not available")))
+		mock.ExpectRollback()
+
+		// Act - Ejecutar el método bajo prueba
+		// Act - Execute the method under test
+		createdProducts, err := repo.CreateByBatch(context.Background(), products)
+
+		// Assert - Verificar que retorna error
+		// Assert - Verify that it returns error
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "failed to get last insert id for product")
+		assert.Nil(t, createdProducts)
+
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	// Test case: Commit error
+	// Caso de prueba: Error en commit
+	t.Run("Error_CommitFailed", func(t *testing.T) {
+		// Arrange - Configurar mock con error en commit
+		// Arrange - Set up mock with commit error
+		db, mock, err := sqlmock.New()
+		require.NoError(t, err)
+		defer db.Close()
+
+		repo := newTestProductRepository(db)
+
+		products := []models.Product{{ProductCode: "PROD001"}}
+
+		mock.ExpectBegin()
+		mock.ExpectPrepare(regexp.QuoteMeta("INSERT INTO products (description, expiration_rate, freezing_rate, height, length, net_weight, product_code, recommended_freezing_temperature, width, product_type_id, seller_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"))
+
+		mock.ExpectExec(regexp.QuoteMeta("INSERT INTO products (description, expiration_rate, freezing_rate, height, length, net_weight, product_code, recommended_freezing_temperature, width, product_type_id, seller_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")).
+			WithArgs(products[0].Description, products[0].ExpirationRate, products[0].FreezingRate, products[0].Height,
+				products[0].Length, products[0].NetWeight, products[0].ProductCode, products[0].RecommendedFreezingTemperature,
+				products[0].Width, products[0].ProductTypeID, products[0].SellerID).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		expectedError := errors.New("commit failed")
+		mock.ExpectCommit().WillReturnError(expectedError)
+
+		// Act - Ejecutar el método bajo prueba
+		// Act - Execute the method under test
+		createdProducts, err := repo.CreateByBatch(context.Background(), products)
+
+		// Assert - Verificar que retorna error
+		// Assert - Verify that it returns error
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "failed to commit transaction")
+		assert.Nil(t, createdProducts)
+
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
 }
 
 // TestProductRepository_Update agrupa todos los tests para el método Update
@@ -696,6 +804,39 @@ func TestProductRepository_Update(t *testing.T) {
 
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
+
+	// Test case: RowsAffected error
+	// Caso de prueba: Error en RowsAffected
+	t.Run("Error_RowsAffectedFailed", func(t *testing.T) {
+		// Arrange - Configurar mock con error en RowsAffected
+		// Arrange - Set up mock with RowsAffected error
+		db, mock, err := sqlmock.New()
+		require.NoError(t, err)
+		defer db.Close()
+
+		repo := newTestProductRepository(db)
+
+		productToUpdate := models.Product{ProductCode: "PROD001"}
+
+		mock.ExpectExec(regexp.QuoteMeta("UPDATE products SET description = ?, expiration_rate = ?, freezing_rate = ?, height = ?, length = ?, net_weight = ?, product_code = ?, recommended_freezing_temperature = ?, width = ?, product_type_id = ?, seller_id = ? WHERE id = ?")).
+			WithArgs(productToUpdate.Description, productToUpdate.ExpirationRate, productToUpdate.FreezingRate,
+				productToUpdate.Height, productToUpdate.Length, productToUpdate.NetWeight, productToUpdate.ProductCode,
+				productToUpdate.RecommendedFreezingTemperature, productToUpdate.Width, productToUpdate.ProductTypeID,
+				productToUpdate.SellerID, int64(1)).
+			WillReturnResult(sqlmock.NewErrorResult(errors.New("rows affected error")))
+
+		// Act - Ejecutar el método bajo prueba
+		// Act - Execute the method under test
+		updatedProduct, err := repo.Update(context.Background(), 1, productToUpdate)
+
+		// Assert - Verificar que retorna error
+		// Assert - Verify that it returns error
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "failed to get rows affected for product")
+		assert.Equal(t, models.Product{}, updatedProduct)
+
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
 }
 
 // TestProductRepository_Delete agrupa todos los tests para el método Delete
@@ -778,6 +919,33 @@ func TestProductRepository_Delete(t *testing.T) {
 		// Assert - Verify that it returns error
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "failed to delete product")
+
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	// Test case: RowsAffected error
+	// Caso de prueba: Error en RowsAffected
+	t.Run("Error_RowsAffectedFailed", func(t *testing.T) {
+		// Arrange - Configurar mock con error en RowsAffected
+		// Arrange - Set up mock with RowsAffected error
+		db, mock, err := sqlmock.New()
+		require.NoError(t, err)
+		defer db.Close()
+
+		repo := newTestProductRepository(db)
+
+		mock.ExpectExec(regexp.QuoteMeta("DELETE FROM products WHERE id = ?")).
+			WithArgs(int64(1)).
+			WillReturnResult(sqlmock.NewErrorResult(errors.New("rows affected error")))
+
+		// Act - Ejecutar el método bajo prueba
+		// Act - Execute the method under test
+		err = repo.Delete(context.Background(), 1)
+
+		// Assert - Verificar que retorna error
+		// Assert - Verify that it returns error
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "failed to get rows affected on delete for product")
 
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
@@ -978,5 +1146,34 @@ func TestNewProductRepository(t *testing.T) {
 		// Assert - Verificar que el repositorio se creó correctamente
 		// Assert - Verify that the repository was created correctly
 		assert.NotNil(t, repo)
+	})
+
+	// Test case: Singleton pattern verification
+	// Caso de prueba: Verificación del patrón singleton
+	t.Run("Success_ReturnsSameInstance", func(t *testing.T) {
+		// Arrange - Crear mock de base de datos
+		// Arrange - Create database mock
+		db, _, err := sqlmock.New()
+		require.NoError(t, err)
+		defer db.Close()
+
+		// Reset the singleton instance to test the singleton behavior
+		// Resetear la instancia singleton para probar el comportamiento singleton
+		productRepositoryInstance = nil
+
+		// Act - Crear múltiples instancias del repositorio
+		// Act - Create multiple repository instances
+		repo1 := NewProductRepository(db)
+		repo2 := NewProductRepository(db)
+
+		// Assert - Verificar que ambas referencias apuntan a la misma instancia
+		// Assert - Verify that both references point to the same instance
+		assert.NotNil(t, repo1)
+		assert.NotNil(t, repo2)
+		assert.Equal(t, repo1, repo2)
+
+		// Reset para no afectar otros tests
+		// Reset to not affect other tests
+		productRepositoryInstance = nil
 	})
 }
