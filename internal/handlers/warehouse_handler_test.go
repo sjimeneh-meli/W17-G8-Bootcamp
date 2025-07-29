@@ -1,3 +1,5 @@
+// Package handlers_test - Tests de integración para Warehouse Handler
+// Tests HTTP comprehensivos para operaciones CRUD de la entidad Warehouse
 package handlers_test
 
 import (
@@ -15,12 +17,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// newWarehouseHandlerMock - Factory para crear handler con servicio mock
 func newWarehouseHandlerMock() (*tests.WarehouseServiceMock, *handlers.WarehouseHandler) {
 	mock := &tests.WarehouseServiceMock{}
 	h := handlers.NewWarehouseHandler(mock)
 	return mock, h
 }
 
+// TestWarehouseHandler_Create - Tests para POST /warehouses
+// Casos: 201 (creación exitosa), 422 (validación), 409 (código duplicado), 400 (JSON inválido), 500 (error interno)
 func TestWarehouseHandler_Create(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		mock, handler := newWarehouseHandlerMock()
@@ -38,6 +43,7 @@ func TestWarehouseHandler_Create(t *testing.T) {
 			"Código inesperado. Body: %s", rr.Body.String())
 	})
 	t.Run("fail with no contains necessary fields", func(t *testing.T) {
+		// Test validación: campo telephone faltante (telephon typo)
 		mock, handler := newWarehouseHandlerMock()
 		mock.CreateFunc = func(ctx context.Context, w models.Warehouse) (models.Warehouse, error) {
 			return w, nil
@@ -52,6 +58,7 @@ func TestWarehouseHandler_Create(t *testing.T) {
 			"Código inesperado. Body: %s", rr.Body.String())
 	})
 	t.Run("warehouse_code already exists", func(t *testing.T) {
+		// Test conflicto: warehouse_code duplicado
 		mock, handler := newWarehouseHandlerMock()
 		mock.CreateFunc = func(ctx context.Context, w models.Warehouse) (models.Warehouse, error) {
 			return w, nil
@@ -68,6 +75,7 @@ func TestWarehouseHandler_Create(t *testing.T) {
 			"Código inesperado. Body: %s", rr.Body.String())
 	})
 	t.Run("invalid JSON format", func(t *testing.T) {
+		// Test JSON malformado
 		_, handler := newWarehouseHandlerMock()
 		body := `{"address":"Dirección","telephone":"1234","warehouse_code":"XX1","minimum_capacity":10,"minimum_temperature":5.0,"locality_id":2`
 		req := httptest.NewRequest("POST", "/warehouses", bytes.NewBufferString(body))
@@ -106,6 +114,8 @@ func TestWarehouseHandler_Create(t *testing.T) {
 	})
 }
 
+// TestWarehouseHandler_Read - Tests para GET /warehouses y GET /warehouses/{id}
+// Casos: 200 (exitoso), 404 (no encontrado), 400 (ID inválido), 500 (error interno)
 func TestWarehouseHandler_Read(t *testing.T) {
 	t.Run("Find By Id Success", func(t *testing.T) {
 		warehouseService := &tests.WarehouseServiceMock{}
@@ -209,6 +219,7 @@ func TestWarehouseHandler_Read(t *testing.T) {
 	})
 
 	t.Run("Find By Id Invalid ID", func(t *testing.T) {
+		// Test ID inválido
 		_, handler := newWarehouseHandlerMock()
 		request := httptest.NewRequest("GET", "/warehouses/{id}", nil)
 		ctx := chi.NewRouteContext()
@@ -220,6 +231,7 @@ func TestWarehouseHandler_Read(t *testing.T) {
 	})
 
 	t.Run("Find By Id Missing ID", func(t *testing.T) {
+		// Test ID faltante
 		_, handler := newWarehouseHandlerMock()
 		request := httptest.NewRequest("GET", "/warehouses/{id}", nil)
 		request = request.WithContext(context.WithValue(request.Context(), chi.RouteCtxKey, chi.NewRouteContext()))
@@ -229,6 +241,8 @@ func TestWarehouseHandler_Read(t *testing.T) {
 	})
 }
 
+// TestWarehouseHandler_Update - Tests para PATCH /warehouses/{id}
+// Casos: 200 (actualización exitosa), 404 (no encontrado), 400 (errores JSON/ID), 409 (código duplicado), 500 (error interno)
 func TestWarehouseHandler_Update(t *testing.T) {
 	t.Run("Update Success", func(t *testing.T) {
 		mock, handler := newWarehouseHandlerMock()
@@ -276,6 +290,7 @@ func TestWarehouseHandler_Update(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, response.Code)
 	})
 	t.Run("Update Invalid JSON", func(t *testing.T) {
+		// Test JSON malformado
 		mock, handler := newWarehouseHandlerMock()
 		mock.GetWarehouseByIDFunc = func(ctx context.Context, id int) (models.Warehouse, error) {
 			return models.Warehouse{
@@ -299,6 +314,7 @@ func TestWarehouseHandler_Update(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, rr.Code)
 	})
 	t.Run("Update Invalid ID", func(t *testing.T) {
+		// Test ID inválido
 		_, handler := newWarehouseHandlerMock()
 		body := `{"address":"Dirección","telephone":"1234","warehouse_code":"XX1","minimum_capacity":10,"minimum_temperature":5.0,"locality_id":2}`
 		req := httptest.NewRequest("PATCH", "/warehouses/{id}", bytes.NewBufferString(body))
@@ -311,6 +327,7 @@ func TestWarehouseHandler_Update(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, rr.Code)
 	})
 	t.Run("Update Missing ID", func(t *testing.T) {
+		// Test ID faltante
 		_, handler := newWarehouseHandlerMock()
 		body := `{"address":"Dirección","telephone":"1234","warehouse_code":"XX1","minimum_capacity":10,"minimum_temperature":5.0,"locality_id":2}`
 		req := httptest.NewRequest("PATCH", "/warehouses/{id}", bytes.NewBufferString(body))
@@ -336,6 +353,7 @@ func TestWarehouseHandler_Update(t *testing.T) {
 		assert.Equal(t, http.StatusInternalServerError, rr.Code)
 	})
 	t.Run("Update Code Uniqueness Conflict", func(t *testing.T) {
+		// Test conflicto: warehouse_code duplicado en actualización
 		mock, handler := newWarehouseHandlerMock()
 		mock.GetWarehouseByIDFunc = func(ctx context.Context, id int) (models.Warehouse, error) {
 			return models.Warehouse{
@@ -391,6 +409,7 @@ func TestWarehouseHandler_Update(t *testing.T) {
 		assert.Equal(t, http.StatusInternalServerError, rr.Code)
 	})
 	t.Run("Update Invalid Structure", func(t *testing.T) {
+		// Test validación: campos inválidos (address vacío, capacity negativa)
 		mock, handler := newWarehouseHandlerMock()
 		mock.GetWarehouseByIDFunc = func(ctx context.Context, id int) (models.Warehouse, error) {
 			return models.Warehouse{
@@ -441,6 +460,8 @@ func TestWarehouseHandler_Update(t *testing.T) {
 	})
 }
 
+// TestWarehouseHandler_Delete - Tests para DELETE /warehouses/{id}
+// Casos: 204 (eliminación exitosa), 404 (no encontrado), 400 (ID inválido/faltante), 500 (error interno)
 func TestWarehouseHandler_Delete(t *testing.T) {
 	t.Run("Delete Success", func(t *testing.T) {
 		mock, handler := newWarehouseHandlerMock()
@@ -469,6 +490,7 @@ func TestWarehouseHandler_Delete(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, response.Code)
 	})
 	t.Run("Delete Invalid ID", func(t *testing.T) {
+		// Test ID inválido
 		_, handler := newWarehouseHandlerMock()
 		request := httptest.NewRequest("DELETE", "/warehouses/{id}", nil)
 		ctx := chi.NewRouteContext()
@@ -479,6 +501,7 @@ func TestWarehouseHandler_Delete(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, response.Code)
 	})
 	t.Run("Delete Missing ID", func(t *testing.T) {
+		// Test ID faltante
 		_, handler := newWarehouseHandlerMock()
 		request := httptest.NewRequest("DELETE", "/warehouses/{id}", nil)
 		request = request.WithContext(context.WithValue(request.Context(), chi.RouteCtxKey, chi.NewRouteContext()))

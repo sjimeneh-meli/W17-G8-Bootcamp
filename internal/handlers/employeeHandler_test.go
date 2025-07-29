@@ -20,11 +20,40 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Package handlers_test - Employee Handler Integration Tests
+// Paquete handlers_test - Tests de Integración del Handler de Employee
+//
+// This file contains comprehensive HTTP handler tests for Employee entity operations
+// Este archivo contiene tests HTTP comprehensivos para operaciones de la entidad Employee
+//
+// Key Features / Características Clave:
+// ✓ Full CRUD operation testing / Pruebas completas de operaciones CRUD
+// ✓ HTTP status code validation / Validación de códigos de estado HTTP
+// ✓ JSON serialization/deserialization testing / Pruebas de serialización/deserialización JSON
+// ✓ Error handling and edge case coverage / Cobertura de manejo de errores y casos límite
+// ✓ Mock service integration with validation layer / Integración de servicios mock con capa de validación
+//
+// Testing Architecture / Arquitectura de Testing:
+// - Handler Layer: HTTP request/response processing / Capa Handler: procesamiento de request/response HTTP
+// - Service Layer: Business logic simulation via mocks / Capa Servicio: simulación de lógica de negocio via mocks
+// - Validation Layer: Input validation testing / Capa Validación: pruebas de validación de entrada
+
 // Tests comprehensivos de integración para handlers HTTP de Employee
 // Validan flujo completo request-response con HTTP real (métodos, JSON, status codes)
 // Ejercitan el stack completo del handler a diferencia de unit tests con mocks
 
-// newTestRequestWithIDParam - Helper para crear requests HTTP con parámetros URL
+// Comprehensive integration tests for Employee HTTP handlers
+// Validate complete request-response flow with real HTTP (methods, JSON, status codes)
+// Exercise the complete handler stack unlike unit tests with mocks
+
+// newTestRequestWithIDParam_employee - Helper para crear requests HTTP con parámetros URL
+// newTestRequestWithIDParam_employee - Helper for creating HTTP requests with URL parameters
+//
+// Functionality / Funcionalidad:
+// - Creates properly formatted HTTP requests / Crea requests HTTP con formato adecuado
+// - Injects Chi router context with URL parameters / Inyecta contexto de router Chi con parámetros URL
+// - Validates input parameters / Valida parámetros de entrada
+// - Returns configured request ready for testing / Retorna request configurado listo para testing
 func newTestRequestWithIDParam_employee(method, pathBase, id string, body io.Reader) (*http.Request, error) {
 	if method == "" {
 		return nil, fmt.Errorf("HTTP method cannot be empty")
@@ -50,6 +79,24 @@ func newTestRequestWithIDParam_employee(method, pathBase, id string, body io.Rea
 }
 
 // TestPostEmployee - Tests comprehensivos del endpoint POST /employees
+// TestPostEmployee - Comprehensive tests for POST /employees endpoint
+//
+// Testing Coverage / Cobertura de Testing:
+// ✓ 201: Successful employee creation with all required fields / Creación exitosa con todos los campos requeridos
+// ✓ 422: Validation error for missing/invalid fields / Error de validación por campos faltantes/inválidos
+// ✓ 409: Business logic conflict (duplicate card number) / Conflicto de lógica de negocio (número de tarjeta duplicado)
+// ✓ 500: Internal server error resilience / Resistencia a errores internos del servidor
+//
+// Employee-Specific Validations / Validaciones Específicas de Employee:
+// - Card number uniqueness / Unicidad de número de tarjeta
+// - Warehouse ID relationship validation / Validación de relación con ID de almacén
+// - Required field presence (first_name, last_name, etc.) / Presencia de campos requeridos
+//
+// HTTP Testing Methodology / Metodología de Testing HTTP:
+// - Real HTTP request simulation / Simulación real de requests HTTP
+// - JSON payload marshaling/unmarshaling / Marshaling/unmarshaling de payload JSON
+// - Content-Type header validation / Validación de headers Content-Type
+// - Mock service behavior verification / Verificación de comportamiento de servicios mock
 func TestPostEmployee(t *testing.T) {
 	t.Run("Post Employee successfully returns 201", func(t *testing.T) {
 		expectedResponseBody := `{
@@ -207,6 +254,22 @@ func TestPostEmployee(t *testing.T) {
 	})
 }
 
+// TestGetAllEmployees - Complete testing suite for GET /api/v1/employees endpoint
+// TestGetAllEmployees - Suite completa de pruebas para endpoint GET /api/v1/employees
+//
+// Retrieval Operation Testing / Pruebas de Operación de Recuperación:
+// ✓ 500: Service layer error handling / Manejo de errores de capa de servicio
+// ✓ 200: Successful bulk data retrieval / Recuperación exitosa de datos en lote
+//
+// Data Structure Validation / Validación de Estructura de Datos:
+// - Multiple employee records handling / Manejo de múltiples registros de empleados
+// - Employee model consistency / Consistencia del modelo Employee
+// - Response format standardization / Estandarización de formato de respuesta
+//
+// Service Integration Testing / Pruebas de Integración de Servicio:
+// - Mock service GetAll method verification / Verificación del método GetAll del servicio mock
+// - Error propagation from service to handler / Propagación de errores del servicio al handler
+// - Context passing validation / Validación de paso de contexto
 func TestGetAllEmployees(t *testing.T) {
 
 	t.Run("error on service returns 500", func(t *testing.T) {
@@ -254,6 +317,24 @@ func TestGetAllEmployees(t *testing.T) {
 	})
 }
 
+// TestGetEmployeeById - Comprehensive testing for GET /api/v1/employees/{id} endpoint
+// TestGetEmployeeById - Pruebas comprehensivas para endpoint GET /api/v1/employees/{id}
+//
+// URL Parameter Processing / Procesamiento de Parámetros URL:
+// - ID parameter extraction from URL / Extracción de parámetro ID de URL
+// - String to integer conversion validation / Validación de conversión string a entero
+// - Chi router context simulation / Simulación de contexto de router Chi
+//
+// Error Scenario Coverage / Cobertura de Escenarios de Error:
+// ✓ 404: Employee not found by ID / Empleado no encontrado por ID
+// ✓ 400: Invalid ID format (non-numeric) / Formato de ID inválido (no numérico)
+// ✓ 500: Internal server error during retrieval / Error interno del servidor durante recuperación
+// ✓ 200: Successful employee data retrieval / Recuperación exitosa de datos de empleado
+//
+// Response Validation / Validación de Respuesta:
+// - JSON structure correctness / Corrección de estructura JSON
+// - Employee model field mapping / Mapeo de campos del modelo Employee
+// - Error message format consistency / Consistencia de formato de mensajes de error
 func TestGetEmployeeById(t *testing.T) {
 	t.Run("Get By Id fails because request employee id doesn't exists returns 404", func(t *testing.T) {
 		id := "100"
@@ -270,7 +351,7 @@ func TestGetEmployeeById(t *testing.T) {
 		validation := validations.GetEmployeeValidation()
 		handler := handlers.GetEmployeeHandler(serviceMock, validation)
 
-		request, err := newTestRequestWithIDParam("GET", "/api/v1/employees", id, nil)
+		request, err := newTestRequestWithIDParam_employee("GET", "/api/v1/employees", id, nil)
 		if err != nil {
 			t.Fatalf("failed to create request: %v", err)
 		}
@@ -297,7 +378,7 @@ func TestGetEmployeeById(t *testing.T) {
 		validation := validations.GetEmployeeValidation()
 		handler := handlers.GetEmployeeHandler(serviceMock, validation)
 
-		request, err := newTestRequestWithIDParam("GET", "/api/v1/employees", id, nil)
+		request, err := newTestRequestWithIDParam_employee("GET", "/api/v1/employees", id, nil)
 		if err != nil {
 			t.Fatalf("failed to create request: %v", err)
 		}
@@ -325,7 +406,7 @@ func TestGetEmployeeById(t *testing.T) {
 		validation := validations.GetEmployeeValidation()
 		handler := handlers.GetEmployeeHandler(serviceMock, validation)
 
-		request, err := newTestRequestWithIDParam("GET", "/api/v1/employees", id, nil)
+		request, err := newTestRequestWithIDParam_employee("GET", "/api/v1/employees", id, nil)
 		if err != nil {
 			t.Fatalf("failed to create request: %v", err)
 		}
@@ -367,7 +448,7 @@ func TestGetEmployeeById(t *testing.T) {
 		validation := validations.GetEmployeeValidation()
 		handler := handlers.GetEmployeeHandler(serviceMock, validation)
 
-		request, err := newTestRequestWithIDParam("GET", "/api/v1/employees", id, nil)
+		request, err := newTestRequestWithIDParam_employee("GET", "/api/v1/employees", id, nil)
 		if err != nil {
 			t.Fatalf("failed to create request: %v", err)
 		}
@@ -382,6 +463,31 @@ func TestGetEmployeeById(t *testing.T) {
 	})
 }
 
+// TestPatchEmployee - Extensive testing for PATCH /api/v1/employees/{id} endpoint
+// TestPatchEmployee - Pruebas extensivas para endpoint PATCH /api/v1/employees/{id}
+//
+// Partial Update Operation Testing / Pruebas de Operación de Actualización Parcial:
+// - Individual field update capability / Capacidad de actualización de campos individuales
+// - Multiple field simultaneous update / Actualización simultánea de múltiples campos
+// - Field validation during partial updates / Validación de campos durante actualizaciones parciales
+//
+// Business Logic Validation / Validación de Lógica de Negocio:
+// ✓ ID parameter format validation / Validación de formato de parámetro ID
+// ✓ Required field presence for updates / Presencia de campos requeridos para actualizaciones
+// ✓ Resource existence verification / Verificación de existencia de recurso
+// ✓ Unique constraint enforcement / Aplicación de restricciones de unicidad
+// ✓ Server error handling / Manejo de errores del servidor
+// ✓ Successful update operation / Operación de actualización exitosa
+//
+// Update Validation Strategy / Estrategia de Validación de Actualización:
+// - At least one field requirement / Requisito de al menos un campo
+// - Card number uniqueness preservation / Preservación de unicidad de número de tarjeta
+// - Data integrity maintenance / Mantenimiento de integridad de datos
+//
+// HTTP Method Specific Testing / Pruebas Específicas del Método HTTP:
+// - PATCH semantics implementation / Implementación de semántica PATCH
+// - Partial resource modification / Modificación parcial de recurso
+// - Idempotency validation / Validación de idempotencia
 func TestPatchEmployee(t *testing.T) {
 	t.Run("Patch Employee fails because request id parameter isn't a number returns 400", func(t *testing.T) {
 		id := "100a"
@@ -396,7 +502,7 @@ func TestPatchEmployee(t *testing.T) {
 		validation := validations.GetEmployeeValidation()
 		handler := handlers.GetEmployeeHandler(serviceMock, validation)
 
-		request, err := newTestRequestWithIDParam("PATCH", "/api/v1/employees", id, nil)
+		request, err := newTestRequestWithIDParam_employee("PATCH", "/api/v1/employees", id, nil)
 		if err != nil {
 			t.Fatalf("failed to create request: %v", err)
 		}
@@ -423,7 +529,7 @@ func TestPatchEmployee(t *testing.T) {
 			"lastname": "Pérez"
 		}`)
 
-		request, err := newTestRequestWithIDParam("PATCH", "/api/v1/employees", id, invalidEmployeeRequest)
+		request, err := newTestRequestWithIDParam_employee("PATCH", "/api/v1/employees", id, invalidEmployeeRequest)
 		if err != nil {
 			t.Fatalf("failed to create request: %v", err)
 		}
@@ -457,7 +563,7 @@ func TestPatchEmployee(t *testing.T) {
 			CardNumberID: "CARD-10012",
 		}
 
-		request, err := newTestRequestWithIDParam("PATCH", "/api/v1/employees", id, PatchEmployeeRequest)
+		request, err := newTestRequestWithIDParam_employee("PATCH", "/api/v1/employees", id, PatchEmployeeRequest)
 		if err != nil {
 			t.Fatalf("failed to create request: %v", err)
 		}
@@ -492,7 +598,7 @@ func TestPatchEmployee(t *testing.T) {
 			CardNumberID: "CARD-1001",
 		}
 
-		request, err := newTestRequestWithIDParam("PATCH", "/api/v1/employees", id, PatchEmployeeRequest)
+		request, err := newTestRequestWithIDParam_employee("PATCH", "/api/v1/employees", id, PatchEmployeeRequest)
 		if err != nil {
 			t.Fatalf("failed to create request: %v", err)
 		}
@@ -528,7 +634,7 @@ func TestPatchEmployee(t *testing.T) {
 			CardNumberID: "CARD-1001",
 		}
 
-		request, err := newTestRequestWithIDParam("PATCH", "/api/v1/employees", id, PatchEmployeeRequest)
+		request, err := newTestRequestWithIDParam_employee("PATCH", "/api/v1/employees", id, PatchEmployeeRequest)
 		if err != nil {
 			t.Fatalf("failed to create request: %v", err)
 		}
@@ -575,7 +681,7 @@ func TestPatchEmployee(t *testing.T) {
 			WarehouseID:  2,
 		}
 
-		request, err := newTestRequestWithIDParam("PATCH", "/api/v1/employees", id, PatchEmployeeRequest)
+		request, err := newTestRequestWithIDParam_employee("PATCH", "/api/v1/employees", id, PatchEmployeeRequest)
 		if err != nil {
 			t.Fatalf("failed to create request: %v", err)
 		}
@@ -594,6 +700,30 @@ func TestPatchEmployee(t *testing.T) {
 	})
 }
 
+// TestDeleteEmployeeById - Complete testing coverage for DELETE /api/v1/employees/{id} endpoint
+// TestDeleteEmployeeById - Cobertura completa de pruebas para endpoint DELETE /api/v1/employees/{id}
+//
+// Delete Operation Scenarios / Escenarios de Operación DELETE:
+// ✓ 400: Invalid ID parameter format handling / Manejo de formato de parámetro ID inválido
+// ✓ 404: Non-existent employee deletion attempt / Intento de eliminación de empleado inexistente
+// ✓ 500: Internal server error during deletion / Error interno del servidor durante eliminación
+// ✓ 204: Successful employee deletion (No Content response) / Eliminación exitosa de empleado (respuesta Sin Contenido)
+//
+// HTTP DELETE Semantics / Semántica HTTP DELETE:
+// - Resource removal operation / Operación de eliminación de recurso
+// - Idempotent operation behavior / Comportamiento de operación idempotente
+// - 204 No Content response validation / Validación de respuesta 204 Sin Contenido
+// - Empty response body verification / Verificación de cuerpo de respuesta vacío
+//
+// Service Layer Integration / Integración de Capa de Servicio:
+// - Delete method mock configuration / Configuración de mock del método Delete
+// - Error propagation testing / Pruebas de propagación de errores
+// - Context parameter passing / Paso de parámetros de contexto
+//
+// Data Consistency Validation / Validación de Consistencia de Datos:
+// - Resource state after deletion / Estado del recurso después de eliminación
+// - Cascade deletion considerations / Consideraciones de eliminación en cascada
+// - Transaction rollback simulation / Simulación de rollback de transacción
 func TestDeleteEmployeeById(t *testing.T) {
 	t.Run("Delete By Id fails because request employee id parameter isn't a number returns 400", func(t *testing.T) {
 		id := "100a"
@@ -608,7 +738,7 @@ func TestDeleteEmployeeById(t *testing.T) {
 		validation := validations.GetEmployeeValidation()
 		handler := handlers.GetEmployeeHandler(serviceMock, validation)
 
-		request, err := newTestRequestWithIDParam("DELETE", "/api/v1/employees", id, nil)
+		request, err := newTestRequestWithIDParam_employee("DELETE", "/api/v1/employees", id, nil)
 		if err != nil {
 			t.Fatalf("failed to create request: %v", err)
 		}
@@ -631,7 +761,7 @@ func TestDeleteEmployeeById(t *testing.T) {
 		"status":"Not Found"
 		}`
 
-		request, err := newTestRequestWithIDParam("DELETE", "/api/v1/employees", id, nil)
+		request, err := newTestRequestWithIDParam_employee("DELETE", "/api/v1/employees", id, nil)
 		if err != nil {
 			t.Fatalf("failed to create request: %v", err)
 		}
@@ -659,7 +789,7 @@ func TestDeleteEmployeeById(t *testing.T) {
 		"status":"Internal Server Error"
 		}`
 
-		request, err := newTestRequestWithIDParam("DELETE", "/api/v1/employees", id, nil)
+		request, err := newTestRequestWithIDParam_employee("DELETE", "/api/v1/employees", id, nil)
 		if err != nil {
 			t.Fatalf("failed to create request: %v", err)
 		}
@@ -683,7 +813,7 @@ func TestDeleteEmployeeById(t *testing.T) {
 
 		expectedCode := 204
 
-		request, err := newTestRequestWithIDParam("DELETE", "/api/v1/employees", id, nil)
+		request, err := newTestRequestWithIDParam_employee("DELETE", "/api/v1/employees", id, nil)
 		if err != nil {
 			t.Fatalf("failed to create request: %v", err)
 		}

@@ -1,3 +1,17 @@
+// Package handlers_test contains comprehensive HTTP handler integration tests for the Buyer entity
+// Este paquete contiene tests de integración HTTP comprehensivos para la entidad Buyer
+//
+// Key Testing Aspects / Aspectos Clave de Testing:
+// - HTTP method testing (POST, GET, PATCH, DELETE) / Pruebas de métodos HTTP
+// - Status code validation / Validación de códigos de estado
+// - JSON request/response handling / Manejo de requests/responses JSON
+// - Error scenarios and edge cases / Escenarios de error y casos límite
+// - Mock service integration / Integración con servicios mock
+//
+// Testing Pattern / Patrón de Testing:
+// - Arrange: Setup mock services, requests, expected responses / Configurar servicios mock, requests, respuestas esperadas
+// - Act: Execute handler function / Ejecutar función del handler
+// - Assert: Validate response codes and bodies / Validar códigos y cuerpos de respuesta
 package handlers_test
 
 import (
@@ -20,7 +34,22 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestPost - Comprehensive testing suite for POST /api/v1/buyers endpoint
+// TestPost - Suite de pruebas comprehensiva para el endpoint POST /api/v1/buyers
+//
+// Test Coverage / Cobertura de Pruebas:
+// ✓ 201: Successful buyer creation / Creación exitosa de comprador
+// ✓ 422: Invalid input validation / Validación de entrada inválida
+// ✓ 409: Duplicate card number conflict / Conflicto por número de tarjeta duplicado
+// ✓ 500: Internal server error handling / Manejo de errores internos del servidor
+//
+// HTTP Testing Patterns / Patrones de Testing HTTP:
+// - JSON payload validation / Validación de payload JSON
+// - Business logic error mapping / Mapeo de errores de lógica de negocio
+// - Service layer mock interaction / Interacción con mocks de capa de servicio
 func TestPost(t *testing.T) {
+	// Test Case 1: Success scenario - validates complete happy path flow
+	// Caso de Prueba 1: Escenario exitoso - valida flujo completo de caso feliz
 	t.Run("Post Buyer successfully returns 201", func(t *testing.T) {
 		expectedResponseBody := `{
 			"data": {
@@ -200,6 +229,17 @@ func TestPost(t *testing.T) {
 	})
 }
 
+// TestGetAll - Complete testing for GET /api/v1/buyers endpoint (retrieve all buyers)
+// TestGetAll - Pruebas completas para endpoint GET /api/v1/buyers (obtener todos los compradores)
+//
+// Test Scenarios / Escenarios de Prueba:
+// ✓ 500: Service layer error handling / Manejo de errores de capa de servicio
+// ✓ 200: Successful data retrieval / Recuperación exitosa de datos
+//
+// Key Validations / Validaciones Clave:
+// - Error propagation from service to handler / Propagación de errores de servicio a handler
+// - Response format consistency / Consistencia de formato de respuesta
+// - Mock service behavior verification / Verificación de comportamiento de servicio mock
 func TestGetAll(t *testing.T) {
 
 	t.Run("error on service returns 500", func(t *testing.T) {
@@ -256,6 +296,24 @@ func TestGetAll(t *testing.T) {
 	})
 }
 
+// TestGetById - Comprehensive testing for GET /api/v1/buyers/{id} endpoint
+// TestGetById - Pruebas comprehensivas para endpoint GET /api/v1/buyers/{id}
+//
+// URL Parameter Testing / Pruebas de Parámetros URL:
+// - Valid numeric ID handling / Manejo de ID numérico válido
+// - Invalid ID format validation / Validación de formato de ID inválido
+// - Non-existent ID error handling / Manejo de errores de ID inexistente
+//
+// HTTP Status Code Coverage / Cobertura de Códigos de Estado HTTP:
+// ✓ 404: Resource not found / Recurso no encontrado
+// ✓ 400: Invalid ID parameter / Parámetro ID inválido
+// ✓ 500: Internal server error / Error interno del servidor
+// ✓ 200: Successful resource retrieval / Recuperación exitosa del recurso
+//
+// Testing Infrastructure / Infraestructura de Testing:
+// - Chi router context simulation / Simulación de contexto de router Chi
+// - URL parameter injection / Inyección de parámetros URL
+// - Helper function usage (newTestRequestWithIDParam) / Uso de funciones helper
 func TestGetById(t *testing.T) {
 	t.Run("Get By Id fails because request buyer id doesn't exists returns 404", func(t *testing.T) {
 		id := "100"
@@ -411,6 +469,25 @@ func TestGetById(t *testing.T) {
 	})
 }
 
+// TestPatch - Extensive testing suite for PATCH /api/v1/buyers/{id} endpoint
+// TestPatch - Suite de pruebas extensiva para endpoint PATCH /api/v1/buyers/{id}
+//
+// PATCH Operation Testing / Pruebas de Operación PATCH:
+// - Partial update validation / Validación de actualización parcial
+// - Required field presence checking / Verificación de presencia de campos requeridos
+// - Data persistence verification / Verificación de persistencia de datos
+//
+// Business Logic Validations / Validaciones de Lógica de Negocio:
+// ✓ ID parameter validation / Validación de parámetro ID
+// ✓ Request body field requirements / Requisitos de campos del cuerpo de request
+// ✓ Resource existence verification / Verificación de existencia de recurso
+// ✓ Unique constraint handling / Manejo de restricciones de unicidad
+// ✓ Server error resilience / Resistencia a errores del servidor
+// ✓ Multiple field update success / Éxito en actualización de múltiples campos
+//
+// HTTP Response Testing / Pruebas de Respuesta HTTP:
+// - Error message format consistency / Consistencia de formato de mensajes de error
+// - Success response structure validation / Validación de estructura de respuesta exitosa
 func TestPatch(t *testing.T) {
 	t.Run("Patch Buyer fails because request id parameter isn't a number returns 400", func(t *testing.T) {
 		id := "100a"
@@ -719,6 +796,20 @@ func TestPatch(t *testing.T) {
 	})
 }
 
+// TestDeleteById - Complete testing coverage for DELETE /api/v1/buyers/{id} endpoint
+// TestDeleteById - Cobertura completa de pruebas para endpoint DELETE /api/v1/buyers/{id}
+//
+// Delete Operation Scenarios / Escenarios de Operación DELETE:
+// ✓ 400: Invalid ID parameter format / Formato de parámetro ID inválido
+// ✓ 404: Resource not found for deletion / Recurso no encontrado para eliminación
+// ✓ 500: Internal server error during deletion / Error interno durante eliminación
+// ✓ 204: Successful deletion (No Content) / Eliminación exitosa (Sin Contenido)
+//
+// Key Testing Aspects / Aspectos Clave de Testing:
+// - ID parameter validation and conversion / Validación y conversión de parámetro ID
+// - Service layer error propagation / Propagación de errores de capa de servicio
+// - HTTP status code accuracy / Precisión de códigos de estado HTTP
+// - Empty response body validation for 204 / Validación de cuerpo de respuesta vacío para 204
 func TestDeleteById(t *testing.T) {
 	t.Run("Delete By Id fails because request buyer id parameter isn't a number returns 400", func(t *testing.T) {
 		id := "100a"
@@ -835,6 +926,23 @@ func TestDeleteById(t *testing.T) {
 	})
 }
 
+// newTestRequestWithIDParam - Utility helper function for creating HTTP requests with URL parameters
+// newTestRequestWithIDParam - Función utilitaria helper para crear requests HTTP con parámetros URL
+//
+// Purpose / Propósito:
+// - Simulates Chi router URL parameter extraction / Simula extracción de parámetros URL del router Chi
+// - Reduces test code duplication / Reduce duplicación de código de test
+// - Provides consistent request setup / Proporciona configuración consistente de requests
+//
+// Parameters / Parámetros:
+// - method: HTTP method (GET, POST, PATCH, DELETE) / Método HTTP
+// - pathBase: Base URL path / Ruta base URL
+// - id: URL parameter value / Valor del parámetro URL
+// - body: Request body reader / Reader del cuerpo de request
+//
+// Returns / Retorna:
+// - Configured HTTP request with Chi route context / Request HTTP configurado con contexto de ruta Chi
+// - Error if invalid parameters provided / Error si se proporcionan parámetros inválidos
 func newTestRequestWithIDParam(method, pathBase, id string, body io.Reader) (*http.Request, error) {
 	if method == "" {
 		return nil, fmt.Errorf("HTTP method cannot be empty")

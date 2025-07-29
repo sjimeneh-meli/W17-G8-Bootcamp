@@ -1,3 +1,6 @@
+// Package repositories_test - Employee Repository Unit Tests / Tests Unitarios del Repositorio Employee
+// Database layer testing for employee CRUD operations with MySQL and card number ID uniqueness
+// Testing de capa de datos para operaciones CRUD de empleados con MySQL y unicidad de ID de tarjeta
 package repositories_test
 
 import (
@@ -13,9 +16,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// TestMySqlEmployeeRepositoryGetAll - Tests for GetAll method / Tests para método GetAll
+// Cases: successful retrieval with data, empty result, database query error, row scanning error
+// Casos: recuperación exitosa con datos, resultado vacío, error de consulta de base de datos, error de escaneo de filas
 func TestMySqlEmployeeRepositoryGetAll(t *testing.T) {
 	t.Run("Successfully returns filled employees map when there is data on db response", func(t *testing.T) {
-		// Reset singleton for testing
+		// Test: Database with employees returns complete map / Base de datos con empleados retorna mapa completo
+		// Reset singleton for testing / Resetear singleton para testing
 		repositories.ResetEmployeeRepositoryInstance()
 		expectedEmployees := map[int]models.Employee{
 			1: {Id: 1, CardNumberID: "CARD-001", FirstName: "Pedro", LastName: "Martinez", WarehouseID: 1},
@@ -43,7 +50,8 @@ func TestMySqlEmployeeRepositoryGetAll(t *testing.T) {
 	})
 
 	t.Run("Successfully returns empty employees map when there isn't data on db response", func(t *testing.T) {
-		// Reset singleton for testing
+		// Test: Empty database returns empty map / Base de datos vacía retorna mapa vacío
+		// Reset singleton for testing / Resetear singleton para testing
 		repositories.ResetEmployeeRepositoryInstance()
 		expectedEmployees := map[int]models.Employee{}
 
@@ -66,7 +74,8 @@ func TestMySqlEmployeeRepositoryGetAll(t *testing.T) {
 	})
 
 	t.Run("Fails because of an internal server error querying the database", func(t *testing.T) {
-		// Reset singleton for testing
+		// Test: Database connection error during query / Error de conexión de base de datos durante consulta
+		// Reset singleton for testing / Resetear singleton para testing
 		repositories.ResetEmployeeRepositoryInstance()
 		expectedError := error_message.ErrInternalServerError
 		expectedEmployees := map[int]models.Employee{}
@@ -90,7 +99,8 @@ func TestMySqlEmployeeRepositoryGetAll(t *testing.T) {
 	})
 
 	t.Run("Fails because of an internal server error scanning database results", func(t *testing.T) {
-		// Reset singleton for testing
+		// Test: Invalid data types cause row scanning errors / Tipos de datos inválidos causan errores de escaneo
+		// Reset singleton for testing / Resetear singleton para testing
 		repositories.ResetEmployeeRepositoryInstance()
 		expectedEmployees := map[int]models.Employee{
 			1: {Id: 1, CardNumberID: "CARD-001", FirstName: "Pedro", LastName: "Martinez", WarehouseID: 1},
@@ -118,9 +128,13 @@ func TestMySqlEmployeeRepositoryGetAll(t *testing.T) {
 	})
 }
 
+// TestMySqlEmployeeRepositoryGetById - Tests for GetById method / Tests para método GetById
+// Cases: successful retrieval, employee not found, internal server error
+// Casos: recuperación exitosa, empleado no encontrado, error interno del servidor
 func TestMySqlEmployeeRepositoryGetById(t *testing.T) {
 	t.Run("Successfully returns employee when found in database", func(t *testing.T) {
-		// Reset singleton for testing
+		// Test: Valid employee ID returns complete employee data / ID de empleado válido retorna datos completos del empleado
+		// Reset singleton for testing / Resetear singleton para testing
 		repositories.ResetEmployeeRepositoryInstance()
 		expectedEmployee := models.Employee{
 			Id:           1,
@@ -151,7 +165,8 @@ func TestMySqlEmployeeRepositoryGetById(t *testing.T) {
 	})
 
 	t.Run("Fails because employee doesn't exist in database", func(t *testing.T) {
-		// Reset singleton for testing
+		// Test: Non-existent employee ID returns not found error / ID de empleado inexistente retorna error not found
+		// Reset singleton for testing / Resetear singleton para testing
 		repositories.ResetEmployeeRepositoryInstance()
 		expectedEmployee := models.Employee{}
 		expectedError := error_message.ErrNotFound
@@ -175,7 +190,8 @@ func TestMySqlEmployeeRepositoryGetById(t *testing.T) {
 	})
 
 	t.Run("Fails because of an internal server error querying the database", func(t *testing.T) {
-		// Reset singleton for testing
+		// Test: Database connection error during retrieval / Error de conexión de base de datos durante recuperación
+		// Reset singleton for testing / Resetear singleton para testing
 		repositories.ResetEmployeeRepositoryInstance()
 		expectedEmployee := models.Employee{}
 
@@ -197,9 +213,13 @@ func TestMySqlEmployeeRepositoryGetById(t *testing.T) {
 	})
 }
 
+// TestMySqlEmployeeRepositoryDeleteById - Tests for DeleteById method / Tests para método DeleteById
+// Cases: successful deletion, employee not found, internal server error
+// Casos: eliminación exitosa, empleado no encontrado, error interno del servidor
 func TestMySqlEmployeeRepositoryDeleteById(t *testing.T) {
 	t.Run("Successfully deletes employee when exists in database", func(t *testing.T) {
-		// Reset singleton for testing
+		// Test: Valid employee ID deletes employee successfully / ID de empleado válido elimina empleado exitosamente
+		// Reset singleton for testing / Resetear singleton para testing
 		repositories.ResetEmployeeRepositoryInstance()
 
 		db, mock, err := sqlmock.New()
@@ -219,7 +239,8 @@ func TestMySqlEmployeeRepositoryDeleteById(t *testing.T) {
 	})
 
 	t.Run("Fails because employee doesn't exist in database", func(t *testing.T) {
-		// Reset singleton for testing
+		// Test: Delete non-existent employee returns not found error / Eliminar empleado inexistente retorna error not found
+		// Reset singleton for testing / Resetear singleton para testing
 		repositories.ResetEmployeeRepositoryInstance()
 		expectedError := error_message.ErrNotFound
 
@@ -241,7 +262,8 @@ func TestMySqlEmployeeRepositoryDeleteById(t *testing.T) {
 	})
 
 	t.Run("Fails because of an internal server error executing delete", func(t *testing.T) {
-		// Reset singleton for testing
+		// Test: Database connection error during delete operation / Error de conexión de base de datos durante operación de eliminación
+		// Reset singleton for testing / Resetear singleton para testing
 		repositories.ResetEmployeeRepositoryInstance()
 		expectedError := error_message.ErrInternalServerError
 
@@ -263,9 +285,13 @@ func TestMySqlEmployeeRepositoryDeleteById(t *testing.T) {
 	})
 }
 
+// TestMySqlEmployeeRepositoryCreate - Tests for Create method / Tests para método Create
+// Cases: successful creation, internal server error executing insert, internal server error getting LastInsertId
+// Casos: creación exitosa, error interno del servidor ejecutando inserción, error interno del servidor obteniendo LastInsertId
 func TestMySqlEmployeeRepositoryCreate(t *testing.T) {
 	t.Run("Successfully creates employee in database", func(t *testing.T) {
-		// Reset singleton for testing
+		// Test: Valid employee data creates new employee with generated ID / Datos válidos de empleado crean nuevo empleado con ID generado
+		// Reset singleton for testing / Resetear singleton para testing
 		repositories.ResetEmployeeRepositoryInstance()
 		inputEmployee := models.Employee{
 			CardNumberID: "CARD-001",
@@ -300,7 +326,8 @@ func TestMySqlEmployeeRepositoryCreate(t *testing.T) {
 	})
 
 	t.Run("Fails because of an internal server error executing insert", func(t *testing.T) {
-		// Reset singleton for testing
+		// Test: Database connection error during employee insertion / Error de conexión de base de datos durante inserción de empleado
+		// Reset singleton for testing / Resetear singleton para testing
 		repositories.ResetEmployeeRepositoryInstance()
 		inputEmployee := models.Employee{
 			CardNumberID: "CARD-001",
@@ -331,7 +358,8 @@ func TestMySqlEmployeeRepositoryCreate(t *testing.T) {
 	})
 
 	t.Run("Fails because of an internal server error getting last insert id", func(t *testing.T) {
-		// Reset singleton for testing
+		// Test: Error retrieving generated ID after successful insert / Error al recuperar ID generado después de inserción exitosa
+		// Reset singleton for testing / Resetear singleton para testing
 		repositories.ResetEmployeeRepositoryInstance()
 		inputEmployee := models.Employee{
 			CardNumberID: "CARD-001",
@@ -362,9 +390,13 @@ func TestMySqlEmployeeRepositoryCreate(t *testing.T) {
 	})
 }
 
+// TestMySqlEmployeeRepositoryUpdate - Tests for Update method / Tests para método Update
+// Cases: successful update, employee not found, internal server error executing update
+// Casos: actualización exitosa, empleado no encontrado, error interno del servidor ejecutando actualización
 func TestMySqlEmployeeRepositoryUpdate(t *testing.T) {
 	t.Run("Successfully updates employee when exists in database", func(t *testing.T) {
-		// Reset singleton for testing
+		// Test: Valid employee data updates existing employee / Datos válidos de empleado actualizan empleado existente
+		// Reset singleton for testing / Resetear singleton para testing
 		repositories.ResetEmployeeRepositoryInstance()
 		inputEmployee := models.Employee{
 			FirstName: "UpdatedName",
@@ -384,12 +416,12 @@ func TestMySqlEmployeeRepositoryUpdate(t *testing.T) {
 		}
 		defer db.Close()
 
-		// Mock the UPDATE query
+		// Mock the UPDATE query / Mock de la consulta UPDATE
 		mock.ExpectExec("UPDATE employees SET first_name = \\?, last_name = \\? WHERE id = \\?").
 			WithArgs("UpdatedName", "UpdatedLastName", 1).
 			WillReturnResult(sqlmock.NewResult(0, 1))
 
-		// Mock the GetById query after update
+		// Mock the GetById query after update / Mock de la consulta GetById después de actualización
 		rows := mock.NewRows([]string{"id", "id_card_number", "first_name", "last_name", "warehouse_id"}).
 			AddRow(1, "CARD-001", "UpdatedName", "UpdatedLastName", 1)
 		mock.ExpectQuery("SELECT id, id_card_number, first_name, last_name, warehouse_id FROM employees WHERE id = ?").
@@ -404,7 +436,8 @@ func TestMySqlEmployeeRepositoryUpdate(t *testing.T) {
 	})
 
 	t.Run("Fails because employee doesn't exist in database", func(t *testing.T) {
-		// Reset singleton for testing
+		// Test: Update non-existent employee returns not found error / Actualizar empleado inexistente retorna error not found
+		// Reset singleton for testing / Resetear singleton para testing
 		repositories.ResetEmployeeRepositoryInstance()
 		inputEmployee := models.Employee{
 			FirstName: "UpdatedName",
@@ -432,7 +465,8 @@ func TestMySqlEmployeeRepositoryUpdate(t *testing.T) {
 	})
 
 	t.Run("Fails because of an internal server error executing update", func(t *testing.T) {
-		// Reset singleton for testing
+		// Test: Database connection error during employee update / Error de conexión de base de datos durante actualización de empleado
+		// Reset singleton for testing / Resetear singleton para testing
 		repositories.ResetEmployeeRepositoryInstance()
 		inputEmployee := models.Employee{
 			FirstName: "UpdatedName",
@@ -460,9 +494,13 @@ func TestMySqlEmployeeRepositoryUpdate(t *testing.T) {
 	})
 }
 
+// TestMySqlEmployeeRepositoryGetCardNumberIds - Tests for GetCardNumberIds method / Tests para método GetCardNumberIds
+// Cases: successful retrieval with data, empty database, internal server error
+// Casos: recuperación exitosa con datos, base de datos vacía, error interno del servidor
 func TestMySqlEmployeeRepositoryGetCardNumberIds(t *testing.T) {
 	t.Run("Successfully returns all card number ids when there is data in database", func(t *testing.T) {
-		// Reset singleton for testing
+		// Test: Database with card numbers returns complete list / Base de datos con números de tarjeta retorna lista completa
+		// Reset singleton for testing / Resetear singleton para testing
 		repositories.ResetEmployeeRepositoryInstance()
 		expectedCardNumberIds := []string{"CARD-001", "CARD-002", "CARD-003"}
 
@@ -488,7 +526,8 @@ func TestMySqlEmployeeRepositoryGetCardNumberIds(t *testing.T) {
 	})
 
 	t.Run("Successfully returns empty slice when there is no data in database", func(t *testing.T) {
-		// Reset singleton for testing
+		// Test: Empty database returns empty slice / Base de datos vacía retorna slice vacío
+		// Reset singleton for testing / Resetear singleton para testing
 		repositories.ResetEmployeeRepositoryInstance()
 		expectedCardNumberIds := []string{}
 
@@ -511,7 +550,8 @@ func TestMySqlEmployeeRepositoryGetCardNumberIds(t *testing.T) {
 	})
 
 	t.Run("Fails because of an internal server error querying the database", func(t *testing.T) {
-		// Reset singleton for testing
+		// Test: Database connection error during card number retrieval / Error de conexión de base de datos durante recuperación de números de tarjeta
+		// Reset singleton for testing / Resetear singleton para testing
 		repositories.ResetEmployeeRepositoryInstance()
 		expectedCardNumberIds := []string{}
 		expectedError := error_message.ErrInternalServerError
@@ -535,9 +575,13 @@ func TestMySqlEmployeeRepositoryGetCardNumberIds(t *testing.T) {
 	})
 }
 
+// TestMySqlEmployeeRepositoryExistEmployeeById - Tests for ExistEmployeeById method / Tests para método ExistEmployeeById
+// Cases: employee exists, employee doesn't exist, internal server error
+// Casos: empleado existe, empleado no existe, error interno del servidor
 func TestMySqlEmployeeRepositoryExistEmployeeById(t *testing.T) {
 	t.Run("Successfully returns true when employee exists in database", func(t *testing.T) {
-		// Reset singleton for testing
+		// Test: Existing employee ID returns true / ID de empleado existente retorna true
+		// Reset singleton for testing / Resetear singleton para testing
 		repositories.ResetEmployeeRepositoryInstance()
 
 		db, mock, err := sqlmock.New()
@@ -560,7 +604,8 @@ func TestMySqlEmployeeRepositoryExistEmployeeById(t *testing.T) {
 	})
 
 	t.Run("Successfully returns false when employee doesn't exist in database", func(t *testing.T) {
-		// Reset singleton for testing
+		// Test: Non-existent employee ID returns false / ID de empleado inexistente retorna false
+		// Reset singleton for testing / Resetear singleton para testing
 		repositories.ResetEmployeeRepositoryInstance()
 
 		db, mock, err := sqlmock.New()
@@ -581,7 +626,8 @@ func TestMySqlEmployeeRepositoryExistEmployeeById(t *testing.T) {
 	})
 
 	t.Run("Fails because of an internal server error querying the database", func(t *testing.T) {
-		// Reset singleton for testing
+		// Test: Database connection error during existence check / Error de conexión de base de datos durante verificación de existencia
+		// Reset singleton for testing / Resetear singleton para testing
 		repositories.ResetEmployeeRepositoryInstance()
 
 		db, mock, err := sqlmock.New()

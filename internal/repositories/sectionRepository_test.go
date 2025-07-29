@@ -1,3 +1,6 @@
+// Package repositories_test - Section Repository Unit Tests / Tests Unitarios del Repositorio Section
+// Database layer testing for section CRUD operations with MySQL
+// Testing de capa de datos para operaciones CRUD de secciones con MySQL
 package repositories_test
 
 import (
@@ -13,8 +16,12 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/repositories"
 )
 
+// TestGetByIdSection - Tests for GetByID method / Tests para método GetByID
+// Cases: successful retrieval by valid ID
+// Casos: recuperación exitosa por ID válido
 func TestGetByIdSection(t *testing.T) {
 	t.Run("Successfully return searched section from db", func(t *testing.T) {
+		// Test: Valid section ID returns complete section data / ID de sección válido retorna datos completos de sección
 		section := &models.Section{
 			Id:                 1,
 			SectionNumber:      "A-01",
@@ -51,8 +58,12 @@ func TestGetByIdSection(t *testing.T) {
 	})
 }
 
+// TestGetAllSections - Tests for GetAll method / Tests para método GetAll
+// Cases: successful retrieval of all sections
+// Casos: recuperación exitosa de todas las secciones
 func TestGetAllSections(t *testing.T) {
 	t.Run("Successfully return all sections from db", func(t *testing.T) {
+		// Test: Database with sections returns complete list / Base de datos con secciones retorna lista completa
 		sections := []*models.Section{
 			{
 				Id:                 1,
@@ -102,8 +113,12 @@ func TestGetAllSections(t *testing.T) {
 	})
 }
 
+// TestDeleteByIdSections - Tests for DeleteByID method / Tests para método DeleteByID
+// Cases: successful deletion by valid ID
+// Casos: eliminación exitosa por ID válido
 func TestDeleteByIdSections(t *testing.T) {
 	t.Run("Successfully delete section from db", func(t *testing.T) {
+		// Test: Valid section ID deletes section successfully / ID de sección válido elimina sección exitosamente
 		sectionID := 10
 
 		db, mock, err := sqlmock.New()

@@ -1,3 +1,6 @@
+// Package repositories_test - Buyer Repository Unit Tests / Tests Unitarios del Repositorio Buyer
+// Database layer testing for buyer CRUD operations with MySQL and card number ID uniqueness
+// Testing de capa de datos para operaciones CRUD de compradores con MySQL y unicidad de ID de tarjeta
 package repositories_test
 
 import (
@@ -15,8 +18,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// TestMySqlBuyerRepositoryGetAll - Tests for GetAll method / Tests para método GetAll
+// Cases: successful retrieval with data, empty result, database query error, row scanning error
+// Casos: recuperación exitosa con datos, resultado vacío, error de consulta de base de datos, error de escaneo de filas
 func TestMySqlBuyerRepositoryGetAll(t *testing.T) {
 	t.Run("Successfully returns filled buyers map when there is data on db response", func(t *testing.T) {
+		// Test: Database with buyers returns complete map / Base de datos con compradores retorna mapa completo
 		expectedBuyers := map[int]models.Buyer{
 			1: {
 				Id:           1,
@@ -55,6 +62,7 @@ func TestMySqlBuyerRepositoryGetAll(t *testing.T) {
 	})
 
 	t.Run("Successfully returns empty buyers map when there isn't data on db response", func(t *testing.T) {
+		// Test: Empty database returns empty map / Base de datos vacía retorna mapa vacío
 		expectedBuyers := map[int]models.Buyer{}
 
 		db, mock, err := sqlmock.New()
@@ -78,6 +86,7 @@ func TestMySqlBuyerRepositoryGetAll(t *testing.T) {
 	})
 
 	t.Run("Fails because of an internal server error querying the database", func(t *testing.T) {
+		// Test: Database connection error during query / Error de conexión de base de datos durante consulta
 		expectedError := error_message.ErrInternalServerError
 		expectedBuyers := map[int]models.Buyer{}
 
@@ -102,6 +111,7 @@ func TestMySqlBuyerRepositoryGetAll(t *testing.T) {
 	})
 
 	t.Run("Fails because of an internal server error scanning database results", func(t *testing.T) {
+		// Test: Invalid data types cause row scanning errors / Tipos de datos inválidos causan errores de escaneo
 		expectedBuyers := map[int]models.Buyer{}
 		expectedError := error_message.ErrInternalServerError
 		db, mock, err := sqlmock.New()
@@ -128,8 +138,12 @@ func TestMySqlBuyerRepositoryGetAll(t *testing.T) {
 	})
 }
 
+// TestGetById - Tests for GetById method / Tests para método GetById
+// Cases: successful retrieval, internal server error during query, scanning error, buyer not found
+// Casos: recuperación exitosa, error interno del servidor durante consulta, error de escaneo, comprador no encontrado
 func TestGetById(t *testing.T) {
 	t.Run("Successfully return searched buyer from db", func(t *testing.T) {
+		// Test: Valid buyer ID returns complete buyer data / ID de comprador válido retorna datos completos del comprador
 		expectedBuyer := models.Buyer{
 			Id:           10,
 			CardNumberId: "CARD-001",
@@ -162,6 +176,7 @@ func TestGetById(t *testing.T) {
 	})
 
 	t.Run("Fails because of an internal server error on the row returned from the database", func(t *testing.T) {
+		// Test: Database connection error during query / Error de conexión de base de datos durante consulta
 		expectedBuyer := models.Buyer{}
 		expectedError := error_message.ErrInternalServerError
 
@@ -188,6 +203,7 @@ func TestGetById(t *testing.T) {
 	})
 
 	t.Run("Fails because of an internal server error scanning database results", func(t *testing.T) {
+		// Test: Invalid data types cause row scanning errors / Tipos de datos inválidos causan errores de escaneo
 		expectedBuyer := models.Buyer{}
 		expectedError := error_message.ErrInternalServerError
 		searchId := 1
@@ -216,6 +232,7 @@ func TestGetById(t *testing.T) {
 	})
 
 	t.Run("Fails because there is no row returned from query", func(t *testing.T) {
+		// Test: Non-existent buyer ID returns not found error / ID de comprador inexistente retorna error not found
 		expectedBuyer := models.Buyer{}
 		expectedError := error_message.ErrNotFound
 
@@ -245,8 +262,12 @@ func TestGetById(t *testing.T) {
 
 }
 
+// TestDeleteById - Tests for DeleteById method / Tests para método DeleteById
+// Cases: successful deletion, internal server error during query, RowsAffected error, buyer not found
+// Casos: eliminación exitosa, error interno del servidor durante consulta, error de RowsAffected, comprador no encontrado
 func TestDeleteById(t *testing.T) {
 	t.Run("Successfully delete buyer from db", func(t *testing.T) {
+		// Test: Valid buyer ID deletes buyer successfully / ID de comprador válido elimina comprador exitosamente
 		searchId := 10
 
 		db, mock, err := sqlmock.New()
@@ -269,6 +290,7 @@ func TestDeleteById(t *testing.T) {
 	})
 
 	t.Run("Fails because of an internal server error querying the database", func(t *testing.T) {
+		// Test: Database connection error during delete operation / Error de conexión de base de datos durante operación de eliminación
 		expectedError := error_message.ErrInternalServerError
 		searchId := 10
 
@@ -292,6 +314,7 @@ func TestDeleteById(t *testing.T) {
 	})
 
 	t.Run("Fails because of an internal server error getting affected rows", func(t *testing.T) {
+		// Test: Error checking affected rows after delete / Error al verificar filas afectadas después de eliminación
 		expectedError := error_message.ErrInternalServerError
 		searchId := 10
 
@@ -316,6 +339,7 @@ func TestDeleteById(t *testing.T) {
 	})
 
 	t.Run("Fails because the buyer id intended to delete isn't found", func(t *testing.T) {
+		// Test: Delete non-existent buyer returns not found error / Eliminar comprador inexistente retorna error not found
 		expectedError := error_message.ErrNotFound
 		searchId := 10
 
@@ -339,8 +363,12 @@ func TestDeleteById(t *testing.T) {
 	})
 }
 
+// TestCreate - Tests for Create method / Tests para método Create
+// Cases: successful creation, internal server error executing insert, LastInsertId error
+// Casos: creación exitosa, error interno del servidor ejecutando inserción, error de LastInsertId
 func TestCreate(t *testing.T) {
 	t.Run("Successfully create a new buyer record on db", func(t *testing.T) {
+		// Test: Valid buyer data creates new buyer with generated ID / Datos válidos de comprador crean nuevo comprador con ID generado
 		expectedBuyer := models.Buyer{
 			Id:           17,
 			CardNumberId: "CARD-0017",
@@ -376,6 +404,7 @@ func TestCreate(t *testing.T) {
 	})
 
 	t.Run("Fails because of an internal server error excecuting insert", func(t *testing.T) {
+		// Test: Database connection error during buyer insertion / Error de conexión de base de datos durante inserción de comprador
 		expectedBuyer := models.Buyer{}
 		expectedError := error_message.ErrInternalServerError
 
@@ -408,6 +437,7 @@ func TestCreate(t *testing.T) {
 	})
 
 	t.Run("Fails because of an internal server error getting the inserted record Id", func(t *testing.T) {
+		// Test: Error retrieving generated ID after successful insert / Error al recuperar ID generado después de inserción exitosa
 		expectedBuyer := models.Buyer{}
 		expectedError := error_message.ErrInternalServerError
 
@@ -441,8 +471,12 @@ func TestCreate(t *testing.T) {
 
 }
 
+// TestUpdate - Tests for Update method / Tests para método Update
+// Cases: successful update, internal server error executing update, RowsAffected error, buyer not found, GetById error after update, no fields provided
+// Casos: actualización exitosa, error interno del servidor ejecutando actualización, error de RowsAffected, comprador no encontrado, error de GetById después de actualización, sin campos proporcionados
 func TestUpdate(t *testing.T) {
 	t.Run("Successfully updates a buyer", func(t *testing.T) {
+		// Test: Valid buyer data updates existing buyer / Datos válidos de comprador actualizan comprador existente
 		expectedBuyer := models.Buyer{
 			Id:           18,
 			CardNumberId: "CARD-0018",
@@ -484,6 +518,7 @@ func TestUpdate(t *testing.T) {
 	})
 
 	t.Run("Fails because of an internal error excecuting the update", func(t *testing.T) {
+		// Test: Database connection error during update execution / Error de conexión de base de datos durante ejecución de actualización
 		expectedBuyer := models.Buyer{}
 		expectedError := error_message.ErrInternalServerError
 		searchId := 18
@@ -514,6 +549,7 @@ func TestUpdate(t *testing.T) {
 	})
 
 	t.Run("Fails because of an internal error getting the affected rows", func(t *testing.T) {
+		// Test: Error checking affected rows after update / Error al verificar filas afectadas después de actualización
 		expectedError := error_message.ErrInternalServerError
 		expectedBuyer := models.Buyer{}
 
@@ -544,6 +580,7 @@ func TestUpdate(t *testing.T) {
 	})
 
 	t.Run("Fails because the buyer Id doesn't exists", func(t *testing.T) {
+		// Test: Update non-existent buyer returns not found error / Actualizar comprador inexistente retorna error not found
 		expectedBuyer := models.Buyer{}
 		expectedError := error_message.ErrNotFound
 
@@ -574,6 +611,7 @@ func TestUpdate(t *testing.T) {
 	})
 
 	t.Run("Fails obtaining the updated buyer", func(t *testing.T) {
+		// Test: Error retrieving updated buyer after successful update / Error al recuperar comprador actualizado después de actualización exitosa
 		expectedBuyer := models.Buyer{}
 		expectedError := error_message.ErrInternalServerError
 
@@ -608,10 +646,11 @@ func TestUpdate(t *testing.T) {
 	})
 
 	t.Run("Fails because no fields are provided for update", func(t *testing.T) {
+		// Test: Update with no fields provided returns error / Actualización sin campos proporcionados retorna error
 		expectedBuyer := models.Buyer{}
 
 		searchId := 20
-		buyerToUpdate := models.Buyer{} // Todos los campos vacíos
+		buyerToUpdate := models.Buyer{} // All fields empty / Todos los campos vacíos
 
 		db, _, err := sqlmock.New()
 		if err != nil {
@@ -630,8 +669,12 @@ func TestUpdate(t *testing.T) {
 	})
 }
 
+// TestGetCardNumberIds - Tests for GetCardNumberIds method / Tests para método GetCardNumberIds
+// Cases: successful retrieval, internal server error
+// Casos: recuperación exitosa, error interno del servidor
 func TestGetCardNumberIds(t *testing.T) {
 	t.Run("Fails because of an internal server error on the query", func(t *testing.T) {
+		// Test: Database connection error during card number retrieval / Error de conexión de base de datos durante recuperación de números de tarjeta
 		expectedCardNumberIdList := []string{}
 		expectedError := error_message.ErrInternalServerError
 
@@ -656,6 +699,7 @@ func TestGetCardNumberIds(t *testing.T) {
 	})
 
 	t.Run("Successfully returns a cardNumberId list", func(t *testing.T) {
+		// Test: Database with card numbers returns complete list / Base de datos con números de tarjeta retorna lista completa
 		expectedCardNumberIdList := []string{
 			"CARD-001", "CARD-002",
 		}
@@ -682,8 +726,12 @@ func TestGetCardNumberIds(t *testing.T) {
 	})
 }
 
+// TestExistBuyerById - Tests for ExistBuyerById method / Tests para método ExistBuyerById
+// Cases: buyer exists, buyer doesn't exist, internal server error
+// Casos: comprador existe, comprador no existe, error interno del servidor
 func TestExistBuyerById(t *testing.T) {
 	t.Run("Successfully returns true when buyer exists", func(t *testing.T) {
+		// Test: Existing buyer ID returns true / ID de comprador existente retorna true
 		expectedExists := true
 		searchId := 1
 
@@ -709,6 +757,7 @@ func TestExistBuyerById(t *testing.T) {
 	})
 
 	t.Run("Successfully returns false when buyer doesn't exist", func(t *testing.T) {
+		// Test: Non-existent buyer ID returns false / ID de comprador inexistente retorna false
 		expectedExists := false
 		searchId := 999
 
@@ -733,6 +782,7 @@ func TestExistBuyerById(t *testing.T) {
 	})
 
 	t.Run("Fails because of an internal server error querying the database", func(t *testing.T) {
+		// Test: Database connection error during existence check / Error de conexión de base de datos durante verificación de existencia
 		expectedExists := false
 		searchId := 1
 
@@ -758,8 +808,12 @@ func TestExistBuyerById(t *testing.T) {
 	})
 }
 
+// TestGetNewBuyerMySQLRepository - Tests for repository constructor / Tests para constructor del repositorio
+// Cases: successful creation, singleton pattern validation
+// Casos: creación exitosa, validación de patrón singleton
 func TestGetNewBuyerMySQLRepository(t *testing.T) {
 	t.Run("Successfully returns a new buyer repository", func(t *testing.T) {
+		// Test: Constructor creates valid repository instance / Constructor crea instancia válida del repositorio
 		db, _, err := sqlmock.New()
 		if err != nil {
 			fmt.Println("failed to open sqlmock database:", err)
@@ -772,6 +826,7 @@ func TestGetNewBuyerMySQLRepository(t *testing.T) {
 	})
 
 	t.Run("Multiple calls to GetNewBuyerMySQLRepository should return the same instance", func(t *testing.T) {
+		// Test: Singleton pattern ensures same instance is returned / Patrón singleton asegura que se retorna la misma instancia
 		db, _, err := sqlmock.New()
 		if err != nil {
 			fmt.Println("failed to open sqlmock database:", err)

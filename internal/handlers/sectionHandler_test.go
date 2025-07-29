@@ -1,3 +1,5 @@
+// Package handlers_test - Tests de integración para Section Handler
+// Tests HTTP comprehensivos para operaciones CRUD de la entidad Section
 package handlers_test
 
 import (
@@ -20,6 +22,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestPostSection - Tests para POST /sections
+// Casos: 201 (creación exitosa), 422 (validación), 417 (errores de negocio/JSON)
 func TestPostSection(t *testing.T) {
 	t.Run("Entity: Section, Method: POST, Code: 201", func(t *testing.T) {
 		expectedResponseCode := 201
@@ -74,6 +78,7 @@ func TestPostSection(t *testing.T) {
 	})
 
 	t.Run("Entity: Section, Method: POST, Code: 422", func(t *testing.T) {
+		// Test validación: campo section_number faltante
 		expectedResponseCode := 422
 		expectedResponseBody := `{
     		"status": "Unprocessable Entity",
@@ -113,10 +118,10 @@ func TestPostSection(t *testing.T) {
 
 		assert.Equal(t, expectedResponseCode, response.Code)
 		assert.JSONEq(t, expectedResponseBody, response.Body.String())
-
 	})
 
 	t.Run("Entity: Section, Method: POST, Code: 409", func(t *testing.T) {
+		// Test conflicto: section_number duplicado
 		expectedResponseCode := 417
 		expectedResponseBody := `{
     		"status": "Expectation Failed",
@@ -157,10 +162,10 @@ func TestPostSection(t *testing.T) {
 
 		assert.Equal(t, expectedResponseCode, response.Code)
 		assert.JSONEq(t, expectedResponseBody, response.Body.String())
-
 	})
 
 	t.Run("Entity: Section, Method: POST, Code: 417", func(t *testing.T) {
+		// Test error JSON: tipo incorrecto para section_number
 		expectedResponseCode := 417
 		expectedResponseBody := `{
     		"status": "Expectation Failed",
@@ -201,10 +206,11 @@ func TestPostSection(t *testing.T) {
 
 		assert.Equal(t, expectedResponseCode, response.Code)
 		assert.JSONEq(t, expectedResponseBody, response.Body.String())
-
 	})
 }
 
+// TestGetAllSections - Tests para GET /sections
+// Casos: 200 (recuperación exitosa), 404 (sin resultados)
 func TestGetAllSections(t *testing.T) {
 	t.Run("Entity: Section, Method: Get, Code: 200", func(t *testing.T) {
 		expectedCode := 200
@@ -251,11 +257,11 @@ func TestGetAllSections(t *testing.T) {
 
 		require.Equal(t, expectedCode, response.Code)
 	})
-
 }
 
+// TestGetByIdSection - Tests para GET /sections/{id}
+// Casos: 200 (encontrado), 404 (no encontrado), 417 (ID inválido)
 func TestGetByIdSection(t *testing.T) {
-
 	t.Run("Entity: Section, Method: Get, Code: 200", func(t *testing.T) {
 		expectedCode := 200
 		expectedResponseBody := `{
@@ -332,6 +338,7 @@ func TestGetByIdSection(t *testing.T) {
 	})
 
 	t.Run("Entity: Section, Method: Get, Code: 417", func(t *testing.T) {
+		// Test ID inválido (formato no numérico)
 		expectedCode := 417
 		id := "100a"
 		sectionId := "100s"
@@ -359,6 +366,8 @@ func TestGetByIdSection(t *testing.T) {
 	})
 }
 
+// TestUpdate - Tests para PUT /sections/{id}
+// Casos: 200 (actualización exitosa), 404 (no encontrado), 417 (errores), 422 (validación)
 func TestUpdate(t *testing.T) {
 	t.Run("Entity: Section, Method: Update, Code: 200", func(t *testing.T) {
 		id := "1"
@@ -474,6 +483,7 @@ func TestUpdate(t *testing.T) {
 	})
 
 	t.Run("Entity: Section, Method: Update, Code: 417", func(t *testing.T) {
+		// Test ID inválido
 		id := "1000a"
 		sectionId := "1000a"
 
@@ -526,6 +536,7 @@ func TestUpdate(t *testing.T) {
 	})
 
 	t.Run("Entity: Section, Method: Update, Code: 422", func(t *testing.T) {
+		// Test validación: campo current_capacity faltante
 		id := "1"
 		sectionId := 1
 
@@ -576,6 +587,7 @@ func TestUpdate(t *testing.T) {
 	})
 
 	t.Run("Entity: Section, Method: Update, Code: 409", func(t *testing.T) {
+		// Test conflicto: section_number duplicado
 		id := "1"
 		sectionId := 1
 
@@ -620,6 +632,7 @@ func TestUpdate(t *testing.T) {
 	})
 
 	t.Run("Entity: Section, Method: Update, Code: 417 (Bad Request)", func(t *testing.T) {
+		// Test error JSON: tipo incorrecto
 		id := "1"
 		sectionId := 1
 
@@ -664,6 +677,8 @@ func TestUpdate(t *testing.T) {
 	})
 }
 
+// TestDeleteByIdSection - Tests para DELETE /sections/{id}
+// Casos: 204 (eliminación exitosa), 404 (no encontrado), 417 (ID inválido)
 func TestDeleteByIdSection(t *testing.T) {
 	t.Run("Entity: Section, Method: Delete, Code: 200", func(t *testing.T) {
 		id := "1"
@@ -686,7 +701,6 @@ func TestDeleteByIdSection(t *testing.T) {
 		handler.DeleteByID(response, request)
 
 		assert.Equal(t, expectedCode, response.Code)
-
 	})
 
 	t.Run("Entity: Section, Method: Delete, Code: 404", func(t *testing.T) {
@@ -717,6 +731,7 @@ func TestDeleteByIdSection(t *testing.T) {
 	})
 
 	t.Run("Entity: Section, Method: Delete, Code: 417", func(t *testing.T) {
+		// Test ID inválido
 		expectedCode := 417
 		id := "1000a"
 		sectionId := "1000a"
