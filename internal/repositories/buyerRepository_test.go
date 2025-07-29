@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMySqlBuyerRepositoryGetAll(t *testing.T) {
+func Test_Buyer_MySqlBuyerRepositoryGetAll(t *testing.T) {
 	t.Run("Successfully returns filled buyers map when there is data on db response", func(t *testing.T) {
 		expectedBuyers := map[int]models.Buyer{
 			1: {
@@ -127,7 +127,7 @@ func TestMySqlBuyerRepositoryGetAll(t *testing.T) {
 	})
 }
 
-func TestGetById(t *testing.T) {
+func Test_Buyer_GetById(t *testing.T) {
 	t.Run("Successfully return searched buyer from db", func(t *testing.T) {
 		expectedBuyer := models.Buyer{
 			Id:           10,
@@ -244,7 +244,7 @@ func TestGetById(t *testing.T) {
 
 }
 
-func TestDeleteById(t *testing.T) {
+func Test_Buyer_DeleteById(t *testing.T) {
 	t.Run("Successfully delete buyer from db", func(t *testing.T) {
 		searchId := 10
 
@@ -338,7 +338,7 @@ func TestDeleteById(t *testing.T) {
 	})
 }
 
-func TestCreate(t *testing.T) {
+func Test_Buyer_Create(t *testing.T) {
 	t.Run("Successfully create a new buyer record on db", func(t *testing.T) {
 		expectedBuyer := models.Buyer{
 			Id:           17,
@@ -440,7 +440,7 @@ func TestCreate(t *testing.T) {
 
 }
 
-func TestUpdate(t *testing.T) {
+func Test_Buyer_Update(t *testing.T) {
 	t.Run("Successfully updates a buyer", func(t *testing.T) {
 		expectedBuyer := models.Buyer{
 			Id:           18,
@@ -629,7 +629,7 @@ func TestUpdate(t *testing.T) {
 	})
 }
 
-func TestGetCardNumberIds(t *testing.T) {
+func Test_Buyer_GetCardNumberIds(t *testing.T) {
 	t.Run("Fails because of an internal server error on the query", func(t *testing.T) {
 		expectedCardNumberIdList := []string{}
 		expectedError := error_message.ErrInternalServerError
@@ -681,7 +681,7 @@ func TestGetCardNumberIds(t *testing.T) {
 	})
 }
 
-func TestExistBuyerById(t *testing.T) {
+func Test_Buyer_ExistBuyerById(t *testing.T) {
 	t.Run("Successfully returns true when buyer exists", func(t *testing.T) {
 		expectedExists := true
 		searchId := 1
@@ -757,7 +757,7 @@ func TestExistBuyerById(t *testing.T) {
 	})
 }
 
-func TestGetNewBuyerMySQLRepository(t *testing.T) {
+func Test_Buyer_GetNewBuyerMySQLRepository(t *testing.T) {
 	t.Run("Successfully returns a new buyer repository", func(t *testing.T) {
 		db, _, err := sqlmock.New()
 		if err != nil {

@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestValidateBuyerRequestStruct(t *testing.T) {
+func Test_Buyer_ValidateBuyerRequestStruct(t *testing.T) {
 	t.Run("BuyerRequest doesn't have required fields CardNumberId, FirstName and LastName", func(t *testing.T) {
 		expectedErrorMessage := "first_name: cannot be blank; id_card_number: cannot be blank; last_name: cannot be blank."
 		buyerRequest := requests.BuyerRequest{}
@@ -75,7 +75,7 @@ func TestValidateBuyerRequestStruct(t *testing.T) {
 	})
 }
 
-func TestIsNotAnEmptyBuyer(t *testing.T) {
+func Test_Buyer_IsNotAnEmptyBuyer(t *testing.T) {
 	t.Run("BuyerRequest is empty returns error", func(t *testing.T) {
 		buyerRequest := requests.BuyerRequest{}
 

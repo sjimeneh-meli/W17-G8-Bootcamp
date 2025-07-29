@@ -20,7 +20,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestPost(t *testing.T) {
+func Test_Buyer_Post(t *testing.T) {
 	t.Run("Post Buyer successfully returns 201", func(t *testing.T) {
 		expectedResponseBody := `{
 			"data": {
@@ -200,7 +200,7 @@ func TestPost(t *testing.T) {
 	})
 }
 
-func TestGetAll(t *testing.T) {
+func Test_Buyer_GetAll(t *testing.T) {
 
 	t.Run("error on service returns 500", func(t *testing.T) {
 		expectedCode := 500
@@ -256,7 +256,7 @@ func TestGetAll(t *testing.T) {
 	})
 }
 
-func TestGetById(t *testing.T) {
+func Test_Buyer_GetById(t *testing.T) {
 	t.Run("Get By Id fails because request buyer id doesn't exists returns 404", func(t *testing.T) {
 		id := "100"
 		numberId := 100
@@ -411,7 +411,7 @@ func TestGetById(t *testing.T) {
 	})
 }
 
-func TestPatch(t *testing.T) {
+func Test_Buyer_Patch(t *testing.T) {
 	t.Run("Patch Buyer fails because request id parameter isn't a number returns 400", func(t *testing.T) {
 		id := "100a"
 
@@ -719,7 +719,7 @@ func TestPatch(t *testing.T) {
 	})
 }
 
-func TestDeleteById(t *testing.T) {
+func Test_Buyer_DeleteById(t *testing.T) {
 	t.Run("Delete By Id fails because request buyer id parameter isn't a number returns 400", func(t *testing.T) {
 		id := "100a"
 

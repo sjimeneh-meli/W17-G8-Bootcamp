@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestBuyerService_GetAll(t *testing.T) {
+func Test_Buyer_Service_GetAll(t *testing.T) {
 	t.Run("GetAll successfully returns all buyers", func(t *testing.T) {
 		// Arrange
 		ctx := context.Background()
@@ -79,7 +79,7 @@ func TestBuyerService_GetAll(t *testing.T) {
 	})
 }
 
-func TestBuyerService_GetById(t *testing.T) {
+func Test_Buyer_Service_GetById(t *testing.T) {
 	t.Run("GetById successfully returns buyer information", func(t *testing.T) {
 		// Arrange
 		ctx := context.Background()
@@ -147,7 +147,7 @@ func TestBuyerService_GetById(t *testing.T) {
 	})
 }
 
-func TestBuyerService_DeleteById(t *testing.T) {
+func Test_Buyer_Service_DeleteById(t *testing.T) {
 	t.Run("DeleteById successfully deletes buyer", func(t *testing.T) {
 		// Arrange
 		ctx := context.Background()
@@ -202,7 +202,7 @@ func TestBuyerService_DeleteById(t *testing.T) {
 	})
 }
 
-func TestCreate(t *testing.T) {
+func Test_Buyer_Create(t *testing.T) {
 	t.Run("Create fails because new buyer CardNumberId already exists", func(t *testing.T) {
 		expectedError := error_message.ErrAlreadyExists
 		expectedBuyer := models.Buyer{}
@@ -274,7 +274,7 @@ func TestCreate(t *testing.T) {
 	})
 }
 
-func TestUpdate(t *testing.T) {
+func Test_Buyer_Update(t *testing.T) {
 	t.Run("Update fails because of a repository issue obtaining existing CardNumberIds return Internal Server Error", func(t *testing.T) {
 		expectedError := error_message.ErrInternalServerError
 		expectedBuyer := models.Buyer{}
@@ -344,7 +344,7 @@ func TestUpdate(t *testing.T) {
 	})
 }
 
-func TestGetBuyerService(t *testing.T) {
+func Test_Buyer_GetBuyerService(t *testing.T) {
 	t.Run("GetBuyerService returns same instance when called multiple times", func(t *testing.T) {
 		mockRepository := tests.GetNewBuyerRepositoryMock()
 		service1 := services.GetBuyerService(mockRepository)
