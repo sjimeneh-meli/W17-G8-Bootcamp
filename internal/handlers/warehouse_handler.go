@@ -92,7 +92,7 @@ func (h *WarehouseHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	// Validate request structure and business rules / Validar estructura de solicitud y reglas de negocio
 	if err := validations.ValidateWarehouseRequestStruct(warehouseRequest); err != nil {
-		response.Error(w, http.StatusBadRequest, err.Error())
+		response.Error(w, http.StatusUnprocessableEntity, err.Error())
 		return
 	}
 
