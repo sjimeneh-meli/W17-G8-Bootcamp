@@ -12,6 +12,7 @@ TESTED_HANDLERS := \
 	./internal/handlers/buyerHandler.go \
 	./internal/handlers/employeeHandler.go \
 	./internal/handlers/productHandler.go \
+	./internal/handlers/purchaseOrderHandler.go \
 	./internal/handlers/sectionHandler.go \
 	./internal/handlers/sellerHandler.go \
 	./internal/handlers/warehouse_handler.go
@@ -19,12 +20,14 @@ TESTED_HANDLERS := \
 TESTED_SERVICES := \
 	./internal/services/buyerService.go \
 	./internal/services/employeeService.go \
+	./internal/services/purchaseOrderService.go \
 	./internal/services/warehouse_service.go
 
 TESTED_REPOSITORIES := \
 	./internal/repositories/buyerRepository.go \
 	./internal/repositories/employeeRepository.go \
 	./internal/repositories/productRepository.go \
+	./internal/repositories/purchaseOrderRepository.go \
 	./internal/repositories/sectionRepository.go \
 	./internal/repositories/sellerRepository.go \
 	./internal/repositories/warehouse_repository.go
@@ -56,7 +59,7 @@ coverage: clean-coverage
 	# Filtrar coverage para incluir SOLO archivos que tienen tests correspondientes
 	@if [ -f $(COVERAGE_FILE) ]; then \
 		(echo "mode: set"; \
-		 grep -E "(buyerHandler\.go|employeeHandler\.go|productHandler\.go|sectionHandler\.go|sellerHandler\.go|warehouse_handler\.go|buyerService\.go|employeeService\.go|warehouse_service\.go|buyerRepository\.go|employeeRepository\.go|productRepository\.go|sectionRepository\.go|sellerRepository\.go|warehouse_repository\.go)" $(COVERAGE_FILE) || true) > $(COVERAGE_FILE).filtered; \
+		 grep -E "(buyerHandler\.go|employeeHandler\.go|productHandler\.go|purchaseOrderHandler\.go|sectionHandler\.go|sellerHandler\.go|warehouse_handler\.go|buyerService\.go|employeeService\.go|purchaseOrderService\.go|warehouse_service\.go|buyerRepository\.go|employeeRepository\.go|productRepository\.go|purchaseOrderRepository\.go|sectionRepository\.go|sellerRepository\.go|warehouse_repository\.go)" $(COVERAGE_FILE) || true) > $(COVERAGE_FILE).filtered; \
 		if [ -s $(COVERAGE_FILE).filtered ] && [ "$$(wc -l < $(COVERAGE_FILE).filtered)" -gt 1 ]; then \
 			mv $(COVERAGE_FILE).filtered $(COVERAGE_FILE); \
 		else \
@@ -88,17 +91,20 @@ coverage-report: coverage
 	@echo "  - buyerHandler.go"
 	@echo "  - employeeHandler.go" 
 	@echo "  - productHandler.go"
+	@echo "  - purchaseOrderHandler.go"
 	@echo "  - sectionHandler.go"
 	@echo "  - sellerHandler.go"
 	@echo "  - warehouse_handler.go"
 	@echo "\nServices:"
 	@echo "  - buyerService.go"
 	@echo "  - employeeService.go"
+	@echo "  - purchaseOrderService.go"
 	@echo "  - warehouse_service.go"
 	@echo "\nRepositories:"
 	@echo "  - buyerRepository.go"
 	@echo "  - employeeRepository.go"
 	@echo "  - productRepository.go"
+	@echo "  - purchaseOrderRepository.go"
 	@echo "  - sectionRepository.go"
 	@echo "  - sellerRepository.go"
 	@echo "  - warehouse_repository.go"
