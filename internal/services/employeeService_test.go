@@ -270,6 +270,62 @@ func TestEmployeeService_Update(t *testing.T) {
 		assert.Equal(t, models.Employee{}, result)
 		repositoryMock.AssertExpectations(t)
 	})
+
+	// update_conflict: Card number already exists, returns conflict error
+	// update_conflict: Card number ya existe, retorna error de conflicto
+	t.Run("update_conflict", func(t *testing.T) {
+		ResetEmployeeServiceInstance()
+
+		repositoryMock := tests.GetNewEmployeeRepositoryMock()
+		service := GetEmployeeService(repositoryMock)
+
+		updateEmployee := models.Employee{
+			CardNumberID: "CARD-EXISTING",
+			FirstName:    "Updated Name",
+		}
+
+		// Mock card numbers that include the one we're trying to use
+		repositoryMock.On("GetCardNumberIds").Return([]string{"CARD-001", "CARD-EXISTING", "CARD-003"}, nil)
+
+		result, err := service.Update(context.Background(), 1, updateEmployee)
+
+		assert.Error(t, err)
+		assert.True(t, errors.Is(err, error_message.ErrAlreadyExists))
+		assert.Equal(t, models.Employee{}, result)
+		repositoryMock.AssertExpectations(t)
+	})
+
+	// update_with_empty_card_number: Update with empty card number (no conflict check needed)
+	// update_with_empty_card_number: Actualizar con card number vacío (no necesita verificación de conflicto)
+	t.Run("update_with_empty_card_number", func(t *testing.T) {
+		ResetEmployeeServiceInstance()
+
+		repositoryMock := tests.GetNewEmployeeRepositoryMock()
+		service := GetEmployeeService(repositoryMock)
+
+		updateEmployee := models.Employee{
+			CardNumberID: "", // Empty card number should not trigger conflict check
+			FirstName:    "Updated Name",
+			LastName:     "Updated LastName",
+		}
+
+		expectedEmployee := models.Employee{
+			Id:           1,
+			CardNumberID: "",
+			FirstName:    "Updated Name",
+			LastName:     "Updated LastName",
+			WarehouseID:  1,
+		}
+
+		repositoryMock.On("GetCardNumberIds").Return([]string{"CARD-001", "CARD-002"}, nil)
+		repositoryMock.On("Update", mock.Anything, 1, updateEmployee).Return(expectedEmployee, nil)
+
+		result, err := service.Update(context.Background(), 1, updateEmployee)
+
+		assert.NoError(t, err)
+		assert.Equal(t, expectedEmployee, result)
+		repositoryMock.AssertExpectations(t)
+	})
 }
 
 // TestEmployeeService_DeleteById - Tests for DeleteById method of EmployeeService

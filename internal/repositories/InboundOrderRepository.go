@@ -12,6 +12,12 @@ import (
 
 var inboundOrderRepositoryInstance InboundOrderRepositoryI
 
+// ResetInboundOrderRepositoryInstance - Resets the singleton instance for testing purposes
+// ResetInboundOrderRepositoryInstance - Resetea la instancia singleton para propósitos de testing
+func ResetInboundOrderRepositoryInstance() {
+	inboundOrderRepositoryInstance = nil
+}
+
 // GetNewInboundOrderMySQLRepository - Creates and returns a new instance of MySqlInboundOrderRepository using singleton pattern
 // GetNewInboundOrderMySQLRepository - Crea y retorna una nueva instancia de MySqlInboundOrderRepository usando patrón singleton
 func GetNewInboundOrderMySQLRepository(db *sql.DB) InboundOrderRepositoryI {

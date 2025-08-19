@@ -10,6 +10,12 @@ import (
 
 var inboundOrdersServiceInstance InboundOrdersServiceI
 
+// ResetInboundOrdersServiceInstance - Resets the singleton instance for testing purposes
+// ResetInboundOrdersServiceInstance - Resetea la instancia singleton para propósitos de testing
+func ResetInboundOrdersServiceInstance() {
+	inboundOrdersServiceInstance = nil
+}
+
 // GetInboundOrdersService - Creates and returns a new instance of InboundOrdersService with required repositories using singleton pattern
 // GetInboundOrdersService - Crea y retorna una nueva instancia de InboundOrdersService con los repositorios requeridos usando patrón singleton
 func GetInboundOrdersService(inboundOrderRepository repositories.InboundOrderRepositoryI, employeeRepository repositories.EmployeeRepositoryI) InboundOrdersServiceI {
