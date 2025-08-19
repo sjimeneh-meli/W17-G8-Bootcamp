@@ -647,3 +647,298 @@ func TestMySqlEmployeeRepositoryExistEmployeeById(t *testing.T) {
 		assert.False(t, exists, "exists should be false")
 	})
 }
+
+// TestGetNewEmployeeMySQLRepository - Tests for singleton pattern in GetNewEmployeeMySQLRepository
+// TestGetNewEmployeeMySQLRepository - Tests para patrón singleton en GetNewEmployeeMySQLRepository
+func TestGetNewEmployeeMySQLRepository(t *testing.T) {
+	t.Run("Successfully creates new employee repository when instance doesn't exist", func(t *testing.T) {
+		// Test: First call creates new instance / Primera llamada crea nueva instancia
+		// Reset singleton for testing / Resetear singleton para testing
+		repositories.ResetEmployeeRepositoryInstance()
+
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			fmt.Println("failed to open sqlmock database:", err)
+		}
+		defer db.Close()
+
+		repository := repositories.GetNewEmployeeMySQLRepository(db)
+
+		assert.NotNil(t, repository, "repository should not be nil")
+		mock.ExpectationsWereMet()
+	})
+
+	t.Run("Returns same instance when repository already exists", func(t *testing.T) {
+		// Test: Subsequent calls return same instance / Llamadas subsecuentes retornan la misma instancia
+		// Reset singleton for testing / Resetear singleton para testing
+		repositories.ResetEmployeeRepositoryInstance()
+
+		db1, mock1, err := sqlmock.New()
+		if err != nil {
+			fmt.Println("failed to open sqlmock database:", err)
+		}
+		defer db1.Close()
+
+		db2, mock2, err := sqlmock.New()
+		if err != nil {
+			fmt.Println("failed to open sqlmock database:", err)
+		}
+		defer db2.Close()
+
+		// First call creates instance
+		repository1 := repositories.GetNewEmployeeMySQLRepository(db1)
+		// Second call should return same instance (singleton pattern)
+		repository2 := repositories.GetNewEmployeeMySQLRepository(db2)
+
+		assert.NotNil(t, repository1, "repository1 should not be nil")
+		assert.NotNil(t, repository2, "repository2 should not be nil")
+		assert.Equal(t, repository1, repository2, "Both repositories should be the same instance")
+		mock1.ExpectationsWereMet()
+		mock2.ExpectationsWereMet()
+	})
+}
+
+// Additional tests to cover missing paths in existing methods
+// Tests adicionales para cubrir paths faltantes en métodos existentes
+
+func TestMySqlEmployeeRepositoryGetById_AdditionalCoverage(t *testing.T) {
+	t.Run("Fails because of scan error with invalid data type", func(t *testing.T) {
+		// Test: Database returns invalid data types causing scan error / Base de datos retorna tipos de datos inválidos causando error de scan
+		// Reset singleton for testing / Resetear singleton para testing
+		repositories.ResetEmployeeRepositoryInstance()
+		expectedEmployee := models.Employee{}
+
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			fmt.Println("failed to open sqlmock database:", err)
+		}
+		defer db.Close()
+
+		// Return invalid data type for ID field
+		rows := mock.NewRows([]string{"id", "id_card_number", "first_name", "last_name", "warehouse_id"}).
+			AddRow("INVALID_ID", "CARD-001", "Pedro", "Martinez", 1)
+
+		mock.ExpectQuery("SELECT id, id_card_number, first_name, last_name, warehouse_id FROM employees WHERE id = ?").
+			WithArgs(1).WillReturnRows(rows)
+
+		repository := repositories.GetNewEmployeeMySQLRepository(db)
+
+		dbEmployee, err := repository.GetById(context.Background(), 1)
+
+		assert.NotNil(t, err, "err shouldn't be nil")
+		assert.Equal(t, expectedEmployee, dbEmployee, "dbEmployee should be empty")
+	})
+}
+
+func TestMySqlEmployeeRepositoryDeleteById_AdditionalCoverage(t *testing.T) {
+	t.Run("Fails because of rows affected error", func(t *testing.T) {
+		// Test: Error when getting rows affected after successful exec / Error al obtener filas afectadas después de exec exitoso
+		// Reset singleton for testing / Resetear singleton para testing
+		repositories.ResetEmployeeRepositoryInstance()
+		expectedError := error_message.ErrInternalServerError
+
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			fmt.Println("failed to open sqlmock database:", err)
+		}
+		defer db.Close()
+
+		mock.ExpectExec("DELETE FROM employees WHERE id = ?").
+			WithArgs(1).WillReturnResult(sqlmock.NewErrorResult(error_message.ErrInternalServerError))
+
+		repository := repositories.GetNewEmployeeMySQLRepository(db)
+
+		err = repository.DeleteById(context.Background(), 1)
+
+		assert.NotNil(t, err, "err shouldn't be nil")
+		assert.ErrorIs(t, err, expectedError, "err should be of type ErrInternalServerError")
+	})
+}
+
+func TestMySqlEmployeeRepositoryUpdate_AdditionalCoverage(t *testing.T) {
+	t.Run("Successfully updates employee with CardNumberID field", func(t *testing.T) {
+		// Test: Update only CardNumberID field / Actualizar solo el campo CardNumberID
+		// Reset singleton for testing / Resetear singleton para testing
+		repositories.ResetEmployeeRepositoryInstance()
+		inputEmployee := models.Employee{
+			CardNumberID: "UPDATED-CARD",
+		}
+		expectedEmployee := models.Employee{
+			Id:           1,
+			CardNumberID: "UPDATED-CARD",
+			FirstName:    "Pedro",
+			LastName:     "Martinez",
+			WarehouseID:  1,
+		}
+
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			fmt.Println("failed to open sqlmock database:", err)
+		}
+		defer db.Close()
+
+		// Mock the UPDATE query / Mock de la consulta UPDATE
+		mock.ExpectExec("UPDATE employees SET id_card_number = \\? WHERE id = \\?").
+			WithArgs("UPDATED-CARD", 1).
+			WillReturnResult(sqlmock.NewResult(0, 1))
+
+		// Mock the GetById query after update / Mock de la consulta GetById después de actualización
+		rows := mock.NewRows([]string{"id", "id_card_number", "first_name", "last_name", "warehouse_id"}).
+			AddRow(1, "UPDATED-CARD", "Pedro", "Martinez", 1)
+		mock.ExpectQuery("SELECT id, id_card_number, first_name, last_name, warehouse_id FROM employees WHERE id = ?").
+			WithArgs(1).WillReturnRows(rows)
+
+		repository := repositories.GetNewEmployeeMySQLRepository(db)
+
+		dbEmployee, err := repository.Update(context.Background(), 1, inputEmployee)
+
+		assert.Nil(t, err, "err should be nil")
+		assert.Equal(t, expectedEmployee, dbEmployee, "dbEmployee should match expected employee")
+	})
+
+	t.Run("Successfully updates employee with WarehouseID field", func(t *testing.T) {
+		// Test: Update only WarehouseID field / Actualizar solo el campo WarehouseID
+		// Reset singleton for testing / Resetear singleton para testing
+		repositories.ResetEmployeeRepositoryInstance()
+		inputEmployee := models.Employee{
+			WarehouseID: 99,
+		}
+		expectedEmployee := models.Employee{
+			Id:           1,
+			CardNumberID: "CARD-001",
+			FirstName:    "Pedro",
+			LastName:     "Martinez",
+			WarehouseID:  99,
+		}
+
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			fmt.Println("failed to open sqlmock database:", err)
+		}
+		defer db.Close()
+
+		// Mock the UPDATE query / Mock de la consulta UPDATE
+		mock.ExpectExec("UPDATE employees SET warehouse_id = \\? WHERE id = \\?").
+			WithArgs(99, 1).
+			WillReturnResult(sqlmock.NewResult(0, 1))
+
+		// Mock the GetById query after update / Mock de la consulta GetById después de actualización
+		rows := mock.NewRows([]string{"id", "id_card_number", "first_name", "last_name", "warehouse_id"}).
+			AddRow(1, "CARD-001", "Pedro", "Martinez", 99)
+		mock.ExpectQuery("SELECT id, id_card_number, first_name, last_name, warehouse_id FROM employees WHERE id = ?").
+			WithArgs(1).WillReturnRows(rows)
+
+		repository := repositories.GetNewEmployeeMySQLRepository(db)
+
+		dbEmployee, err := repository.Update(context.Background(), 1, inputEmployee)
+
+		assert.Nil(t, err, "err should be nil")
+		assert.Equal(t, expectedEmployee, dbEmployee, "dbEmployee should match expected employee")
+	})
+
+	t.Run("Successfully updates employee with all fields", func(t *testing.T) {
+		// Test: Update all fields / Actualizar todos los campos
+		// Reset singleton for testing / Resetear singleton para testing
+		repositories.ResetEmployeeRepositoryInstance()
+		inputEmployee := models.Employee{
+			CardNumberID: "ALL-UPDATED",
+			FirstName:    "UpdatedFirst",
+			LastName:     "UpdatedLast",
+			WarehouseID:  999,
+		}
+		expectedEmployee := models.Employee{
+			Id:           1,
+			CardNumberID: "ALL-UPDATED",
+			FirstName:    "UpdatedFirst",
+			LastName:     "UpdatedLast",
+			WarehouseID:  999,
+		}
+
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			fmt.Println("failed to open sqlmock database:", err)
+		}
+		defer db.Close()
+
+		// Mock the UPDATE query with all fields / Mock de la consulta UPDATE con todos los campos
+		mock.ExpectExec("UPDATE employees SET first_name = \\?, last_name = \\?, id_card_number = \\?, warehouse_id = \\? WHERE id = \\?").
+			WithArgs("UpdatedFirst", "UpdatedLast", "ALL-UPDATED", 999, 1).
+			WillReturnResult(sqlmock.NewResult(0, 1))
+
+		// Mock the GetById query after update / Mock de la consulta GetById después de actualización
+		rows := mock.NewRows([]string{"id", "id_card_number", "first_name", "last_name", "warehouse_id"}).
+			AddRow(1, "ALL-UPDATED", "UpdatedFirst", "UpdatedLast", 999)
+		mock.ExpectQuery("SELECT id, id_card_number, first_name, last_name, warehouse_id FROM employees WHERE id = ?").
+			WithArgs(1).WillReturnRows(rows)
+
+		repository := repositories.GetNewEmployeeMySQLRepository(db)
+
+		dbEmployee, err := repository.Update(context.Background(), 1, inputEmployee)
+
+		assert.Nil(t, err, "err should be nil")
+		assert.Equal(t, expectedEmployee, dbEmployee, "dbEmployee should match expected employee")
+	})
+
+	t.Run("Fails because of rows affected error", func(t *testing.T) {
+		// Test: Error when getting rows affected after update / Error al obtener filas afectadas después de actualización
+		// Reset singleton for testing / Resetear singleton para testing
+		repositories.ResetEmployeeRepositoryInstance()
+		inputEmployee := models.Employee{
+			FirstName: "UpdatedName",
+		}
+		expectedEmployee := models.Employee{}
+		expectedError := error_message.ErrInternalServerError
+
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			fmt.Println("failed to open sqlmock database:", err)
+		}
+		defer db.Close()
+
+		mock.ExpectExec("UPDATE employees SET first_name = \\? WHERE id = \\?").
+			WithArgs("UpdatedName", 1).
+			WillReturnResult(sqlmock.NewErrorResult(error_message.ErrInternalServerError))
+
+		repository := repositories.GetNewEmployeeMySQLRepository(db)
+
+		dbEmployee, err := repository.Update(context.Background(), 1, inputEmployee)
+
+		assert.NotNil(t, err, "err shouldn't be nil")
+		assert.Equal(t, expectedEmployee, dbEmployee, "dbEmployee should be empty")
+		assert.ErrorIs(t, err, expectedError, "err should be of type ErrInternalServerError")
+	})
+
+	t.Run("Fails because GetById fails after successful update", func(t *testing.T) {
+		// Test: Update succeeds but GetById fails afterward / Actualización exitosa pero GetById falla después
+		// Reset singleton for testing / Resetear singleton para testing
+		repositories.ResetEmployeeRepositoryInstance()
+		inputEmployee := models.Employee{
+			FirstName: "UpdatedName",
+		}
+		expectedEmployee := models.Employee{}
+		expectedError := error_message.ErrInternalServerError
+
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			fmt.Println("failed to open sqlmock database:", err)
+		}
+		defer db.Close()
+
+		// Mock successful UPDATE query / Mock de consulta UPDATE exitosa
+		mock.ExpectExec("UPDATE employees SET first_name = \\? WHERE id = \\?").
+			WithArgs("UpdatedName", 1).
+			WillReturnResult(sqlmock.NewResult(0, 1))
+
+		// Mock failing GetById query / Mock de consulta GetById que falla
+		mock.ExpectQuery("SELECT id, id_card_number, first_name, last_name, warehouse_id FROM employees WHERE id = ?").
+			WithArgs(1).WillReturnError(error_message.ErrInternalServerError)
+
+		repository := repositories.GetNewEmployeeMySQLRepository(db)
+
+		dbEmployee, err := repository.Update(context.Background(), 1, inputEmployee)
+
+		assert.NotNil(t, err, "err shouldn't be nil")
+		assert.Equal(t, expectedEmployee, dbEmployee, "dbEmployee should be empty")
+		assert.ErrorIs(t, err, expectedError, "err should be of type ErrInternalServerError")
+	})
+}
