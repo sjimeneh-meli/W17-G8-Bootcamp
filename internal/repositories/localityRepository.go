@@ -186,3 +186,7 @@ func (r *SQLLocalityRepository) ExistById(ctx context.Context, localityID int) (
 	}
 	return exists, nil
 }
+
+func ResetLocalityRepositorySingleton() {
+	localityRepositoryInstance = nil
+}
