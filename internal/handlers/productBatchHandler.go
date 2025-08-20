@@ -20,13 +20,13 @@ import (
 func GetProductBatchHandler(service services.ProductBatchServiceI,
 	sectionService services.SectionServiceI,
 	productService services.ProductService,
-	validation validations.ProductBatchValidation) ProductBatchHandlerI {
+	validation validations.ProductBatchValidationI) ProductBatchHandlerI {
 
 	return &ProductBatchHandler{
 		service:        service,
 		sectionService: sectionService,
 		productService: productService,
-		validation:     &validation,
+		validation:     validation,
 	}
 }
 
@@ -43,7 +43,7 @@ type ProductBatchHandler struct {
 	service        services.ProductBatchServiceI       // Service layer for product batch business logic / Capa de servicio para lógica de negocio de lotes de productos
 	sectionService services.SectionServiceI            // Service layer for section validation / Capa de servicio para validación de secciones
 	productService services.ProductService             // Service layer for product validation / Capa de servicio para validación de productos
-	validation     *validations.ProductBatchValidation // Validation layer for product batch requests / Capa de validación para solicitudes de lotes de productos
+	validation     validations.ProductBatchValidationI // Validation layer for product batch requests / Capa de validación para solicitudes de lotes de productos
 }
 
 // Create handles HTTP POST requests to create a new product batch

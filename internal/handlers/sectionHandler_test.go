@@ -15,8 +15,8 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/error_message"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/seeders"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/tests"
-	"github.com/sajimenezher_meli/meli-frescos-8/internal/validations"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -29,8 +29,8 @@ func TestPostSection(t *testing.T) {
 		expectedResponseCode := 201
 		expectedResponseBody := `{
 			"data": {
-				"id": 29,  
-				"section_number": "K-01",
+				"id": 1,  
+				"section_number": "A-01",
 				"current_capacity": 2,
 				"current_temperature": 3.43,
 				"maximum_capacity": 2,
@@ -42,7 +42,7 @@ func TestPostSection(t *testing.T) {
 		}`
 
 		actualRequest := strings.NewReader(`{
-			"section_number": "K-01",
+			"section_number": "A-01",
 			"current_capacity": 2,
 			"current_temperature": 3.43,
 			"maximum_capacity": 2,
@@ -52,112 +52,21 @@ func TestPostSection(t *testing.T) {
 			"warehouse_id": 1
 		}`)
 
-		sectionRequest := &models.Section{
-			Id:                 0,
-			SectionNumber:      "K-01",
-			CurrentCapacity:    2,
-			CurrentTemperature: 3.43,
-			MaximumCapacity:    2,
-			MinimumCapacity:    2,
-			MinimumTemperature: 2,
-			ProductTypeID:      2,
-			WarehouseID:        1,
-		}
-
 		request := httptest.NewRequest(http.MethodPost, "/sections", actualRequest)
 		response := httptest.NewRecorder()
 		sectionMock := tests.GetSectionServiceMock()
-
-		sectionMock.On("Create", mock.AnythingOfType("*context.timerCtx"), sectionRequest).Return(nil)
-		vld := validations.GetSectionValidation()
-		handler := handlers.GetSectionHandler(sectionMock, nil, vld)
-		handler.Create(response, request)
-
-		assert.Equal(t, expectedResponseCode, response.Code)
-		assert.JSONEq(t, expectedResponseBody, response.Body.String())
-	})
-
-	t.Run("Entity: Section, Method: POST, Code: 422", func(t *testing.T) {
-		// Test validación: campo section_number faltante
-		expectedResponseCode := 422
-		expectedResponseBody := `{
-    		"status": "Unprocessable Entity",
-    		"message": "section_number: cannot be blank."
-		}`
-
-		actualRequest := strings.NewReader(`{
-			"current_capacity": 2,
-			"current_temperature": 3.43,
-			"maximum_capacity": 2,
-			"minimum_capacity": 2,
-			"minimum_temperature": 2,
-			"product_type_id": 2,
-			"warehouse_id": 1
-		}`)
-
-		sectionRequest := &models.Section{
-			Id:                 0,
-			SectionNumber:      "K-01",
-			CurrentCapacity:    2,
-			CurrentTemperature: 3.43,
-			MaximumCapacity:    2,
-			MinimumCapacity:    2,
-			MinimumTemperature: 2,
-			ProductTypeID:      2,
-			WarehouseID:        1,
+		vldMock := tests.GetSectionValidationMock()
+		warehouseMock := &tests.WarehouseServiceMock{
+			GetByIdFunc: func(ctx context.Context, id int) (models.Warehouse, error) {
+				return models.Warehouse{}, nil
+			},
 		}
 
-		request := httptest.NewRequest(http.MethodPost, "/sections", actualRequest)
-		response := httptest.NewRecorder()
-		sectionMock := tests.GetSectionServiceMock()
+		sectionMock.On("Create", mock.AnythingOfType("*context.timerCtx"), seeders.NewSectionModel).Return(nil)
+		sectionMock.On("ExistsWithSectionNumber", mock.AnythingOfType("*context.timerCtx"), seeders.NewSectionModel.Id, seeders.NewSectionModel.SectionNumber).Return(false)
+		vldMock.On("ValidateSectionRequestStruct", seeders.NewSectionRequest).Return(nil)
 
-		sectionMock.On("Create", mock.AnythingOfType("*context.timerCtx"), sectionRequest).Return(nil)
-		vld := validations.GetSectionValidation()
-		handler := handlers.GetSectionHandler(sectionMock, nil, vld)
-		handler.Create(response, request)
-
-		assert.Equal(t, expectedResponseCode, response.Code)
-		assert.JSONEq(t, expectedResponseBody, response.Body.String())
-	})
-
-	t.Run("Entity: Section, Method: POST, Code: 409", func(t *testing.T) {
-		// Test conflicto: section_number duplicado
-		expectedResponseCode := 417
-		expectedResponseBody := `{
-    		"status": "Expectation Failed",
-    		"message": "already exist a section with the same number"
-		}`
-
-		actualRequest := strings.NewReader(`{
-			"section_number": "K-01",
-			"current_capacity": 2,
-			"current_temperature": 3.43,
-			"maximum_capacity": 2,
-			"minimum_capacity": 2,
-			"minimum_temperature": 2,
-			"product_type_id": 2,
-			"warehouse_id": 1
-		}`)
-
-		sectionRequest := &models.Section{
-			Id:                 0,
-			SectionNumber:      "K-01",
-			CurrentCapacity:    2,
-			CurrentTemperature: 3.43,
-			MaximumCapacity:    2,
-			MinimumCapacity:    2,
-			MinimumTemperature: 2,
-			ProductTypeID:      2,
-			WarehouseID:        1,
-		}
-
-		request := httptest.NewRequest(http.MethodPost, "/sections", actualRequest)
-		response := httptest.NewRecorder()
-		sectionMock := tests.GetSectionServiceMock()
-
-		sectionMock.On("Create", mock.AnythingOfType("*context.timerCtx"), sectionRequest).Return(errors.New("already exist a section with the same number"))
-		vld := validations.GetSectionValidation()
-		handler := handlers.GetSectionHandler(sectionMock, nil, vld)
+		handler := handlers.GetSectionHandler(sectionMock, warehouseMock, vldMock)
 		handler.Create(response, request)
 
 		assert.Equal(t, expectedResponseCode, response.Code)
@@ -183,25 +92,169 @@ func TestPostSection(t *testing.T) {
 			"warehouse_id": 1
 		}`)
 
-		sectionRequest := &models.Section{
-			Id:                 0,
-			SectionNumber:      "K-01",
-			CurrentCapacity:    2,
-			CurrentTemperature: 3.43,
-			MaximumCapacity:    2,
-			MinimumCapacity:    2,
-			MinimumTemperature: 2,
-			ProductTypeID:      2,
-			WarehouseID:        1,
+		request := httptest.NewRequest(http.MethodPost, "/sections", actualRequest)
+		response := httptest.NewRecorder()
+		sectionMock := tests.GetSectionServiceMock()
+		vldMock := tests.GetSectionValidationMock()
+		warehouseMock := &tests.WarehouseServiceMock{
+			GetByIdFunc: func(ctx context.Context, id int) (models.Warehouse, error) {
+				return models.Warehouse{}, nil
+			},
 		}
+
+		sectionMock.On("Create", mock.AnythingOfType("*context.timerCtx"), seeders.NewSectionModel).Return(nil)
+		handler := handlers.GetSectionHandler(sectionMock, warehouseMock, vldMock)
+		handler.Create(response, request)
+
+		assert.Equal(t, expectedResponseCode, response.Code)
+		assert.JSONEq(t, expectedResponseBody, response.Body.String())
+	})
+
+	t.Run("Entity: Section, Method: POST, Code: 409", func(t *testing.T) {
+		// Test conflicto: section_number duplicado
+		expectedResponseCode := 409
+		expectedResponseBody := `{
+    		"status": "Conflict",
+    		"message": "already exist a section with the same number"
+		}`
+
+		actualRequest := strings.NewReader(`{
+			"section_number": "B-01",
+			"current_capacity": 2,
+			"current_temperature": 3.43,
+			"maximum_capacity": 2,
+			"minimum_capacity": 2,
+			"minimum_temperature": 2,
+			"product_type_id": 2,
+			"warehouse_id": 1
+		}`)
 
 		request := httptest.NewRequest(http.MethodPost, "/sections", actualRequest)
 		response := httptest.NewRecorder()
 		sectionMock := tests.GetSectionServiceMock()
+		vldMock := tests.GetSectionValidationMock()
+		warehouseMock := &tests.WarehouseServiceMock{
+			GetByIdFunc: func(ctx context.Context, id int) (models.Warehouse, error) {
+				return models.Warehouse{}, nil
+			},
+		}
 
-		sectionMock.On("Create", mock.AnythingOfType("*context.timerCtx"), sectionRequest).Return(nil)
-		vld := validations.GetSectionValidation()
-		handler := handlers.GetSectionHandler(sectionMock, nil, vld)
+		sectionMock.On("ExistsWithSectionNumber", mock.AnythingOfType("*context.timerCtx"), 0, "B-01").Return(true)
+		vldMock.On("ValidateSectionRequestStruct", seeders.NewSectionRequestTwo).Return(nil)
+		handler := handlers.GetSectionHandler(sectionMock, warehouseMock, vldMock)
+		handler.Create(response, request)
+
+		assert.Equal(t, expectedResponseCode, response.Code)
+		assert.JSONEq(t, expectedResponseBody, response.Body.String())
+	})
+
+	t.Run("Entity: Section, Method: POST, Code: 404", func(t *testing.T) {
+		expectedResponseCode := 404
+		expectedResponseBody := `{
+    		"status": "Not Found",
+    		"message": "error: a required dependent entity was not found"
+		}`
+
+		actualRequest := strings.NewReader(`{
+			"section_number": "A-01",
+			"current_capacity": 2,
+			"current_temperature": 3.43,
+			"maximum_capacity": 2,
+			"minimum_capacity": 2,
+			"minimum_temperature": 2,
+			"product_type_id": 2,
+			"warehouse_id": 1
+		}`)
+
+		request := httptest.NewRequest(http.MethodPost, "/sections", actualRequest)
+		response := httptest.NewRecorder()
+		sectionMock := tests.GetSectionServiceMock()
+		vldMock := tests.GetSectionValidationMock()
+		warehouseMock := &tests.WarehouseServiceMock{
+			GetByIdFunc: func(ctx context.Context, id int) (models.Warehouse, error) {
+				return models.Warehouse{}, error_message.ErrDependencyNotFound
+			},
+		}
+
+		sectionMock.On("Create", mock.AnythingOfType("*context.timerCtx"), seeders.NewSectionModel).Return(nil)
+		vldMock.On("ValidateSectionRequestStruct", seeders.NewSectionRequest).Return(nil)
+
+		handler := handlers.GetSectionHandler(sectionMock, warehouseMock, vldMock)
+		handler.Create(response, request)
+
+		assert.Equal(t, expectedResponseCode, response.Code)
+		assert.JSONEq(t, expectedResponseBody, response.Body.String())
+	})
+
+	t.Run("Entity: Section, Method: POST, Code: 422", func(t *testing.T) {
+		// Test validación: campo section_number faltante
+		expectedResponseCode := 422
+		expectedResponseBody := `{
+    		"status": "Unprocessable Entity",
+    		"message": "section_number: cannot be blank."
+		}`
+
+		actualRequest := strings.NewReader(`{
+			"current_capacity": 2,
+			"current_temperature": 3.43,
+			"maximum_capacity": 2,
+			"minimum_capacity": 2,
+			"minimum_temperature": 2,
+			"product_type_id": 2,
+			"warehouse_id": 1
+		}`)
+
+		request := httptest.NewRequest(http.MethodPost, "/sections", actualRequest)
+		response := httptest.NewRecorder()
+		sectionMock := tests.GetSectionServiceMock()
+		vldMock := tests.GetSectionValidationMock()
+		warehouseMock := &tests.WarehouseServiceMock{
+			GetByIdFunc: func(ctx context.Context, id int) (models.Warehouse, error) {
+				return models.Warehouse{}, nil
+			},
+		}
+
+		sectionMock.On("Create", mock.AnythingOfType("*context.timerCtx"), actualRequest).Return(nil)
+		vldMock.On("ValidateSectionRequestStruct", seeders.NewSectionRequestWithoutNumber).Return(errors.New("section_number: cannot be blank."))
+		handler := handlers.GetSectionHandler(sectionMock, warehouseMock, vldMock)
+		handler.Create(response, request)
+
+		assert.Equal(t, expectedResponseCode, response.Code)
+		assert.JSONEq(t, expectedResponseBody, response.Body.String())
+	})
+
+	t.Run("Entity: Section, Method: POST, Code: 417", func(t *testing.T) {
+		// Test validación: campo section_number faltante
+		expectedResponseCode := 417
+		expectedResponseBody := `{
+    		"status": "Expectation Failed",
+    		"message": "invalid character 'a' looking for beginning of value"
+		}`
+
+		actualRequest := strings.NewReader(`{
+			"section_number": "A-01",
+			"current_capacity": a,
+			"current_temperature": 3.43,
+			"maximum_capacity": 2,
+			"minimum_capacity": 2,
+			"minimum_temperature": 2,
+			"product_type_id": 2,
+			"warehouse_id": 1
+		}`)
+
+		request := httptest.NewRequest(http.MethodPost, "/sections", actualRequest)
+		response := httptest.NewRecorder()
+		sectionMock := tests.GetSectionServiceMock()
+		vldMock := tests.GetSectionValidationMock()
+		warehouseMock := &tests.WarehouseServiceMock{
+			GetByIdFunc: func(ctx context.Context, id int) (models.Warehouse, error) {
+				return models.Warehouse{}, nil
+			},
+		}
+
+		sectionMock.On("Create", mock.AnythingOfType("*context.timerCtx"), actualRequest).Return(nil)
+		vldMock.On("ValidateSectionRequestStruct", seeders.NewSectionModel).Return(nil)
+		handler := handlers.GetSectionHandler(sectionMock, warehouseMock, vldMock)
 		handler.Create(response, request)
 
 		assert.Equal(t, expectedResponseCode, response.Code)
@@ -215,23 +268,11 @@ func TestGetAllSections(t *testing.T) {
 	t.Run("Entity: Section, Method: Get, Code: 200", func(t *testing.T) {
 		expectedCode := 200
 
-		sections := []*models.Section{
-			{
-				Id:                 1,
-				SectionNumber:      "K-01",
-				CurrentCapacity:    2,
-				CurrentTemperature: 3.43,
-				MaximumCapacity:    2,
-				MinimumCapacity:    2,
-				MinimumTemperature: 2,
-				ProductTypeID:      2,
-				WarehouseID:        1,
-			},
-		}
 		sectionMock := tests.GetSectionServiceMock()
-		sectionMock.On("GetAll", mock.AnythingOfType("*context.timerCtx")).Return(sections, nil)
-		vld := validations.GetSectionValidation()
-		handler := handlers.GetSectionHandler(sectionMock, nil, vld)
+		sectionMock.On("GetAll", mock.AnythingOfType("*context.timerCtx")).Return(seeders.Sections, nil)
+		vldMock := tests.GetSectionValidationMock()
+		warehouseMock := &tests.WarehouseServiceMock{}
+		handler := handlers.GetSectionHandler(sectionMock, warehouseMock, vldMock)
 
 		request := httptest.NewRequest(http.MethodGet, "/sections", nil)
 		response := httptest.NewRecorder()
@@ -244,11 +285,11 @@ func TestGetAllSections(t *testing.T) {
 	t.Run("Entity: Section, Method: Get, Code: 404", func(t *testing.T) {
 		expectedCode := 404
 
-		sections := []*models.Section{}
 		sectionMock := tests.GetSectionServiceMock()
-		sectionMock.On("GetAll", mock.AnythingOfType("*context.timerCtx")).Return(sections, error_message.ErrNotFound)
-		vld := validations.GetSectionValidation()
-		handler := handlers.GetSectionHandler(sectionMock, nil, vld)
+		sectionMock.On("GetAll", mock.AnythingOfType("*context.timerCtx")).Return(seeders.Sections, error_message.ErrNotFound)
+		vldMock := tests.GetSectionValidationMock()
+		warehouseMock := &tests.WarehouseServiceMock{}
+		handler := handlers.GetSectionHandler(sectionMock, warehouseMock, vldMock)
 
 		request := httptest.NewRequest(http.MethodGet, "/sections", nil)
 		response := httptest.NewRecorder()
@@ -267,35 +308,24 @@ func TestGetByIdSection(t *testing.T) {
 		expectedResponseBody := `{
 			"data": {
 				"id": 1, 
-				"section_number": "K-01",
-				"current_capacity": 2,
+				"section_number": "A-01",
+				"current_capacity": 1,
 				"current_temperature": 3.43,
-				"maximum_capacity": 2,
-				"minimum_capacity": 2,
-				"minimum_temperature": 2,
-				"product_type_id": 2,
+				"maximum_capacity": 1,
+				"minimum_capacity": 1,
+				"minimum_temperature": 1,
+				"product_type_id": 1,
 				"warehouse_id": 1
 			}
 		}`
 
 		id := "1"
-		sectionId := 1
-		section := &models.Section{
-			Id:                 1,
-			SectionNumber:      "K-01",
-			CurrentCapacity:    2,
-			CurrentTemperature: 3.43,
-			MaximumCapacity:    2,
-			MinimumCapacity:    2,
-			MinimumTemperature: 2,
-			ProductTypeID:      2,
-			WarehouseID:        1,
-		}
 
 		sectionMock := tests.GetSectionServiceMock()
-		sectionMock.On("GetByID", mock.AnythingOfType("*context.timerCtx"), sectionId).Return(section, nil)
-		vld := validations.GetSectionValidation()
-		handler := handlers.GetSectionHandler(sectionMock, nil, vld)
+		vldMock := tests.GetSectionValidationMock()
+		warehouseMock := &tests.WarehouseServiceMock{}
+		sectionMock.On("GetByID", mock.AnythingOfType("*context.timerCtx"), seeders.Sections[0].Id).Return(seeders.Sections[0], nil)
+		handler := handlers.GetSectionHandler(sectionMock, warehouseMock, vldMock)
 
 		request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/sections/%s", id), nil)
 		routeCtx := chi.NewRouteContext()
@@ -320,9 +350,10 @@ func TestGetByIdSection(t *testing.T) {
 		}`
 
 		sectionMock := tests.GetSectionServiceMock()
+		vldMock := tests.GetSectionValidationMock()
+		warehouseMock := &tests.WarehouseServiceMock{}
 		sectionMock.On("GetByID", mock.AnythingOfType("*context.timerCtx"), sectionId).Return(&models.Section{}, error_message.ErrNotFound)
-		vld := validations.GetSectionValidation()
-		handler := handlers.GetSectionHandler(sectionMock, nil, vld)
+		handler := handlers.GetSectionHandler(sectionMock, warehouseMock, vldMock)
 
 		request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/sections/%s", id), nil)
 		routeCtx := chi.NewRouteContext()
@@ -348,9 +379,10 @@ func TestGetByIdSection(t *testing.T) {
 		}`
 
 		sectionMock := tests.GetSectionServiceMock()
+		vldMock := tests.GetSectionValidationMock()
+		warehouseMock := &tests.WarehouseServiceMock{}
 		sectionMock.On("GetByID", mock.AnythingOfType("*context.timerCtx"), sectionId).Return(&models.Section{}, error_message.ErrNotFound)
-		vld := validations.GetSectionValidation()
-		handler := handlers.GetSectionHandler(sectionMock, nil, vld)
+		handler := handlers.GetSectionHandler(sectionMock, warehouseMock, vldMock)
 
 		request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/sections/%s", id), nil)
 		routeCtx := chi.NewRouteContext()
@@ -371,13 +403,12 @@ func TestGetByIdSection(t *testing.T) {
 func TestUpdate(t *testing.T) {
 	t.Run("Entity: Section, Method: Update, Code: 200", func(t *testing.T) {
 		id := "1"
-		sectionId := 1
 
 		expectedCode := 200
 		expectedResponseBody := `{
 			"data": {
 				"id": 1, 
-				"section_number": "K-01",
+				"section_number": "A-01",
 				"current_capacity": 2,
 				"current_temperature": 3.43,
 				"maximum_capacity": 2,
@@ -389,7 +420,7 @@ func TestUpdate(t *testing.T) {
 		}`
 
 		sectionRequest := strings.NewReader(`{
-			"section_number": "K-01",
+			"section_number": "A-01",
 			"current_capacity": 2,
 			"current_temperature": 3.43,
 			"maximum_capacity": 2,
@@ -399,23 +430,58 @@ func TestUpdate(t *testing.T) {
 			"warehouse_id": 1
 		}`)
 
-		section := &models.Section{
-			Id:                 1,
-			SectionNumber:      "K-01",
-			CurrentCapacity:    2,
-			CurrentTemperature: 3.43,
-			MaximumCapacity:    2,
-			MinimumCapacity:    2,
-			MinimumTemperature: 2,
-			ProductTypeID:      2,
-			WarehouseID:        1,
-		}
+		sectionMock := tests.GetSectionServiceMock()
+		vldMock := tests.GetSectionValidationMock()
+		warehouseMock := &tests.WarehouseServiceMock{}
+		sectionMock.On("ExistsWithSectionNumber", mock.AnythingOfType("*context.timerCtx"), seeders.Sections[0].Id, seeders.Sections[0].SectionNumber).Return(false)
+		sectionMock.On("GetByID", mock.AnythingOfType("*context.timerCtx"), seeders.Sections[0].Id).Return(seeders.Sections[0], nil)
+		sectionMock.On("Update", mock.AnythingOfType("*context.timerCtx"), seeders.Sections[0]).Return(nil)
+		vldMock.On("ValidateSectionRequestStruct", seeders.NewSectionRequest).Return(nil)
+
+		handler := handlers.GetSectionHandler(sectionMock, warehouseMock, vldMock)
+
+		request := httptest.NewRequest(http.MethodPut, fmt.Sprintf("/sections/%s", id), sectionRequest)
+		routeCtx := chi.NewRouteContext()
+		routeCtx.URLParams.Add("id", id)
+		request = request.WithContext(context.WithValue(request.Context(), chi.RouteCtxKey, routeCtx))
+
+		response := httptest.NewRecorder()
+
+		handler.Update(response, request)
+
+		assert.Equal(t, expectedCode, response.Code)
+		assert.JSONEq(t, expectedResponseBody, response.Body.String())
+	})
+
+	t.Run("Entity: Section, Method: Update, Code: 417 (Update)", func(t *testing.T) {
+		id := "1"
+
+		expectedCode := 417
+		expectedResponseBody := `{
+			"message":"service error", 
+			"status":"Expectation Failed"
+		}`
+
+		sectionRequest := strings.NewReader(`{
+			"section_number": "A-01",
+			"current_capacity": 2,
+			"current_temperature": 3.43,
+			"maximum_capacity": 2,
+			"minimum_capacity": 2,
+			"minimum_temperature": 2,
+			"product_type_id": 2,
+			"warehouse_id": 1
+		}`)
 
 		sectionMock := tests.GetSectionServiceMock()
-		sectionMock.On("GetByID", mock.AnythingOfType("*context.timerCtx"), sectionId).Return(section, nil)
-		sectionMock.On("Update", mock.AnythingOfType("*context.timerCtx"), section).Return(nil)
-		vld := validations.GetSectionValidation()
-		handler := handlers.GetSectionHandler(sectionMock, nil, vld)
+		vldMock := tests.GetSectionValidationMock()
+		warehouseMock := &tests.WarehouseServiceMock{}
+		sectionMock.On("ExistsWithSectionNumber", mock.AnythingOfType("*context.timerCtx"), seeders.Sections[0].Id, seeders.Sections[0].SectionNumber).Return(false)
+		sectionMock.On("GetByID", mock.AnythingOfType("*context.timerCtx"), seeders.Sections[0].Id).Return(seeders.Sections[0], nil)
+		sectionMock.On("Update", mock.AnythingOfType("*context.timerCtx"), seeders.Sections[0]).Return(errors.New("service error"))
+		vldMock.On("ValidateSectionRequestStruct", seeders.NewSectionRequest).Return(nil)
+
+		handler := handlers.GetSectionHandler(sectionMock, warehouseMock, vldMock)
 
 		request := httptest.NewRequest(http.MethodPut, fmt.Sprintf("/sections/%s", id), sectionRequest)
 		routeCtx := chi.NewRouteContext()
@@ -451,23 +517,12 @@ func TestUpdate(t *testing.T) {
 			"warehouse_id": 1
 		}`)
 
-		section := &models.Section{
-			Id:                 1,
-			SectionNumber:      "K-01",
-			CurrentCapacity:    2,
-			CurrentTemperature: 3.43,
-			MaximumCapacity:    2,
-			MinimumCapacity:    2,
-			MinimumTemperature: 2,
-			ProductTypeID:      2,
-			WarehouseID:        1,
-		}
-
 		sectionMock := tests.GetSectionServiceMock()
+		vldMock := tests.GetSectionValidationMock()
+		warehouseMock := &tests.WarehouseServiceMock{}
 		sectionMock.On("GetByID", mock.AnythingOfType("*context.timerCtx"), sectionId).Return(&models.Section{}, error_message.ErrNotFound)
-		sectionMock.On("Update", mock.AnythingOfType("*context.timerCtx"), sectionId, section).Return(error_message.ErrNotFound)
-		vld := validations.GetSectionValidation()
-		handler := handlers.GetSectionHandler(sectionMock, nil, vld)
+
+		handler := handlers.GetSectionHandler(sectionMock, warehouseMock, vldMock)
 
 		request := httptest.NewRequest(http.MethodPut, fmt.Sprintf("/sections/%s", id), sectionRequest)
 		routeCtx := chi.NewRouteContext()
@@ -504,23 +559,12 @@ func TestUpdate(t *testing.T) {
 			"warehouse_id": 1
 		}`)
 
-		section := &models.Section{
-			Id:                 1,
-			SectionNumber:      "K-01",
-			CurrentCapacity:    2,
-			CurrentTemperature: 3.43,
-			MaximumCapacity:    2,
-			MinimumCapacity:    2,
-			MinimumTemperature: 2,
-			ProductTypeID:      2,
-			WarehouseID:        1,
-		}
-
 		sectionMock := tests.GetSectionServiceMock()
+		vldMock := tests.GetSectionValidationMock()
+		warehouseMock := &tests.WarehouseServiceMock{}
 		sectionMock.On("GetByID", mock.AnythingOfType("*context.timerCtx"), sectionId).Return(&models.Section{}, error_message.ErrNotFound)
-		sectionMock.On("Update", mock.AnythingOfType("*context.timerCtx"), sectionId, section).Return(error_message.ErrNotFound)
-		vld := validations.GetSectionValidation()
-		handler := handlers.GetSectionHandler(sectionMock, nil, vld)
+
+		handler := handlers.GetSectionHandler(sectionMock, warehouseMock, vldMock)
 
 		request := httptest.NewRequest(http.MethodPut, fmt.Sprintf("/sections/%s", id), sectionRequest)
 		routeCtx := chi.NewRouteContext()
@@ -542,12 +586,12 @@ func TestUpdate(t *testing.T) {
 
 		expectedCode := 422
 		expectedResponseBody := `{
-			"message":"current_capacity: cannot be blank.", 
+			"message":"section_number: cannot be blank.", 
 			"status":"Unprocessable Entity"
 		}`
 
 		sectionRequest := strings.NewReader(`{
-			"section_number": "K-01",
+			"current_capacity": 2,
 			"current_temperature": 3.43,
 			"maximum_capacity": 2,
 			"minimum_capacity": 2,
@@ -556,22 +600,13 @@ func TestUpdate(t *testing.T) {
 			"warehouse_id": 1
 		}`)
 
-		section := &models.Section{
-			Id:                 1,
-			SectionNumber:      "K-01",
-			CurrentTemperature: 3.43,
-			MaximumCapacity:    2,
-			MinimumCapacity:    2,
-			MinimumTemperature: 2,
-			ProductTypeID:      2,
-			WarehouseID:        1,
-		}
-
 		sectionMock := tests.GetSectionServiceMock()
-		sectionMock.On("GetByID", mock.AnythingOfType("*context.timerCtx"), sectionId).Return(section, nil)
-		sectionMock.On("Update", mock.AnythingOfType("*context.timerCtx"), section).Return(nil)
-		vld := validations.GetSectionValidation()
-		handler := handlers.GetSectionHandler(sectionMock, nil, vld)
+		vldMock := tests.GetSectionValidationMock()
+		warehouseMock := &tests.WarehouseServiceMock{}
+		sectionMock.On("GetByID", mock.AnythingOfType("*context.timerCtx"), sectionId).Return(seeders.Sections[0], nil)
+		vldMock.On("ValidateSectionRequestStruct", seeders.NewSectionRequestWithoutNumber).Return(errors.New("section_number: cannot be blank."))
+
+		handler := handlers.GetSectionHandler(sectionMock, warehouseMock, vldMock)
 
 		request := httptest.NewRequest(http.MethodPut, fmt.Sprintf("/sections/%s", id), sectionRequest)
 		routeCtx := chi.NewRouteContext()
@@ -589,16 +624,15 @@ func TestUpdate(t *testing.T) {
 	t.Run("Entity: Section, Method: Update, Code: 409", func(t *testing.T) {
 		// Test conflicto: section_number duplicado
 		id := "1"
-		sectionId := 1
 
-		expectedCode := 417
+		expectedCode := 409
 		expectedResponseBody := `{
 			"message":"already exist a section with the same number", 
-			"status":"Expectation Failed"
+			"status":"Conflict"
 		}`
 
 		sectionRequest := strings.NewReader(`{
-			"section_number": "K-01",
+			"section_number": "B-01",
 			"current_capacity": 2,
 			"current_temperature": 3.43,
 			"maximum_capacity": 2,
@@ -608,15 +642,13 @@ func TestUpdate(t *testing.T) {
 			"warehouse_id": 1
 		}`)
 
-		section := &models.Section{
-			Id: 1,
-		}
-
 		sectionMock := tests.GetSectionServiceMock()
-		sectionMock.On("GetByID", mock.AnythingOfType("*context.timerCtx"), sectionId).Return(section, nil)
-		sectionMock.On("Update", mock.AnythingOfType("*context.timerCtx"), section).Return(errors.New("already exist a section with the same number"))
-		vld := validations.GetSectionValidation()
-		handler := handlers.GetSectionHandler(sectionMock, nil, vld)
+		vldMock := tests.GetSectionValidationMock()
+		warehouseMock := &tests.WarehouseServiceMock{}
+		sectionMock.On("GetByID", mock.AnythingOfType("*context.timerCtx"), seeders.Sections[0].Id).Return(seeders.Sections[0], nil)
+		sectionMock.On("ExistsWithSectionNumber", mock.AnythingOfType("*context.timerCtx"), seeders.Sections[0].Id, "B-01").Return(false)
+		vldMock.On("ValidateSectionRequestStruct", seeders.NewSectionRequestTwo).Return(nil)
+		handler := handlers.GetSectionHandler(sectionMock, warehouseMock, vldMock)
 
 		request := httptest.NewRequest(http.MethodPut, fmt.Sprintf("/sections/%s", id), sectionRequest)
 		routeCtx := chi.NewRouteContext()
@@ -658,10 +690,11 @@ func TestUpdate(t *testing.T) {
 		}
 
 		sectionMock := tests.GetSectionServiceMock()
+		vldMock := tests.GetSectionValidationMock()
+		warehouseMock := &tests.WarehouseServiceMock{}
 		sectionMock.On("GetByID", mock.AnythingOfType("*context.timerCtx"), sectionId).Return(section, nil)
-		sectionMock.On("Update", mock.AnythingOfType("*context.timerCtx"), section).Return(errors.New("json: cannot unmarshal number into Go struct field SectionRequest.section_number of type string"))
-		vld := validations.GetSectionValidation()
-		handler := handlers.GetSectionHandler(sectionMock, nil, vld)
+
+		handler := handlers.GetSectionHandler(sectionMock, warehouseMock, vldMock)
 
 		request := httptest.NewRequest(http.MethodPut, fmt.Sprintf("/sections/%s", id), sectionRequest)
 		routeCtx := chi.NewRouteContext()
@@ -687,9 +720,10 @@ func TestDeleteByIdSection(t *testing.T) {
 		expectedCode := 204
 
 		sectionMock := tests.GetSectionServiceMock()
+		vldMock := tests.GetSectionValidationMock()
+		warehouseMock := &tests.WarehouseServiceMock{}
 		sectionMock.On("DeleteByID", mock.AnythingOfType("*context.timerCtx"), sectionId).Return(nil)
-		vld := validations.GetSectionValidation()
-		handler := handlers.GetSectionHandler(sectionMock, nil, vld)
+		handler := handlers.GetSectionHandler(sectionMock, warehouseMock, vldMock)
 
 		request := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/sections/%s", id), nil)
 		routeCtx := chi.NewRouteContext()
@@ -713,9 +747,10 @@ func TestDeleteByIdSection(t *testing.T) {
 		}`
 
 		sectionMock := tests.GetSectionServiceMock()
+		vldMock := tests.GetSectionValidationMock()
+		warehouseMock := &tests.WarehouseServiceMock{}
 		sectionMock.On("DeleteByID", mock.AnythingOfType("*context.timerCtx"), sectionId).Return(error_message.ErrNotFound)
-		vld := validations.GetSectionValidation()
-		handler := handlers.GetSectionHandler(sectionMock, nil, vld)
+		handler := handlers.GetSectionHandler(sectionMock, warehouseMock, vldMock)
 
 		request := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/sections/%s", id), nil)
 		routeCtx := chi.NewRouteContext()
@@ -741,9 +776,10 @@ func TestDeleteByIdSection(t *testing.T) {
 		}`
 
 		sectionMock := tests.GetSectionServiceMock()
+		vldMock := tests.GetSectionValidationMock()
+		warehouseMock := &tests.WarehouseServiceMock{}
 		sectionMock.On("DeleteByID", mock.AnythingOfType("*context.timerCtx"), sectionId).Return(error_message.ErrNotFound)
-		vld := validations.GetSectionValidation()
-		handler := handlers.GetSectionHandler(sectionMock, nil, vld)
+		handler := handlers.GetSectionHandler(sectionMock, warehouseMock, vldMock)
 
 		request := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/sections/%s", id), nil)
 		routeCtx := chi.NewRouteContext()
