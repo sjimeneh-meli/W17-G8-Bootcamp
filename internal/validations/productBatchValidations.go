@@ -5,8 +5,12 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/requests"
 )
 
-func GetProductBatchValidation() *ProductBatchValidation {
+func GetProductBatchValidation() ProductBatchValidationI {
 	return &ProductBatchValidation{}
+}
+
+type ProductBatchValidationI interface {
+	ValidateProductBatchRequestStruc(r requests.ProductBatchRequest) error
 }
 
 type ProductBatchValidation struct{}

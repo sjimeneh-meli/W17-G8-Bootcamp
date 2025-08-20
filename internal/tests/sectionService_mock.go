@@ -27,7 +27,7 @@ func (r *SectionServiceMock) GetByID(ctx context.Context, id int) (*models.Secti
 
 func (r *SectionServiceMock) Create(ctx context.Context, section *models.Section) error {
 	args := r.Called(ctx, section)
-	section.Id = 29
+	section.Id = 1
 	return args.Error(0)
 }
 
@@ -42,9 +42,11 @@ func (r *SectionServiceMock) DeleteByID(ctx context.Context, id int) error {
 }
 
 func (r *SectionServiceMock) ExistWithID(ctx context.Context, id int) bool {
-	return false
+	r.Called(ctx, id)
+	return id == 5
 }
 
 func (r *SectionServiceMock) ExistsWithSectionNumber(ctx context.Context, id int, sectionNumber string) bool {
-	return false
+	r.Called(ctx, id, sectionNumber)
+	return sectionNumber == "B-01"
 }

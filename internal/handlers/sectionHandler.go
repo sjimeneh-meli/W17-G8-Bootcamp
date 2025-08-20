@@ -19,7 +19,7 @@ import (
 
 // GetSectionHandler creates and returns a new instance of SectionHandler with required services and validation
 // GetSectionHandler crea y retorna una nueva instancia de SectionHandler con los servicios y validación requeridos
-func GetSectionHandler(service services.SectionServiceI, warehouseService services.WarehouseService, validation *validations.SectionValidation) SectionHandlerI {
+func GetSectionHandler(service services.SectionServiceI, warehouseService services.WarehouseService, validation validations.SectionValidationI) SectionHandlerI {
 	return &SectionHandler{
 		service:          service,
 		warehouseService: warehouseService,
@@ -42,7 +42,7 @@ type SectionHandlerI interface {
 type SectionHandler struct {
 	service          services.SectionServiceI       // Service layer for section business logic / Capa de servicio para lógica de negocio de secciones
 	warehouseService services.WarehouseService      // Service layer for warehouse validation / Capa de servicio para validación de almacenes
-	validation       *validations.SectionValidation // Validation layer for section requests / Capa de validación para solicitudes de secciones
+	validation       validations.SectionValidationI // Validation layer for section requests / Capa de validación para solicitudes de secciones
 }
 
 // GetAll handles HTTP GET requests to retrieve all sections
@@ -125,13 +125,11 @@ func (h *SectionHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//ERROR
-	// Validate that warehouse exists / Validar que el almacén exista
-	/*_, srvErr := h.warehouseService.GetById(ctx, request.WarehouseID)
+	_, srvErr := h.warehouseService.GetById(ctx, request.WarehouseID)
 	if srvErr != nil {
 		response.Error(w, http.StatusNotFound, srvErr.Error())
 		return
-	}*/
+	}
 
 	// Map request to section model / Mapear solicitud a modelo de sección
 	section = mappers.GetSectionModelFromRequest(request)
