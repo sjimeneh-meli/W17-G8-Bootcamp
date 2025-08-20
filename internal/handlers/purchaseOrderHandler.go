@@ -115,6 +115,7 @@ func (h *PurchaseOrderHandler) GetAll() http.HandlerFunc {
 		purchaseOrdersMap, err := h.service.GetAll(ctx)
 		if err != nil {
 			response.Error(w, http.StatusInternalServerError, err.Error())
+			return
 		}
 
 		// Convert map to slice and map to response format / Convertir mapa a slice y mapear a formato de respuesta

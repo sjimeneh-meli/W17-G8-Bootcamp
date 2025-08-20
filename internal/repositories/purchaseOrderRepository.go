@@ -20,7 +20,7 @@ func GetNewPurchaseOrderMySQLRepository(db *sql.DB) PurchaseOrderRepositoryI {
 	}
 
 	purchaseOrderRepositoryInstance = &MySqlPurchaseOrderRepository{
-		db: db,
+		Db: db,
 	}
 	return purchaseOrderRepositoryInstance
 }
@@ -52,7 +52,7 @@ type PurchaseOrderRepositoryI interface {
 // MySqlPurchaseOrderRepository - MySQL implementation of the PurchaseOrderRepositoryI interface
 // MySqlPurchaseOrderRepository - Implementación MySQL de la interfaz PurchaseOrderRepositoryI
 type MySqlPurchaseOrderRepository struct {
-	db *sql.DB // Database connection / Conexión a la base de datos
+	Db *sql.DB // Database connection / Conexión a la base de datos
 }
 
 // GetAll - Retrieves all purchase orders from the database and returns them as a map with order ID as key
@@ -63,7 +63,7 @@ func (r *MySqlPurchaseOrderRepository) GetAll(ctx context.Context) (map[int]mode
 	// SQL query to select all purchase order fields / Consulta SQL para seleccionar todos los campos de la orden de compra
 	query := "select id, order_number, order_date, tracking_code, buyer_id, product_record_id from purchase_orders"
 
-	rows, err := r.db.QueryContext(ctx, query)
+	rows, err := r.Db.QueryContext(ctx, query)
 	if err != nil {
 		return orders, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
 	}
@@ -94,7 +94,7 @@ func (r *MySqlPurchaseOrderRepository) Create(ctx context.Context, order models.
 	query := `insert into purchase_orders (order_number, order_date, tracking_code, buyer_id, product_record_id)
 	values (?, ?, ?, ?, ?)`
 
-	result, err := r.db.ExecContext(ctx, query, order.OrderNumber, order.OrderDate, order.TrackingCode, order.BuyerId, order.ProductRecordId)
+	result, err := r.Db.ExecContext(ctx, query, order.OrderNumber, order.OrderDate, order.TrackingCode, order.BuyerId, order.ProductRecordId)
 	if err != nil {
 		return models.PurchaseOrder{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
 	}
@@ -120,7 +120,7 @@ from productos_frescos.buyers b
 inner join productos_frescos.purchase_orders po on po.buyer_id = b.id
 where b.id = ?
 group by b.id`
-	row := r.db.QueryRowContext(ctx, query, buyerId)
+	row := r.Db.QueryRowContext(ctx, query, buyerId)
 
 	err := row.Scan(&report.Id, &report.IdCardNumber, &report.FirstName, &report.LastName, &report.PurchaseOrderCount)
 	if err != nil {
@@ -146,7 +146,7 @@ inner join productos_frescos.purchase_orders po on po.buyer_id = b.id
 group by b.id
 order by b.id`
 
-	rows, err := r.db.QueryContext(ctx, query)
+	rows, err := r.Db.QueryContext(ctx, query)
 	if err != nil {
 		return []models.PurchaseOrderReport{}, fmt.Errorf("%w - %s", error_message.ErrInternalServerError, err.Error())
 	}
@@ -172,7 +172,7 @@ func (r *MySqlPurchaseOrderRepository) ExistPurchaseOrderByOrderNumber(ctx conte
 	query := "SELECT 1 FROM purchase_orders WHERE order_number = ? LIMIT 1 "
 
 	var exists int64
-	err := r.db.QueryRowContext(ctx, query, orderNumber).Scan(&exists)
+	err := r.Db.QueryRowContext(ctx, query, orderNumber).Scan(&exists)
 
 	if err != nil {
 		// If no rows found, order number doesn't exist (not an error) / Si no se encuentran filas, el número de orden no existe (no es un error)
