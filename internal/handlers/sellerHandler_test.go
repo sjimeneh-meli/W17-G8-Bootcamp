@@ -1,3 +1,5 @@
+// Package handlers_test - Tests de integración para Seller Handler
+// Tests HTTP comprehensivos para operaciones CRUD de la entidad Seller
 package handlers_test
 
 import (
@@ -16,6 +18,8 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+// TestPostSeller - Tests para POST /sellers
+// Casos: 201 (creación exitosa), 400 (JSON inválido), 422 (validación), 409 (CID duplicado)
 func TestPostSeller(t *testing.T) {
 	t.Run("should return 201 and a seller", func(t *testing.T) {
 		expectedResponseBody := `{
@@ -64,6 +68,7 @@ func TestPostSeller(t *testing.T) {
 	})
 
 	t.Run("should return 400 when JSON has incorrect field", func(t *testing.T) {
+		// Test error JSON: tipo incorrecto para locality_id
 		expectedCode := 400
 		expectedResponseBody := `{
 			"status": "Bad Request",
@@ -91,10 +96,10 @@ func TestPostSeller(t *testing.T) {
 
 		assert.Equal(t, expectedCode, response.Code)
 		assert.JSONEq(t, expectedResponseBody, response.Body.String())
-
 	})
 
 	t.Run("should return 422 when JSON missing required fields", func(t *testing.T) {
+		// Test validación: campo cid faltante
 		expectedCode := 422
 		expectedResponseBody := `{
 			"status": "Unprocessable Entity",
@@ -120,10 +125,10 @@ func TestPostSeller(t *testing.T) {
 
 		assert.Equal(t, expectedCode, response.Code)
 		assert.JSONEq(t, expectedResponseBody, response.Body.String())
-
 	})
 
 	t.Run("should return 409 when CID already exists", func(t *testing.T) {
+		// Test conflicto: CID duplicado
 		expectedCode := 409
 		expectedResponseBody := `{
 			"status": "Conflict",
@@ -153,9 +158,10 @@ func TestPostSeller(t *testing.T) {
 		assert.Equal(t, expectedCode, response.Code)
 		assert.JSONEq(t, expectedResponseBody, response.Body.String())
 	})
-
 }
 
+// TestGet - Tests para GET /sellers y GET /sellers/{id}
+// Casos: 200 (colección y individual), 404 (no encontrado)
 func TestGet(t *testing.T) {
 	t.Run("should return 200 and list of sellers", func(t *testing.T) {
 		expectedCode := 200
@@ -287,6 +293,8 @@ func TestGet(t *testing.T) {
 	})
 }
 
+// TestPut - Tests para PUT /sellers/{id}
+// Casos: 200 (actualización exitosa), 404 (no encontrado)
 func TestPut(t *testing.T) {
 	t.Run("should return 200 and update a seller", func(t *testing.T) {
 		expectedCode := 200
@@ -376,6 +384,8 @@ func TestPut(t *testing.T) {
 	})
 }
 
+// TestDelete - Tests para DELETE /sellers/{id}
+// Casos: 204 (eliminación exitosa), 404 (no encontrado)
 func TestDelete(t *testing.T) {
 	t.Run("should return 404 when seller does not exist", func(t *testing.T) {
 		expectedCode := 404
@@ -429,6 +439,7 @@ func TestDelete(t *testing.T) {
 	})
 }
 
+// TestGetAllError - Test casos de error para GetAll
 func TestGetAllError(t *testing.T) {
 	t.Run("should return 404 when service returns error", func(t *testing.T) {
 		expectedCode := 404
@@ -454,6 +465,7 @@ func TestGetAllError(t *testing.T) {
 	})
 }
 
+// TestGetByIdInvalidID - Test ID inválido para GetById
 func TestGetByIdInvalidID(t *testing.T) {
 	t.Run("should return 400 when ID is not a valid number", func(t *testing.T) {
 		expectedCode := 400
@@ -478,8 +490,10 @@ func TestGetByIdInvalidID(t *testing.T) {
 	})
 }
 
+// TestSaveAdditionalErrors - Tests adicionales de error para Save
 func TestSaveAdditionalErrors(t *testing.T) {
 	t.Run("should return 422 when dependency not found", func(t *testing.T) {
+		// Test error: locality_id no existe
 		expectedCode := 422
 		expectedResponseBody := `{
 			"status": "Unprocessable Entity",
@@ -542,6 +556,7 @@ func TestSaveAdditionalErrors(t *testing.T) {
 	})
 }
 
+// TestUpdateAdditionalErrors - Tests adicionales de error para Update
 func TestUpdateAdditionalErrors(t *testing.T) {
 	t.Run("should return 400 when ID is empty", func(t *testing.T) {
 		expectedCode := 400
@@ -574,6 +589,7 @@ func TestUpdateAdditionalErrors(t *testing.T) {
 	})
 
 	t.Run("should return 400 when ID is not a valid number", func(t *testing.T) {
+		// Test ID inválido
 		expectedCode := 400
 		id := "invalid_id"
 
@@ -603,6 +619,7 @@ func TestUpdateAdditionalErrors(t *testing.T) {
 	})
 
 	t.Run("should return 400 when JSON body is invalid", func(t *testing.T) {
+		// Test JSON inválido
 		expectedCode := 400
 		id := "1"
 
@@ -667,6 +684,7 @@ func TestUpdateAdditionalErrors(t *testing.T) {
 	})
 }
 
+// TestDeleteAdditionalErrors - Tests adicionales de error para Delete
 func TestDeleteAdditionalErrors(t *testing.T) {
 	t.Run("should return 400 when ID is empty", func(t *testing.T) {
 		expectedCode := 400
@@ -691,6 +709,7 @@ func TestDeleteAdditionalErrors(t *testing.T) {
 	})
 
 	t.Run("should return 400 when ID is not a valid number", func(t *testing.T) {
+		// Test ID inválido
 		expectedCode := 400
 		id := "invalid_id"
 

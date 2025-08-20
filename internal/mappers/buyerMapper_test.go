@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetModelBuyerFromRequest(t *testing.T) {
+func Test_Buyer_GetModelBuyerFromRequest(t *testing.T) {
 	t.Run("Successfully maps a BuyerRequest to Buyer", func(t *testing.T) {
 		expectedBuyer := &models.Buyer{
 			Id:           0,
@@ -31,7 +31,7 @@ func TestGetModelBuyerFromRequest(t *testing.T) {
 	})
 }
 
-func TestGetResponseBuyerFromModel(t *testing.T) {
+func Test_Buyer_GetResponseBuyerFromModel(t *testing.T) {
 	t.Run("Successfully maps a Buyer to BuyerResponse", func(t *testing.T) {
 		buyerDb := models.Buyer{
 			Id:           10,
@@ -53,7 +53,7 @@ func TestGetResponseBuyerFromModel(t *testing.T) {
 	})
 }
 
-func TestGetListBuyerResponseFromListModel(t *testing.T) {
+func Test_Buyer_GetListBuyerResponseFromListModel(t *testing.T) {
 	t.Run("Successfully maps a list of Buyer to a list of BuyerResponse", func(t *testing.T) {
 		buyersList := []*models.Buyer{{
 			Id:           10,
