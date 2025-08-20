@@ -5,8 +5,12 @@ import (
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/handlers/requests"
 )
 
-func GetSectionValidation() *SectionValidation {
+func GetSectionValidation() SectionValidationI {
 	return &SectionValidation{}
+}
+
+type SectionValidationI interface {
+	ValidateSectionRequestStruct(r requests.SectionRequest) error
 }
 
 type SectionValidation struct {

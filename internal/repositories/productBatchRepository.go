@@ -24,6 +24,10 @@ func GetProductBatchRepository(db *sql.DB) ProductBatchRepositoryI {
 	return productBatchRepositoryInstance
 }
 
+func ResetProductBatchRepositoryInstance() {
+	productBatchRepositoryInstance = nil
+}
+
 // ProductBatchRepositoryI - Interface defining the contract for product batch repository operations
 // ProductBatchRepositoryI - Interfaz que define el contrato para las operaciones del repositorio de lotes de productos
 type ProductBatchRepositoryI interface {

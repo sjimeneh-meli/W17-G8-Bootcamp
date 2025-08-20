@@ -14,6 +14,7 @@ import (
 
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/models"
 	"github.com/sajimenezher_meli/meli-frescos-8/internal/repositories"
+	"github.com/sajimenezher_meli/meli-frescos-8/internal/seeders"
 )
 
 // TestGetByIdSection - Tests for GetByID method / Tests para método GetByID
@@ -109,6 +110,42 @@ func TestGetAllSections(t *testing.T) {
 
 		assert.Nil(t, err, "err should be nil")
 		assert.Equal(t, sections, sectionDB, "ok")
+		repositories.ResetSectionRepositoryInstance()
+	})
+}
+
+func TestCreateSection(t *testing.T) {
+	t.Run("Successfully create a section from db", func(t *testing.T) {
+		section := &models.Section{
+			Id:                 0,
+			SectionNumber:      "A-01",
+			CurrentCapacity:    2,
+			CurrentTemperature: 3.43,
+			MaximumCapacity:    2,
+			MinimumCapacity:    2,
+			MinimumTemperature: 2,
+			ProductTypeID:      2,
+			WarehouseID:        1,
+		}
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			fmt.Println("failed to open sqlmock database:", err)
+		}
+		defer db.Close()
+
+		rows := mock.NewRows([]string{"Id", "section_number", "current_capacity", "current_temperature", "maximum_capacity", "minimum_capacity", "minimum_temperature", "product_type_id", "warehouse_id"}).
+			AddRow("1", "A-01", "2", "3.43", "2", "2", "2", "2", "1")
+
+		mock.ExpectQuery(regexp.QuoteMeta(
+			"INSERT INTO section_number,current_capacity,current_temperature,maximum_capacity,minimum_capacity,minimum_temperature,product_type_id,warehouse_id FROM sections;")).
+			WillReturnRows(rows).
+			RowsWillBeClosed()
+
+		repository := repositories.GetSectionRepository(db)
+		repository.Create(context.Background(), section)
+
+		assert.Nil(t, err, "err should be nil")
+		assert.Equal(t, seeders.NewSectionModel, section, "ok")
 		repositories.ResetSectionRepositoryInstance()
 	})
 }

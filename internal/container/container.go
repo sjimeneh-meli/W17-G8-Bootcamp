@@ -156,7 +156,7 @@ func (c *Container) initializeProductBatchHandler() error {
 	productBatchRepository := repositories.GetProductBatchRepository(c.StorageDB)
 	productBatchService := services.GetProductBatchService(productBatchRepository)
 	productBatchValidation := validations.GetProductBatchValidation()
-	c.ProductBatchHandler = handlers.GetProductBatchHandler(productBatchService, sectionService, productService, *productBatchValidation)
+	c.ProductBatchHandler = handlers.GetProductBatchHandler(productBatchService, sectionService, productService, productBatchValidation)
 	return nil
 }
 
